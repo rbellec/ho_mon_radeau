@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ho_mon_radeau_dev
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # Port forward commented to avoid conflicts with other local PostgreSQL instances
+    # Uncomment if you need direct database access from host
+    # ports:
+    #   - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Phoenix Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/ho_mon_radeau_dev
+      SECRET_KEY_BASE: changeme_in_production_use_mix_phx_gen_secret
+      PHX_HOST: localhost
+      PHX_PORT: 4000
+      MIX_ENV: dev
+    ports:
+      - "4000:4000"
+    volumes:
+      # Mount source code for live reload
+      - .:/app
+      # Persist Elixir dependencies
+      - elixir-deps:/app/deps
+      - elixir-build:/app/_build
+    command: mix phx.server
+    stdin_open: true
+    tty: true
+
+  # Mailcatcher for development email testing
+  mailcatcher:
+    image: sj26/mailcatcher:latest
+    ports:
+      - "1080:1080"  # Web interface
+      - "1025:1025"  # SMTP server
+
+  # Traefik (optional) - uncomment if you need local DNS routing
+  # traefik:
+  #   image: traefik:v2.10
+  #   command:
+  #     - "--api.insecure=true"
+  #     - "--providers.docker=true"
+  #     - "--providers.docker.exposedbydefault=false"
+  #     - "--entrypoints.web.address=:80"
+  #   ports:
+  #     - "80:80"
+  #     - "8080:8080"  # Traefik dashboard
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  postgres-data:
+    driver: local
+  elixir-deps:
+    driver: local
+  elixir-build:
+    driver: local
