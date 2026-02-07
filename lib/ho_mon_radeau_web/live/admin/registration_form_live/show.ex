@@ -5,6 +5,7 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
   use HoMonRadeauWeb, :live_view
 
   alias HoMonRadeau.Events
+  alias HoMonRadeau.Events.RegistrationFormNotifier
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -294,13 +295,17 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
   @impl true
   def handle_event("approve", _params, socket) do
     admin = socket.assigns.current_scope.user
+    form = socket.assigns.form
 
-    case Events.approve_registration_form(socket.assigns.form, admin) do
-      {:ok, form} ->
+    case Events.approve_registration_form(form, admin) do
+      {:ok, updated_form} ->
+        # Send approval notification to user
+        RegistrationFormNotifier.deliver_form_approved(form.user)
+
         {:noreply,
          socket
-         |> assign(:form, Events.get_registration_form!(form.id))
-         |> put_flash(:info, "Fiche validée avec succès")}
+         |> assign(:form, Events.get_registration_form!(updated_form.id))
+         |> put_flash(:info, "Fiche validée - notification envoyée")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Erreur lors de la validation")}
@@ -320,15 +325,33 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
   @impl true
   def handle_event("reject", %{"reason" => reason}, socket) do
     admin = socket.assigns.current_scope.user
+    form = socket.assigns.form
 
-    case Events.reject_registration_form(socket.assigns.form, admin, reason) do
-      {:ok, form} ->
-        # TODO: Send rejection emails
+    case Events.reject_registration_form(form, admin, reason) do
+      {:ok, updated_form} ->
+        # Send rejection email to user
+        RegistrationFormNotifier.deliver_form_rejected(form.user, updated_form)
+
+        # Send notification to crew managers
+        crew = Events.get_user_crew(form.user)
+
+        if crew do
+          managers = Events.get_crew_managers(crew.id)
+          raft = Events.get_raft!(crew.raft_id)
+
+          RegistrationFormNotifier.deliver_form_rejected_to_managers(
+            managers,
+            form.user,
+            updated_form,
+            raft.name
+          )
+        end
+
         {:noreply,
          socket
-         |> assign(:form, Events.get_registration_form!(form.id))
+         |> assign(:form, Events.get_registration_form!(updated_form.id))
          |> assign(:show_reject_modal, false)
-         |> put_flash(:info, "Fiche rejetée")}
+         |> put_flash(:info, "Fiche rejetée - notifications envoyées")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Erreur lors du rejet")}
