@@ -20,6 +20,9 @@ defmodule HoMonRadeau.Accounts.User do
     # Validation status (set by welcome team)
     field :validated, :boolean, default: false
 
+    # Admin status
+    field :is_admin, :boolean, default: false
+
     timestamps(type: :utc_datetime)
   end
 

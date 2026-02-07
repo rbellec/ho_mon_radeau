@@ -216,4 +216,36 @@ defmodule HoMonRadeauWeb.UserAuth do
   end
 
   defp maybe_store_return_to(conn), do: conn
+
+  @doc """
+  Plug for routes that require the user to be validated by the welcome team.
+  """
+  def require_validated_user(conn, _opts) do
+    user = conn.assigns.current_scope && conn.assigns.current_scope.user
+
+    if user && user.validated do
+      conn
+    else
+      conn
+      |> put_flash(:error, "Votre compte doit être validé par l'équipe d'accueil pour accéder à cette page.")
+      |> redirect(to: ~p"/")
+      |> halt()
+    end
+  end
+
+  @doc """
+  Plug for routes that require the user to be an admin.
+  """
+  def require_admin_user(conn, _opts) do
+    user = conn.assigns.current_scope && conn.assigns.current_scope.user
+
+    if user && user.is_admin do
+      conn
+    else
+      conn
+      |> put_flash(:error, "Accès réservé aux administrateurs.")
+      |> redirect(to: ~p"/")
+      |> halt()
+    end
+  end
 end

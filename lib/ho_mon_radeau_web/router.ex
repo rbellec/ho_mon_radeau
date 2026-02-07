@@ -62,6 +62,21 @@ defmodule HoMonRadeauWeb.Router do
     get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email
   end
 
+  # Routes requiring validated user
+  scope "/", HoMonRadeauWeb do
+    pipe_through [:browser, :require_authenticated_user, :require_validated_user]
+
+    live "/fiche-inscription", RegistrationFormLive.Index, :index
+  end
+
+  # Admin routes
+  scope "/admin", HoMonRadeauWeb.Admin, as: :admin do
+    pipe_through [:browser, :require_authenticated_user, :require_admin_user]
+
+    live "/fiches", RegistrationFormLive.Index, :index
+    live "/fiches/:id", RegistrationFormLive.Show, :show
+  end
+
   scope "/", HoMonRadeauWeb do
     pipe_through [:browser]
 
