@@ -5,8 +5,10 @@ defmodule HoMonRadeau.Events do
   """
 
   import Ecto.Query, warn: false
+  alias Ecto.Multi
   alias HoMonRadeau.Repo
-  alias HoMonRadeau.Events.Edition
+  alias HoMonRadeau.Events.{Edition, Raft, Crew, CrewMember, RaftLink}
+  alias HoMonRadeau.Accounts.User
 
   ## Editions
 
@@ -124,5 +126,367 @@ defmodule HoMonRadeau.Events do
     else
       changeset
     end
+  end
+
+  ## Rafts
+
+  @doc """
+  Lists all rafts for an edition.
+  Returns rafts ordered by validated status (participants first) then by name.
+  """
+  def list_rafts(edition_id) do
+    Raft
+    |> where([r], r.edition_id == ^edition_id)
+    |> order_by([r], desc: r.validated, asc: r.name)
+    |> preload([:crew])
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists all rafts for the current edition.
+  """
+  def list_current_edition_rafts do
+    case get_current_edition() do
+      nil -> []
+      edition -> list_rafts(edition.id)
+    end
+  end
+
+  @doc """
+  Gets a single raft.
+  Raises `Ecto.NoResultsError` if the Raft does not exist.
+  """
+  def get_raft!(id), do: Repo.get!(Raft, id) |> Repo.preload([:crew, :edition, :links])
+
+  @doc """
+  Gets a raft by slug for an edition.
+  """
+  def get_raft_by_slug(slug, edition_id) do
+    Raft
+    |> where([r], r.slug == ^slug and r.edition_id == ^edition_id)
+    |> preload([:crew, :edition, :links])
+    |> Repo.one()
+  end
+
+  @doc """
+  Creates a raft with its associated crew and the creator as first manager.
+  This is a transactional operation.
+  """
+  def create_raft_with_crew(%User{} = user, attrs) do
+    edition = get_current_edition()
+
+    if is_nil(edition) do
+      {:error, :no_current_edition}
+    else
+      create_raft_with_crew(user, attrs, edition.id)
+    end
+  end
+
+  def create_raft_with_crew(%User{} = user, attrs, edition_id) do
+    Multi.new()
+    |> Multi.insert(:raft, fn _ ->
+      %Raft{}
+      |> Raft.changeset(Map.put(attrs, :edition_id, edition_id))
+    end)
+    |> Multi.insert(:crew, fn %{raft: raft} ->
+      %Crew{}
+      |> Crew.changeset(%{raft_id: raft.id, edition_id: edition_id})
+    end)
+    |> Multi.insert(:creator_member, fn %{crew: crew} ->
+      %CrewMember{}
+      |> CrewMember.changeset(%{
+        crew_id: crew.id,
+        user_id: user.id,
+        is_manager: true
+      })
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{raft: raft, crew: crew, creator_member: _member}} ->
+        {:ok, %{raft | crew: crew}}
+
+      {:error, :raft, changeset, _} ->
+        {:error, changeset}
+
+      {:error, _, _, _} = error ->
+        error
+    end
+  end
+
+  @doc """
+  Updates a raft.
+  """
+  def update_raft(%Raft{} = raft, attrs) do
+    raft
+    |> Raft.update_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Returns a changeset for editing a raft.
+  """
+  def change_raft(%Raft{} = raft, attrs \\ %{}) do
+    Raft.changeset(raft, attrs)
+  end
+
+  @doc """
+  Validates a raft (admin action).
+  """
+  def validate_raft(%Raft{} = raft, %User{} = admin) do
+    raft
+    |> Raft.validation_changeset(%{
+      validated: true,
+      validated_at: DateTime.utc_now(:second),
+      validated_by_id: admin.id
+    })
+    |> Repo.update()
+  end
+
+  @doc """
+  Invalidates a raft (admin action).
+  """
+  def invalidate_raft(%Raft{} = raft) do
+    raft
+    |> Raft.validation_changeset(%{
+      validated: false,
+      validated_at: nil,
+      validated_by_id: nil
+    })
+    |> Repo.update()
+  end
+
+  ## Crews
+
+  @doc """
+  Gets a crew by raft ID.
+  """
+  def get_crew_by_raft(raft_id) do
+    Crew
+    |> where([c], c.raft_id == ^raft_id)
+    |> preload(crew_members: :user)
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets the crew for a user in the current edition.
+  Returns nil if user is not in any crew.
+  """
+  def get_user_crew(%User{} = user) do
+    case get_current_edition() do
+      nil ->
+        nil
+
+      edition ->
+        from(cm in CrewMember,
+          join: c in Crew,
+          on: c.id == cm.crew_id,
+          where: cm.user_id == ^user.id and c.edition_id == ^edition.id,
+          preload: [crew: [:raft]]
+        )
+        |> Repo.one()
+        |> case do
+          nil -> nil
+          member -> member.crew
+        end
+    end
+  end
+
+  @doc """
+  Checks if a user is a member of any crew in the current edition.
+  """
+  def user_has_crew?(%User{} = user) do
+    get_user_crew(user) != nil
+  end
+
+  ## Crew Members
+
+  @doc """
+  Lists all members of a crew.
+  """
+  def list_crew_members(crew_id) do
+    CrewMember
+    |> where([cm], cm.crew_id == ^crew_id)
+    |> preload(:user)
+    |> order_by([cm], desc: cm.is_manager, desc: cm.is_captain, asc: cm.joined_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets public crew members (those with a nickname).
+  """
+  def get_public_crew_members(crew_id) do
+    from(cm in CrewMember,
+      where: cm.crew_id == ^crew_id,
+      join: u in User,
+      on: u.id == cm.user_id,
+      where: not is_nil(u.nickname),
+      select: %{
+        id: cm.id,
+        nickname: u.nickname,
+        profile_picture_url: u.profile_picture_url,
+        profile_picture_public: u.profile_picture_public
+      },
+      order_by: u.nickname
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Counts secret members (those without nickname or with private photo).
+  """
+  def count_secret_members(crew_id) do
+    from(cm in CrewMember,
+      where: cm.crew_id == ^crew_id,
+      join: u in User,
+      on: u.id == cm.user_id,
+      where: is_nil(u.nickname) or u.profile_picture_public == false
+    )
+    |> Repo.aggregate(:count)
+  end
+
+  @doc """
+  Counts total crew members.
+  """
+  def count_crew_members(crew_id) do
+    CrewMember
+    |> where([cm], cm.crew_id == ^crew_id)
+    |> Repo.aggregate(:count)
+  end
+
+  @doc """
+  Adds a member to a crew.
+  """
+  def add_crew_member(crew_id, user_id, attrs \\ %{}) do
+    %CrewMember{}
+    |> CrewMember.changeset(Map.merge(attrs, %{crew_id: crew_id, user_id: user_id}))
+    |> Repo.insert()
+  end
+
+  @doc """
+  Removes a member from a crew.
+  """
+  def remove_crew_member(crew_id, user_id) do
+    CrewMember
+    |> where([cm], cm.crew_id == ^crew_id and cm.user_id == ^user_id)
+    |> Repo.delete_all()
+  end
+
+  @doc """
+  Gets a crew member.
+  """
+  def get_crew_member(crew_id, user_id) do
+    CrewMember
+    |> where([cm], cm.crew_id == ^crew_id and cm.user_id == ^user_id)
+    |> preload(:user)
+    |> Repo.one()
+  end
+
+  @doc """
+  Promotes a crew member to manager.
+  """
+  def promote_to_manager(crew_id, user_id) do
+    case get_crew_member(crew_id, user_id) do
+      nil ->
+        {:error, :not_found}
+
+      member ->
+        member
+        |> CrewMember.promote_to_manager_changeset()
+        |> Repo.update()
+    end
+  end
+
+  @doc """
+  Demotes a crew member from manager.
+  """
+  def demote_from_manager(crew_id, user_id) do
+    case get_crew_member(crew_id, user_id) do
+      nil ->
+        {:error, :not_found}
+
+      member ->
+        member
+        |> CrewMember.demote_from_manager_changeset()
+        |> Repo.update()
+    end
+  end
+
+  @doc """
+  Sets the captain of a crew.
+  Only one captain per crew - this unsets any existing captain.
+  """
+  def set_captain(crew_id, user_id) do
+    Repo.transaction(fn ->
+      # Unset existing captain
+      from(cm in CrewMember, where: cm.crew_id == ^crew_id and cm.is_captain == true)
+      |> Repo.update_all(set: [is_captain: false])
+
+      # Set new captain
+      case get_crew_member(crew_id, user_id) do
+        nil ->
+          Repo.rollback(:not_found)
+
+        member ->
+          member
+          |> CrewMember.set_captain_changeset(true)
+          |> Repo.update!()
+      end
+    end)
+  end
+
+  @doc """
+  Checks if a user is a manager of a crew.
+  """
+  def is_manager?(crew_id, user_id) do
+    CrewMember
+    |> where([cm], cm.crew_id == ^crew_id and cm.user_id == ^user_id and cm.is_manager == true)
+    |> Repo.exists?()
+  end
+
+  @doc """
+  Gets all managers of a crew.
+  """
+  def get_crew_managers(crew_id) do
+    CrewMember
+    |> where([cm], cm.crew_id == ^crew_id and cm.is_manager == true)
+    |> preload(:user)
+    |> Repo.all()
+  end
+
+  ## Raft Links
+
+  @doc """
+  Lists all public links for a raft.
+  """
+  def list_raft_links(raft_id) do
+    RaftLink
+    |> where([rl], rl.raft_id == ^raft_id)
+    |> order_by([rl], asc: rl.position)
+    |> Repo.all()
+  end
+
+  @doc """
+  Creates a raft link.
+  """
+  def create_raft_link(attrs) do
+    %RaftLink{}
+    |> RaftLink.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a raft link.
+  """
+  def update_raft_link(%RaftLink{} = link, attrs) do
+    link
+    |> RaftLink.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a raft link.
+  """
+  def delete_raft_link(%RaftLink{} = link) do
+    Repo.delete(link)
   end
 end
