@@ -34,7 +34,7 @@ Vous y trouverez :
 
 ### 3. Contribuer au code
 
-Le projet est en **phase de spécification**. Le développement de l'application Phoenix démarrera prochainement.
+Le projet est en **développement actif**.
 
 Si vous souhaitez contribuer au code :
 - Lisez [`CLAUDE.md`](./CLAUDE.md) pour les conventions du projet
@@ -87,7 +87,7 @@ git clone [repository-url]
 cd ho_mon_radeau
 
 # Démarrer les services
-docker-compose up
+docker compose up
 
 # L'application sera accessible sur :
 # - App : http://localhost:4000
@@ -97,16 +97,19 @@ docker-compose up
 ### Commandes Utiles
 ```bash
 # Shell Elixir dans le container
-docker-compose exec app iex -S mix
+docker compose exec app iex -S mix
 
 # Migrations
-docker-compose exec app mix ecto.migrate
+docker compose run --rm app mix ecto.migrate
 
 # Tests
-docker-compose exec app mix test
+docker compose run --rm -e MIX_ENV=test app mix test
 
 # Format code
-docker-compose exec app mix format
+docker compose run --rm app mix format
+
+# Arrêter les services
+docker compose down
 ```
 
 ## 📂 Structure du Projet
