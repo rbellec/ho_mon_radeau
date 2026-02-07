@@ -42,3 +42,9 @@ config :phoenix_live_view,
 # Sort query params output of verified routes for robust url comparisons
 config :phoenix,
   sort_verified_routes_query_params: true
+
+# Configure local file storage for tests
+config :ho_mon_radeau, :storage,
+  adapter: :local,
+  upload_dir: "tmp/test_uploads",
+  enabled: true

@@ -70,7 +70,12 @@ defmodule HoMonRadeau.MixProject do
       {:gen_smtp, "~> 1.2"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:ex_machina, "~> 2.8", only: :test},
-      {:faker, "~> 0.18", only: :test}
+      {:faker, "~> 0.18", only: :test},
+      # S3/Tigris storage
+      {:ex_aws, "~> 2.5"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:hackney, "~> 1.20"},
+      {:sweet_xml, "~> 0.7"}
     ]
   end
 

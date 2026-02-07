@@ -117,4 +117,24 @@ if config_env() == :prod do
   #     config :swoosh, :api_client, Swoosh.ApiClient.Req
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
+
+  # ## Configuring S3/Tigris storage
+  #
+  # Tigris is an S3-compatible object storage service integrated with Fly.io.
+  # These environment variables are automatically set when you create a Tigris bucket.
+  if System.get_env("BUCKET_NAME") do
+    config :ex_aws,
+      access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
+      secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
+      region: System.get_env("AWS_REGION", "auto")
+
+    config :ex_aws, :s3,
+      scheme: "https://",
+      host: System.get_env("AWS_ENDPOINT_URL_S3") |> URI.parse() |> Map.get(:host),
+      region: System.get_env("AWS_REGION", "auto")
+
+    config :ho_mon_radeau, :storage,
+      bucket: System.get_env("BUCKET_NAME"),
+      enabled: true
+  end
 end

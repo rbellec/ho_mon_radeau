@@ -97,3 +97,10 @@ config :ho_mon_radeau, HoMonRadeau.Mailer,
   adapter: Swoosh.Adapters.SMTP,
   relay: "mailcatcher",
   port: 1025
+
+# Configure local file storage for development
+# Files are stored in priv/static/uploads
+config :ho_mon_radeau, :storage,
+  adapter: :local,
+  upload_dir: "priv/static/uploads",
+  enabled: true

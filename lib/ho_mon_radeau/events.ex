@@ -7,7 +7,8 @@ defmodule HoMonRadeau.Events do
   import Ecto.Query, warn: false
   alias Ecto.Multi
   alias HoMonRadeau.Repo
-  alias HoMonRadeau.Events.{Edition, Raft, Crew, CrewMember, RaftLink}
+  alias HoMonRadeau.Events.{Edition, Raft, Crew, CrewMember, RaftLink, RegistrationForm}
+  alias HoMonRadeau.Storage
   alias HoMonRadeau.Accounts.User
 
   ## Editions
@@ -488,5 +489,261 @@ defmodule HoMonRadeau.Events do
   """
   def delete_raft_link(%RaftLink{} = link) do
     Repo.delete(link)
+  end
+
+  ## Registration Forms
+
+  @doc """
+  Gets the current (most recent) registration form for a user in an edition.
+  Returns nil if no form has been uploaded.
+  """
+  def get_current_registration_form(user_id, edition_id) do
+    from(rf in RegistrationForm,
+      where: rf.user_id == ^user_id and rf.edition_id == ^edition_id,
+      order_by: [desc: rf.uploaded_at],
+      limit: 1
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets all registration forms for a user in an edition (history).
+  """
+  def list_user_registration_forms(user_id, edition_id) do
+    from(rf in RegistrationForm,
+      where: rf.user_id == ^user_id and rf.edition_id == ^edition_id,
+      order_by: [desc: rf.uploaded_at],
+      preload: [:reviewed_by]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a registration form by ID.
+  """
+  def get_registration_form!(id) do
+    RegistrationForm
+    |> Repo.get!(id)
+    |> Repo.preload([:user, :edition, :reviewed_by])
+  end
+
+  @doc """
+  Determines the required form type for a user based on their crew role.
+  Returns :captain, :participant, or nil if user is not in a crew.
+  """
+  def required_form_type(%User{} = user, edition_id) do
+    from(cm in CrewMember,
+      join: c in Crew,
+      on: c.id == cm.crew_id,
+      where: cm.user_id == ^user.id and c.edition_id == ^edition_id,
+      select: cm.is_captain
+    )
+    |> Repo.one()
+    |> case do
+      nil -> nil
+      true -> :captain
+      false -> :participant
+    end
+  end
+
+  @doc """
+  Returns the registration form status for a user.
+  Possible values: :missing, :pending, :approved, :rejected
+  """
+  def registration_form_status(%User{} = user, edition_id) do
+    case get_current_registration_form(user.id, edition_id) do
+      nil -> :missing
+      %{status: "approved"} -> :approved
+      %{status: "rejected"} -> :rejected
+      %{status: "pending"} -> :pending
+    end
+  end
+
+  @doc """
+  Uploads a registration form for a user.
+  Stores the file and creates a database record.
+  """
+  def upload_registration_form(%User{} = user, edition_id, file_params) do
+    form_type = required_form_type(user, edition_id)
+
+    if is_nil(form_type) do
+      {:error, :not_in_crew}
+    else
+      do_upload_registration_form(user, edition_id, form_type, file_params)
+    end
+  end
+
+  defp do_upload_registration_form(user, edition_id, form_type, %{
+         filename: filename,
+         content: content,
+         content_type: content_type
+       }) do
+    file_key = Storage.registration_form_key(edition_id, user.id, filename)
+
+    with {:ok, _key} <- Storage.upload(file_key, content, content_type: content_type) do
+      %RegistrationForm{}
+      |> RegistrationForm.changeset(%{
+        user_id: user.id,
+        edition_id: edition_id,
+        form_type: Atom.to_string(form_type),
+        file_key: file_key,
+        file_name: filename,
+        file_size: byte_size(content),
+        content_type: content_type
+      })
+      |> Repo.insert()
+    end
+  end
+
+  @doc """
+  Approves a registration form.
+  """
+  def approve_registration_form(%RegistrationForm{} = form, %User{} = reviewer) do
+    form
+    |> RegistrationForm.approve_changeset(reviewer.id)
+    |> Repo.update()
+  end
+
+  @doc """
+  Rejects a registration form with a reason.
+  """
+  def reject_registration_form(%RegistrationForm{} = form, %User{} = reviewer, reason) do
+    form
+    |> RegistrationForm.reject_changeset(reviewer.id, reason)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a registration form and its associated file.
+  Admin only action.
+  """
+  def delete_registration_form(%RegistrationForm{} = form) do
+    with :ok <- Storage.delete(form.file_key) do
+      Repo.delete(form)
+    end
+  end
+
+  @doc """
+  Gets the download URL for a registration form.
+  """
+  def get_registration_form_url(%RegistrationForm{} = form, opts \\ []) do
+    Storage.get_url(form.file_key, opts)
+  end
+
+  @doc """
+  Lists all pending registration forms for an edition.
+  """
+  def list_pending_registration_forms(edition_id) do
+    from(rf in RegistrationForm,
+      where: rf.edition_id == ^edition_id and rf.status == "pending",
+      order_by: [asc: rf.uploaded_at],
+      preload: [:user]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists all registration forms for an edition with optional filters.
+  """
+  def list_registration_forms(edition_id, opts \\ []) do
+    status = Keyword.get(opts, :status)
+    raft_id = Keyword.get(opts, :raft_id)
+
+    query =
+      from(rf in RegistrationForm,
+        where: rf.edition_id == ^edition_id,
+        order_by: [desc: rf.uploaded_at],
+        preload: [:user, :reviewed_by]
+      )
+
+    query =
+      if status do
+        where(query, [rf], rf.status == ^status)
+      else
+        query
+      end
+
+    query =
+      if raft_id do
+        from(rf in query,
+          join: cm in CrewMember,
+          on: cm.user_id == rf.user_id,
+          join: c in Crew,
+          on: c.id == cm.crew_id,
+          where: c.raft_id == ^raft_id
+        )
+      else
+        query
+      end
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Gets registration form statistics for an edition grouped by raft.
+  Returns a list of maps with raft info and form counts.
+  """
+  def registration_form_stats_by_raft(edition_id) do
+    # Get all rafts with their crew members
+    rafts_with_members =
+      from(r in Raft,
+        join: c in Crew,
+        on: c.raft_id == r.id,
+        join: cm in CrewMember,
+        on: cm.crew_id == c.id,
+        where: r.edition_id == ^edition_id,
+        select: %{raft_id: r.id, raft_name: r.name, user_id: cm.user_id}
+      )
+      |> Repo.all()
+
+    # Group by raft and compute stats
+    rafts_with_members
+    |> Enum.group_by(fn %{raft_id: id, raft_name: name} -> {id, name} end)
+    |> Enum.map(fn {{raft_id, raft_name}, members} ->
+      user_ids = Enum.map(members, & &1.user_id)
+
+      # Get current form status for each user
+      form_statuses =
+        Enum.map(user_ids, fn user_id ->
+          registration_form_status(%User{id: user_id}, edition_id)
+        end)
+
+      %{
+        raft_id: raft_id,
+        raft_name: raft_name,
+        total_members: length(members),
+        approved: Enum.count(form_statuses, &(&1 == :approved)),
+        pending: Enum.count(form_statuses, &(&1 == :pending)),
+        rejected: Enum.count(form_statuses, &(&1 == :rejected)),
+        missing: Enum.count(form_statuses, &(&1 == :missing))
+      }
+    end)
+  end
+
+  @doc """
+  Gets crew members who are missing or have rejected registration forms for a raft.
+  """
+  def get_crew_members_missing_forms(raft_id, edition_id) do
+    # Get all crew members for this raft
+    crew_members =
+      from(cm in CrewMember,
+        join: c in Crew,
+        on: c.id == cm.crew_id,
+        join: u in User,
+        on: u.id == cm.user_id,
+        where: c.raft_id == ^raft_id and c.edition_id == ^edition_id,
+        select: %{user: u, is_captain: cm.is_captain}
+      )
+      |> Repo.all()
+
+    # Filter to those with missing or rejected forms
+    Enum.filter(crew_members, fn %{user: user} ->
+      status = registration_form_status(user, edition_id)
+      status in [:missing, :rejected]
+    end)
+    |> Enum.map(fn member ->
+      status = registration_form_status(member.user, edition_id)
+      Map.put(member, :form_status, Atom.to_string(status))
+    end)
   end
 end
