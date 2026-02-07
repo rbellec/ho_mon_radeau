@@ -61,16 +61,16 @@ Certaines équipes ont des droits particuliers dans l'app :
 ### Adhésion aux équipes transverses
 
 #### Pour un utilisateur
-1. Page "Équipes transverses" (accessible après connexion)
-2. Liste des équipes avec description
-3. Bouton "Rejoindre cette équipe" ou "Demander à rejoindre"
-4. Validation par coordinateur ou ajout automatique (selon configuration)
+- **Pas de formulaire d'adhésion dans l'application**
+- **Pas de bouton "Rejoindre"**
+- Le recrutement se fait par **discussions externes** (WhatsApp, forum, en personne)
+- Une fois le recrutement validé en externe, un coordinateur ajoute le membre dans l'app
 
 #### Gestion par le coordinateur
-- Ajouter des membres directement
-- Valider les demandes d'adhésion
+- Ajouter des membres directement (après validation externe)
 - Retirer des membres
 - Nommer d'autres coordinateurs
+- Pas de système de demandes d'adhésion dans l'app
 
 ### Page privée d'équipe transverse
 
@@ -188,26 +188,30 @@ Coordinateur initial (optionnel)
 Équipes transverses - Tutto Blu
 
 Les équipes transverses assurent les fonctions support de l'événement.
-Vous pouvez rejoindre une ou plusieurs équipes en plus de votre radeau.
+Le recrutement se fait par discussions directes avec les coordinateurs.
 
 Mes équipes
 -----------
 ✓ SAFE - 12 membres
+  Coordinateurs : Alice, Bob, Charlie
   [Voir la page de l'équipe]
 
 Autres équipes
 --------------
 Accueil des nouveaux - 8 membres
 "Rencontre et validation des nouveaux participants"
-[Rejoindre cette équipe]
+Coordinateurs : Diana, Enzo
 
 Bidons - 5 membres
 "Gestion de la location des bidons"
-[Rejoindre cette équipe]
+Coordinateurs : Fatima
 
 Sécurité - 10 membres
 "Assure la sécurité physique sur l'événement"
-[Rejoindre cette équipe]
+Coordinateurs : Gabriel, Hélène
+
+💬 Pour rejoindre une équipe, contactez directement les coordinateurs
+   via le forum ou WhatsApp.
 ```
 
 ### Page privée d'équipe transverse
@@ -291,13 +295,20 @@ scope "/", HoMonRadeauWeb do
 
   get "/equipes-transverses", TransverseTeamController, :index
   get "/equipes-transverses/:id", TransverseTeamController, :show
-  post "/equipes-transverses/:id/join", TransverseTeamController, :join
+  # Pas de route join - l'ajout se fait par les coordinateurs
 end
 
 scope "/admin", HoMonRadeauWeb.Admin do
   pipe_through [:browser, :require_authenticated_user, :require_admin]
 
   resources "/equipes-transverses", TransverseTeamController
+end
+
+scope "/equipes-transverses/:id", HoMonRadeauWeb do
+  pipe_through [:browser, :require_authenticated_user, :require_coordinator]
+
+  post "/membres", TransverseTeamController, :add_member
+  delete "/membres/:member_id", TransverseTeamController, :remove_member
 end
 ```
 

@@ -78,8 +78,12 @@ Rôles à pourvoir
 ```
 
 #### Page publique du radeau
-- Les rôles ne sont **pas affichés publiquement** (sauf éventuellement capitaine ?)
+- Les rôles ne sont **pas affichés publiquement** (y compris le capitaine)
 - Seule la liste des membres avec pseudos/photos
+
+#### Page admin - Liste des radeaux
+- Le **capitaine est affiché** dans la liste des radeaux pour les administrateurs
+- Permet aux admins de voir rapidement qui est l'interlocuteur de chaque radeau
 
 ## Règles métier
 

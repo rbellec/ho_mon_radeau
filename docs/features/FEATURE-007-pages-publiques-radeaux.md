@@ -38,7 +38,13 @@ Affichage de tous les radeaux avec :
 ### Page publique d'un radeau
 
 #### URL
-`/radeaux/[nom-du-radeau]` ou `/radeaux/[id]`
+`/[année]/radeaux/[nom-du-radeau]` ou `/[année]/radeaux/[id]`
+
+Exemples :
+- `/2026/radeaux/fun-radeau`
+- `/2027/radeaux/fun-radeau`
+
+Le même nom de radeau peut exister pour différentes éditions, mais chaque radeau est **unique par édition**.
 
 #### Contenu affiché
 
@@ -85,6 +91,22 @@ Documents et liens
 - Ou message "Vous êtes déjà membre d'un autre équipage"
 
 ## Règles métier
+
+### Éditions annuelles
+
+Chaque événement Tutto Blu correspond à une **édition** (année) :
+- Un radeau est **unique par édition** (ex: "Fun Radeau 2026")
+- Le **même nom de radeau** peut être réutilisé d'une année sur l'autre
+- Mais ce ne sera **pas le même radeau ni le même équipage**
+- Un radeau peut être lié aux radeaux du même nom des éditions précédentes (historique)
+- Un équipage est lié à **une seule édition**
+
+**Exemples :**
+- "Fun Radeau" existe en 2025 (événement passé, non traité dans l'app)
+- "Fun Radeau" existe en 2026 (événement actuel)
+- "Fun Radeau" existera probablement en 2027 (futur)
+
+**Règle d'unicité :** Le nom du radeau doit être unique **pour une édition donnée**, mais peut être réutilisé pour d'autres éditions.
 
 ### Visibilité des données
 
@@ -220,12 +242,40 @@ Même affichage mais :
 ### Implémentation
 
 #### Base de données
-Tables existantes + ajouts :
+
+**Table des éditions :**
+```elixir
+create table :editions do
+  add :year, :integer, null: false
+  add :name, :string  # ex: "Tutto Blu 2026"
+  add :is_current, :boolean, default: false
+  add :start_date, :date
+  add :end_date, :date
+
+  timestamps()
+end
+
+create unique_index(:editions, [:year])
+```
+
+**Tables existantes + ajouts :**
 ```elixir
 alter table :rafts do
+  add :edition_id, references(:editions), null: false
   add :description_short, :string, limit: 150
   add :picture_url, :string
+  add :previous_raft_id, references(:rafts)  # Lien vers radeau même nom édition précédente
 end
+
+# Nom unique PAR ÉDITION (pas globalement unique)
+create unique_index(:rafts, [:name, :edition_id])
+create index(:rafts, [:edition_id])
+
+alter table :crews do
+  add :edition_id, references(:editions), null: false
+end
+
+create index(:crews, [:edition_id])
 
 create table :raft_links do
   add :raft_id, references(:rafts), null: false

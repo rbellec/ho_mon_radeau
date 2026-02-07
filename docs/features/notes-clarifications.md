@@ -21,6 +21,8 @@
 ### Q1 - Équipage vs Radeau
 **Réponse :** Relation 1-1. Le radeau est l'objet physique, l'équipage est le groupe. Deux entités potentiellement distinctes mais liées de manière unique. Dans le langage, on confond souvent les deux termes.
 
+**Important :** Un utilisateur ne peut être membre que d'**un seul équipage** à la fois, mais peut être membre de **plusieurs équipes transverses** en parallèle.
+
 ### Q2 - Équipes transverses
 **Réponse :**
 - Différentes des équipages de radeau
@@ -318,4 +320,39 @@ Sur la page équipage afficher :
 
 ---
 
-_Session en cours - Clarifications bidons et CUF complétées_
+## Clarifications supplémentaires - Session 2
+
+### Unicité des équipages
+- Un utilisateur ne peut être membre que d'**UN SEUL équipage** (pas de multi-appartenance)
+- Il peut cependant être membre de **plusieurs équipes transverses**
+- Un utilisateur ne peut créer un radeau que s'il **n'est pas déjà membre d'un équipage**
+- Si il quitte son équipage, il peut ensuite créer un nouveau radeau
+
+### Radeaux abandonnés
+- Un radeau sans aucun membre = **radeau abandonné**
+- Les admins peuvent l'effacer ou y affecter un nouveau membre (gestionnaire par défaut)
+
+### Affichage du capitaine
+- Le capitaine **n'est pas affiché publiquement** sur la page du radeau
+- Il est affiché dans la **liste admin des radeaux** pour faciliter le contact
+
+### Système d'éditions annuelles
+**Changement majeur dans la structure :**
+- Chaque événement Tutto Blu = une **édition** (année)
+- Un radeau est **unique par édition** mais le nom peut être réutilisé d'une année sur l'autre
+- Exemple : "Fun Radeau" peut exister en 2025, 2026, 2027 mais ce sont 3 radeaux différents
+- **URL des radeaux :** `/[année]/radeaux/[nom]` (ex: `/2026/radeaux/fun-radeau`)
+- **Règle d'unicité :** Nom unique **par édition** (pas globalement unique)
+- **Table éditions :** Nécessaire pour gérer les différentes années
+- Un équipage est lié à **une seule édition**
+- Un radeau peut avoir un lien vers le radeau du même nom de l'édition précédente (historique)
+
+### Équipes transverses - Adhésion
+- **Pas de bouton "Rejoindre"** dans l'application
+- Le recrutement se fait par **discussions externes** (WhatsApp, forum, en personne)
+- Une fois validé, le coordinateur ajoute le membre directement dans l'app
+- Les équipes sont en **nombre très limité** et gérées plutôt en dur dans le code
+
+---
+
+_Session complétée - Toutes les features documentées avec corrections_

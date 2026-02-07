@@ -15,7 +15,10 @@ Permettre aux participants de former leurs propres équipages de manière autono
 
 ### Conditions pour créer un équipage
 - Utilisateur doit être **validé** (FEATURE-002)
-- Utilisateur ne doit pas déjà être membre d'un équipage (ou clarifier si possible d'être dans plusieurs ?)
+- Utilisateur **ne doit pas déjà être membre d'un équipage**
+  - Un utilisateur ne peut être membre que d'**UN SEUL équipage** à la fois
+  - Il peut cependant être membre de **plusieurs équipes transverses** en parallèle
+- Si l'utilisateur quitte son équipage, il peut ensuite créer un nouveau radeau
 
 ### Formulaire de création
 L'utilisateur renseigne :
@@ -40,6 +43,12 @@ L'utilisateur renseigne :
 - Dans le langage, les deux termes sont souvent utilisés de manière interchangeable
 - Techniquement : 2 entités possibles mais liées de manière unique
 
+### Radeau vs Équipes transverses
+- Un utilisateur peut être membre d'**un seul radeau/équipage**
+- MAIS peut être membre de **plusieurs équipes transverses** en parallèle
+- Les équipes transverses sont en **nombre très limité** (Accueil, SAFE, Bidons, Sécurité, Médecine)
+- Gérées plutôt **en dur dans le code** avec des droits spécifiques par type
+
 ## Règles métier
 
 ### Nom du radeau
@@ -63,8 +72,16 @@ L'utilisateur renseigne :
 - Impact sur affichage dans les listes (FEATURE-009)
 
 ### Limite de création
-- Un utilisateur peut-il créer plusieurs radeaux ? **À clarifier**
-- Un utilisateur peut-il être dans plusieurs équipages ? **À clarifier**
+- Un utilisateur ne peut créer un radeau que s'il **n'est pas déjà membre d'un équipage**
+- Un utilisateur ne peut être membre que d'**un seul équipage** à la fois
+- Si un utilisateur quitte son équipage, il peut ensuite créer un nouveau radeau
+
+### Radeaux abandonnés
+Si un radeau n'a plus aucun membre :
+- Le radeau est considéré comme **abandonné**
+- Les administrateurs peuvent :
+  - **Effacer le radeau** définitivement
+  - **Affecter un membre** au radeau (qui devient gestionnaire par défaut)
 
 ## Interface utilisateur
 
