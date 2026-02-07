@@ -62,3 +62,4 @@ Détails d'implémentation spécifiques
 | 010 | Équipes transverses | ✅ Documenté | P1 |
 | 011 | Gestion des bidons | ✅ Documenté | P1 |
 | 012 | CUF (Cotisation Urbaine Flottante) | ✅ Documenté | P1 |
+| 013 | Fiches d'inscription | ✅ Documenté | P0 - MVP |
