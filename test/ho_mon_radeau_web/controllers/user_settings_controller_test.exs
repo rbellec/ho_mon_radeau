@@ -55,14 +55,14 @@ defmodule HoMonRadeauWeb.UserSettingsControllerTest do
         put(conn, ~p"/users/settings", %{
           "action" => "update_password",
           "user" => %{
-            "password" => "too short",
-            "password_confirmation" => "does not match"
+            "password" => "short",
+            "password_confirmation" => "other"
           }
         })
 
       response = html_response(old_password_conn, 200)
       assert response =~ "Settings"
-      assert response =~ "should be at least 12 character(s)"
+      assert response =~ "6 caractères minimum"
       assert response =~ "does not match password"
 
       assert get_session(old_password_conn, :user_token) == get_session(conn, :user_token)

@@ -210,12 +210,14 @@ defmodule HoMonRadeau.AccountsTest do
     test "validates password", %{user: user} do
       {:error, changeset} =
         Accounts.update_user_password(user, %{
-          password: "not valid",
-          password_confirmation: "another"
+          password: "short",
+          password_confirmation: "other"
         })
 
       assert %{
-               password: ["should be at least 12 character(s)"],
+               password: [
+                 "le mot de passe doit faire 6 caractères minimum et un peu de folie. Un peu plus."
+               ],
                password_confirmation: ["does not match password"]
              } = errors_on(changeset)
     end
