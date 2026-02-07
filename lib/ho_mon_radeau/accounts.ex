@@ -235,15 +235,15 @@ defmodule HoMonRadeau.Accounts do
     {:ok, query} = UserToken.verify_magic_link_token_query(token)
 
     case Repo.one(query) do
-      # Prevent session fixation attacks by disallowing magic links for unconfirmed users with password
-      {%User{confirmed_at: nil, hashed_password: hash}, _token} when not is_nil(hash) ->
-        raise """
-        magic link log in is not allowed for unconfirmed users with a password set!
-
-        This cannot happen with the default implementation, which indicates that you
-        might have adapted the code to a different use case. Please make sure to read the
-        "Mixing magic link and password registration" section of `mix help phx.gen.auth`.
-        """
+      # User has a password - just confirm them, don't log in via magic link
+      {%User{confirmed_at: nil, hashed_password: hash} = user, _token} when not is_nil(hash) ->
+        user
+        |> User.confirm_changeset()
+        |> update_user_and_delete_all_tokens()
+        |> case do
+          {:ok, {user, _tokens}} -> {:ok, :confirmed_with_password, user}
+          error -> error
+        end
 
       {%User{confirmed_at: nil} = user, _token} ->
         user

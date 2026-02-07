@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <.live_title default="HoMonRadeau" suffix=" · Phoenix Framework">
+    <.live_title default="Ho Mon Radeau" suffix=" · Tutto Blu">
       {assigns[:page_title]}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
@@ -30,27 +30,42 @@
       })();
     </script>
   </head>
-  <body>
-    <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-      <%= if @current_scope do %>
-        <li>
-          {@current_scope.user.email}
-        </li>
-        <li>
-          <.link href={~p"/users/settings"}>Settings</.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log-out"} method="delete">Log out</.link>
-        </li>
-      <% else %>
-        <li>
-          <.link href={~p"/users/register"}>Register</.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log-in"}>Log in</.link>
-        </li>
-      <% end %>
-    </ul>
+  <body class="bg-base-100 antialiased">
+    <header class="navbar bg-base-100 border-b border-base-200 px-4 sm:px-6 lg:px-8 sticky top-0 z-50">
+      <div class="flex-1">
+        <a href="/" class="flex items-center gap-2 text-primary font-bold text-xl">
+          <span class="text-2xl">🚣</span>
+          <span class="hidden sm:inline">Ho Mon Radeau</span>
+        </a>
+      </div>
+      <div class="flex-none">
+        <ul class="menu menu-horizontal px-1 space-x-1 items-center text-sm">
+          <li>
+            <a href="https://tuttoblu.framer.website/" target="_blank" class="hidden sm:flex">Tutto Blu</a>
+          </li>
+          <li>
+            <a href="https://forum.flotille-tutto-blu.org" target="_blank" class="hidden sm:flex">Forum</a>
+          </li>
+          <%= if @current_scope do %>
+            <li>
+              <.link href={~p"/users/settings"} class="font-medium">
+                {@current_scope.user.email}
+              </.link>
+            </li>
+            <li>
+              <.link href={~p"/users/log-out"} method="delete">Déconnexion</.link>
+            </li>
+          <% else %>
+            <li>
+              <.link href={~p"/users/register"} class="btn btn-ghost btn-sm">Inscription</.link>
+            </li>
+            <li>
+              <.link href={~p"/users/log-in"} class="btn btn-primary btn-sm">Connexion</.link>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </header>
     {@inner_content}
   </body>
 </html>

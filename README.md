@@ -110,7 +110,14 @@ docker compose run --rm app mix format
 
 # Arrêter les services
 docker compose down
+
+# Créer des données de test (dev uniquement)
+docker compose exec app mix run priv/repo/seeds_dev.exs
 ```
+
+### Console et administration
+
+Pour manipuler les données (valider des utilisateurs, passer admin, gérer les équipages), voir la documentation détaillée : **[`docs/console.md`](./docs/console.md)**
 
 ## 📂 Structure du Projet
 

@@ -15,8 +15,8 @@ defmodule HoMonRadeauWeb.UserSessionController do
   def create(conn, %{"user" => %{"token" => token} = user_params} = params) do
     info =
       case params do
-        %{"_action" => "confirmed"} -> "User confirmed successfully."
-        _ -> "Welcome back!"
+        %{"_action" => "confirmed"} -> "Email confirmé avec succès."
+        _ -> "Content de vous revoir !"
       end
 
     case Accounts.login_user_by_magic_link(token) do
@@ -25,9 +25,15 @@ defmodule HoMonRadeauWeb.UserSessionController do
         |> put_flash(:info, info)
         |> UserAuth.log_in_user(user, user_params)
 
+      # User has a password - confirm them but require password login
+      {:ok, :confirmed_with_password, _user} ->
+        conn
+        |> put_flash(:info, "Email confirmé ! Vous pouvez maintenant vous connecter avec votre mot de passe.")
+        |> redirect(to: ~p"/users/log-in")
+
       {:error, :not_found} ->
         conn
-        |> put_flash(:error, "The link is invalid or it has expired.")
+        |> put_flash(:error, "Le lien est invalide ou a expiré.")
         |> render(:new, form: Phoenix.Component.to_form(%{}, as: "user"))
     end
   end

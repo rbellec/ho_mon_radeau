@@ -61,7 +61,7 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
       conn = get(conn, ~p"/users/log-in/#{token}")
       html = html_response(conn, 200)
       refute html =~ "Confirm my account"
-      assert html =~ "Log in"
+      assert html =~ "Log me in"
     end
 
     test "raises error for invalid token", %{conn: conn} do
@@ -179,7 +179,7 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
           "user" => %{"token" => "invalid"}
         })
 
-      assert html_response(conn, 200) =~ "The link is invalid or it has expired."
+      assert html_response(conn, 200) =~ "Le lien est invalide ou a expiré."
     end
   end
 

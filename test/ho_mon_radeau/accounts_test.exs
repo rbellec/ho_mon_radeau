@@ -332,9 +332,6 @@ defmodule HoMonRadeau.AccountsTest do
   end
 
   describe "login_user_by_magic_link/1" do
-    # Note: Since we use password-based registration, unconfirmed users always have
-    # a password set, so magic link login will raise for them. This is expected behavior.
-
     test "returns user and (deleted) token for confirmed user" do
       user = user_fixture()
       assert user.confirmed_at
@@ -344,15 +341,18 @@ defmodule HoMonRadeau.AccountsTest do
       assert {:error, :not_found} = Accounts.login_user_by_magic_link(encoded_token)
     end
 
-    test "raises when unconfirmed user has password set" do
+    test "confirms unconfirmed user with password and returns :confirmed_with_password" do
       user = unconfirmed_user_fixture()
       # Our users always have passwords after registration
       assert user.hashed_password
+      refute user.confirmed_at
       {encoded_token, _hashed_token} = generate_user_magic_link_token(user)
 
-      assert_raise RuntimeError, ~r/magic link log in is not allowed/, fn ->
-        Accounts.login_user_by_magic_link(encoded_token)
-      end
+      assert {:ok, :confirmed_with_password, confirmed_user} =
+               Accounts.login_user_by_magic_link(encoded_token)
+
+      assert confirmed_user.id == user.id
+      assert confirmed_user.confirmed_at
     end
   end
 
