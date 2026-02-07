@@ -48,8 +48,17 @@ Détails d'implémentation spécifiques
 
 ## Index des Features
 
-_À compléter lors de l'ajout de features_
-
 | ID | Feature | Statut | Priorité |
 |----|---------|--------|----------|
-| - | - | - | - |
+| 001 | Inscription utilisateur | ✅ Documenté | P0 - MVP |
+| 002 | Validation des nouveaux participants | ✅ Documenté | P0 - MVP |
+| 003 | Création d'équipage | ✅ Documenté | P0 - MVP |
+| 004 | Gestion des gestionnaires d'équipage | ✅ Documenté | P0 - MVP |
+| 005 | Adhésion à un équipage | ✅ Documenté | P0 - MVP |
+| 006 | Rôles dans l'équipage | ✅ Documenté | P1 |
+| 007 | Pages publiques des radeaux | ✅ Documenté | P0 - MVP |
+| 008 | Pages privées des radeaux | ✅ Documenté | P0 - MVP |
+| 009 | Validation admin des radeaux | ✅ Documenté | P1 |
+| 010 | Équipes transverses | ✅ Documenté | P1 |
+| 011 | Gestion des bidons | ✅ Documenté | P1 |
+| 012 | CUF (Cotisation Urbaine Flottante) | ✅ Documenté | P1 |

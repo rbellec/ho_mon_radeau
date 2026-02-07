@@ -1,0 +1,52 @@
+
+Question bidons :
+1- tous les membres d'un équipage peuvent faire la demande et/ou corriger le
+nombre de bidons dans la demande. Une seule demande par radeau (il pourra y avoir des demandes
+additionnelles ensuite). Concrètement cela veut dire qu'il peut y avoir un "historique" des
+paiements/demandes validées.
+
+2- Avant validation de paiement, la demande peut être modifiée à tout moment par un membre
+d'équipage, un membre de l'équipe bidons ou un admin. Après validation c'est une demande
+additionelle (pas de remise pour le moment si le radeau a besoin de moins de bidons, cette option
+est en tête mais sera discutée plus tard)
+
+3 - Il y a un stock limité. Il y a des bidons avec des défauts et cela n'est vu qu'au début de
+l'evenement. Cette partie gestion du stock est une feature à discuter plus tard. La gestion des
+limites et des priorités se fera directement en discutant et non par l'application.
+
+4 Le tarif par bidon sera affiché dans l'app et calculé pour chaque radeau sur leur page. La valeur
+ne sera quasiment jamais changée. Cela peut être soit changé directement en BDD, soit changé par
+un administrateur. Une fois une "facture" de bidons payée, le montant ne doit plus bouger même si
+le prix de location change. Le RIB pourra être affiché dans l'app (sur la page "payer les bidons" ?)
+
+5 pour l'instant on se focalise sur les 3 status décrits dans la question. Pour la gestion du
+stock sur place cela sera discuté plus tard.
+
+6 Certains radeaux veulent choisir un autre mode de flottaison. Libre à eux. Il faut juste
+afficher un 0 bidons dans le nombre. Les organisateur en discuterons directement avec eux.
+
+Questions CUF
+1 - le capitaine est la personne qui fait l'interface entre l'organisation de l'evenement et
+l'équipage, c'est donc lui qui gère la CUF
+
+2 - La CUF tiens lieu aussi d'inscription des participants. Sont déclarés les participants validés
+qui seront membres de ce radeau (nominatif). Il peut y avoir des changements ensuite, mais cela
+doit être validé par l'admin ensuite. Plus de détail sur ce point seront précisé plus tard.
+Dans l'immédiat sur le workflow de validation, les membres qui sont déclarés participants à
+l'evenement ont un statut particulier. Si je devais résumer sur un équipage on affiche : les
+candidats (par exemple user non validés qui attendent un entretient avec un membre de l'équipe
+d'accueuil), les participants (CUF validée) et les membres en attente de validation de la
+participation. Il peut y avoir des membres non participants, par exemple des personnes non
+disponibles pour l'evenement qui souhaites participer au travail en amont. Seul le capitaine est
+obligatoirement un participant (mais attention, il peut être capitaine bien avant d'être validé
+participant puisque cela arrive tard dans la timeline)
+
+3 - Le montant est fixe par personne et sera fixé en Mars environ
+4 - Ok, ajouter le statut "non participant"
+5 - Je ne sais pas encore. Sur la page de l'équipage afficher le nombre de candidats (seulement
+si il y en a), nombre de membres, nombre de participants validés (CUF payé). Afficher "CUF restant
+à régler", ce nombre peut être négatif si un participant se désiste par exemple.
+6 - Le nombre limite de participant n'est pas encore connu, il sera affiché dans la page d'admin
+avec le nombre de participants validés.
+7 - Pour la cootisation à la base, nous aborderons cette feature plus tard. Pour le moment il faut
+l'avoir en tête et préparer un placeholder sur la page du radeau.
