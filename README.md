@@ -1,69 +1,80 @@
 # HoMonRadeaaaUUUUUHOAUUUUOOOOOOO !
 
-> Application web d'auto-gestion pour événements
+> Application web d'auto-gestion pour l'événement [Tutto Blu](https://tuttoblu.discourse.group/)
 
-## Motif
+## 🎯 Objectif
 
-Cette application permet l'auto-gestion d'événements par les participants eux-mêmes, en réduisant la charge organisationnelle et en favorisant l'autonomie collective.
+Cette application facilite l'organisation de **Tutto Blu**, un événement unique où les participant·es construisent leurs propres radeaux puis les mettent à l'eau pour créer ensemble un village flottant éphémère sur un lac.
 
-**Cas d'usage cible :** Événements de 500 participants maximum avec utilisation occasionnelle (2-3 fois par semaine).
+L'application permet aux équipages de :
+- S'inscrire et former des équipages
+- Gérer leur radeau (membres, rôles, ressources)
+- Commander les bidons de flottaison
+- Payer la cotisation (CUF)
+- Coordonner avec l'organisation et les équipes support
 
-## Stack Technique
+**Cible :** ~500 participant·es, événement annuel, utilisation occasionnelle (2-3 fois/semaine en phase de préparation).
+
+## 🤝 Comment participer ?
+
+### 1. Consulter la documentation des features
+
+**👉 La première étape est de lire les spécifications détaillées dans [`docs/features/`](./docs/features/)**
+
+Vous y trouverez :
+- **12 features complètement spécifiées** avec cas d'usage, règles métier, maquettes UI, et notes techniques
+- La liste complète dans [`docs/features/README.md`](./docs/features/README.md)
+- Les clarifications et décisions dans [`docs/features/notes-clarifications.md`](./docs/features/notes-clarifications.md)
+
+### 2. Proposer des améliorations
+
+- **Ouvrir une issue** sur GitHub pour discuter d'une feature, signaler un bug, ou proposer une amélioration
+- **Créer une Pull Request** avec vos modifications
+- Les PR sur la **documentation des features** sont les bienvenues !
+
+### 3. Contribuer au code
+
+Le projet est en **phase de spécification**. Le développement de l'application Phoenix démarrera prochainement.
+
+Si vous souhaitez contribuer au code :
+- Lisez [`CLAUDE.md`](./CLAUDE.md) pour les conventions du projet
+- Le code doit être en **anglais** (noms de variables, commentaires)
+- La documentation doit être en **français**
+
+## 🤖 Développement optimisé pour Claude Code
+
+Ce projet a été conçu en collaboration avec **[Claude Code](https://claude.ai/code)**, l'outil CLI d'Anthropic pour le développement assisté par IA.
+
+Les spécifications détaillées dans `docs/features/` permettent à Claude Code (ou à n'importe quel développeur·euse) de comprendre rapidement le contexte et de contribuer efficacement.
+
+**Avantages :**
+- Documentation exhaustive et structurée
+- Contexte complet pour chaque feature
+- Règles métier clairement définies
+- Notes techniques précises
+
+## 📚 Stack Technique
 
 ### Backend
 - **Elixir** (latest stable) - Langage fonctionnel, concurrent, fiable
 - **Phoenix Framework** (latest stable) - Framework web moderne
 - **PostgreSQL 16** - Base de données relationnelle
-- **Docker + Docker Compose** - Containerisation et orchestration
+- **Docker + Docker Compose** - Containerisation
 
 ### Frontend
-- **Phoenix LiveView** - Interface réactive temps réel sans JavaScript complexe
+- **Phoenix LiveView** - Interface réactive sans JavaScript complexe
 - Approche minimaliste : fonctionnalité avant esthétique
 
 ### Authentification
-- **phx.gen.auth** - Authentification native Phoenix
-- Login/password avec validation email
-- Reset password par email
-- Pas de SSO (choix délibéré anti-GAFAM)
+- **phx.gen.auth** - Authentification email/password avec validation
+- Pas de SSO (choix anti-GAFAM)
 
 ### Infrastructure
 - **Développement :** Docker Compose local
-- **Production :** Fly.io (déploiement simple via git push)
+- **Production :** Fly.io
 - **Email dev :** Mailcatcher
-- **Traffic attendu :** Très faible (500 users max, usage occasionnel)
 
-## Méthode de Développement
-
-### Philosophie
-- **Simplicité d'abord** - Solutions les plus simples et directes
-- **Dernières versions stables** - Pas de legacy, toujours à jour
-- **Documentation bilingue** - Code en anglais, docs features en français
-- **Docker-first** - Environnement reproductible
-
-### Workflow
-1. **Planification** - Features documentées dans `docs/features/`
-2. **Développement** - TDD avec tests automatisés
-3. **Revue** - Code review via commits
-4. **Déploiement** - `fly deploy` vers production
-
-### Structure du Projet
-```
-ho_mon_radeau/
-├── CLAUDE.md              # Configuration projet (conventions, stack)
-├── README.md              # Ce fichier
-├── docker-compose.yml     # Services Docker
-├── Dockerfile             # Image Phoenix
-├── lib/                   # Code Elixir
-│   ├── ho_mon_radeau/     # Business logic
-│   └── ho_mon_radeau_web/ # Phoenix web layer
-├── docs/
-│   └── features/          # Documentation features (français)
-├── config/                # Configuration Phoenix
-├── priv/                  # Assets, migrations
-└── test/                  # Tests
-```
-
-## Installation Rapide
+## 🚀 Installation Rapide
 
 ### Prérequis
 - Docker & Docker Compose
@@ -78,8 +89,9 @@ cd ho_mon_radeau
 # Démarrer les services
 docker-compose up
 
-# L'application est accessible sur http://localhost:4000
-# Mailcatcher sur http://localhost:1080
+# L'application sera accessible sur :
+# - App : http://localhost:4000
+# - Mailcatcher : http://localhost:1080
 ```
 
 ### Commandes Utiles
@@ -97,24 +109,36 @@ docker-compose exec app mix test
 docker-compose exec app mix format
 ```
 
-## Déploiement
+## 📂 Structure du Projet
 
-### Fly.io
-```bash
-# Premier déploiement
-fly launch
-
-# Déploiements suivants
-fly deploy
-
-# Voir les logs
-fly logs
+```
+ho_mon_radeau/
+├── CLAUDE.md              # Conventions et configuration du projet
+├── README.md              # Ce fichier
+├── docker-compose.yml     # Services Docker (PostgreSQL, Phoenix, Mailcatcher)
+├── Dockerfile             # Image Phoenix/Elixir
+├── docs/
+│   └── features/          # 📖 Documentation complète des features (COMMENCEZ ICI)
+├── lib/                   # Code Elixir (à venir)
+│   ├── ho_mon_radeau/     # Business logic
+│   └── ho_mon_radeau_web/ # Phoenix web layer
+├── config/                # Configuration Phoenix
+├── priv/                  # Assets, migrations
+└── test/                  # Tests
 ```
 
-## Contribution
+## 🌍 Philosophie du Projet
 
-Voir `CLAUDE.md` pour les conventions de code et de documentation.
+- **Simplicité d'abord** - Solutions directes plutôt que sur-ingénierie
+- **Auto-gestion** - Favoriser l'autonomie des participant·es
+- **Open Source** - Transparence et contributions bienvenues
+- **Anti-GAFAM** - Indépendance vis-à-vis des grandes plateformes
+- **Documentation exhaustive** - Pour faciliter les contributions
 
-## Licence
+## 📝 Licence
 
 À définir
+
+---
+
+**Pour toute question :** Ouvrez une issue sur GitHub ou consultez le [forum Tutto Blu](https://tuttoblu.discourse.group/)
