@@ -7,8 +7,7 @@
 # Only use in development environments.
 
 alias HoMonRadeau.{Repo, Accounts, Events}
-alias HoMonRadeau.Accounts.User
-alias HoMonRadeau.Events.{Edition, Raft, Crew, CrewMember}
+alias HoMonRadeau.Events.Raft
 
 IO.puts("Creating development seed data...")
 
@@ -82,13 +81,13 @@ user4 = create_user.("marin4@example.com", "Corsaire", [
 ])
 
 # Create some unvalidated users (pending validation)
-pending1 = create_user.("nouveau1@example.com", "NouveauVenu", [
+_pending1 = create_user.("nouveau1@example.com", "NouveauVenu", [
   validated: false,
   first_name: "Pierre",
   last_name: "Nouveau"
 ])
 
-pending2 = create_user.("nouveau2@example.com", "Debutant", [
+_pending2 = create_user.("nouveau2@example.com", "Debutant", [
   validated: false
 ])
 
@@ -110,7 +109,7 @@ IO.puts("\nCreating rafts and crews...")
 create_raft_with_crew = fn name, description, captain, members ->
   case Repo.get_by(Raft, name: name, edition_id: edition.id) do
     nil ->
-      {:ok, %{raft: raft, crew: crew}} = Events.create_raft_with_crew(captain, %{
+      {:ok, raft} = Events.create_raft_with_crew(captain, %{
         name: name,
         description: description,
         description_short: String.slice(description, 0, 100)
@@ -118,12 +117,12 @@ create_raft_with_crew = fn name, description, captain, members ->
 
       IO.puts("  Created raft: #{name}")
 
-      # Add additional crew members
+      # Add additional crew members (raft.crew is preloaded)
       Enum.each(members, fn {user, opts} ->
         is_manager = Keyword.get(opts, :is_manager, false)
         roles = Keyword.get(opts, :roles, [])
 
-        {:ok, _} = Events.add_crew_member(crew.id, user.id, %{
+        {:ok, _} = Events.add_crew_member(raft.crew.id, user.id, %{
           is_manager: is_manager,
           roles: roles,
           participation_status: "confirmed"
