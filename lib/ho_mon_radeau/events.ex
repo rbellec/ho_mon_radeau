@@ -7,7 +7,7 @@ defmodule HoMonRadeau.Events do
   import Ecto.Query, warn: false
   alias Ecto.Multi
   alias HoMonRadeau.Repo
-  alias HoMonRadeau.Events.{Edition, Raft, Crew, CrewMember, RaftLink, RegistrationForm}
+  alias HoMonRadeau.Events.{Edition, Raft, Crew, CrewMember, CrewJoinRequest, RaftLink, RegistrationForm}
   alias HoMonRadeau.Storage
   alias HoMonRadeau.Accounts.User
 
@@ -132,14 +132,20 @@ defmodule HoMonRadeau.Events do
   ## Rafts
 
   @doc """
-  Lists all rafts for an edition.
+  Lists all rafts for an edition with crew count.
   Returns rafts ordered by validated status (participants first) then by name.
   """
   def list_rafts(edition_id) do
-    Raft
-    |> where([r], r.edition_id == ^edition_id)
-    |> order_by([r], desc: r.validated, asc: r.name)
-    |> preload([:crew])
+    from(r in Raft,
+      where: r.edition_id == ^edition_id,
+      left_join: c in Crew,
+      on: c.raft_id == r.id,
+      left_join: cm in CrewMember,
+      on: cm.crew_id == c.id,
+      group_by: r.id,
+      order_by: [desc: r.validated, asc: r.name],
+      select: %{r | crew_count: count(cm.id)}
+    )
     |> Repo.all()
   end
 
@@ -165,8 +171,28 @@ defmodule HoMonRadeau.Events do
   def get_raft_by_slug(slug, edition_id) do
     Raft
     |> where([r], r.slug == ^slug and r.edition_id == ^edition_id)
-    |> preload([:crew, :edition, :links])
     |> Repo.one()
+  end
+
+  @doc """
+  Preloads raft details including crew members with their users.
+  """
+  def preload_raft_details(%Raft{} = raft) do
+    Repo.preload(raft, [
+      :edition,
+      :links,
+      crew: [crew_members: :user]
+    ])
+  end
+
+  @doc """
+  Checks if a user is a manager of a crew.
+  """
+  def is_crew_manager?(%Crew{} = crew, %User{} = user) do
+    from(cm in CrewMember,
+      where: cm.crew_id == ^crew.id and cm.user_id == ^user.id and cm.is_manager == true
+    )
+    |> Repo.exists?()
   end
 
   @doc """
@@ -745,5 +771,119 @@ defmodule HoMonRadeau.Events do
       status = registration_form_status(member.user, edition_id)
       Map.put(member, :form_status, Atom.to_string(status))
     end)
+  end
+
+  ## Join Requests
+
+  @doc """
+  Creates a join request for a user to join a crew.
+  Returns error if user is already in a crew.
+  """
+  def create_join_request(%Crew{} = crew, %User{} = user, message \\ nil) do
+    case get_user_crew(user) do
+      nil ->
+        %CrewJoinRequest{}
+        |> CrewJoinRequest.changeset(%{
+          crew_id: crew.id,
+          user_id: user.id,
+          message: message
+        })
+        |> Repo.insert()
+
+      _crew ->
+        {:error, :already_in_crew}
+    end
+  end
+
+  @doc """
+  Gets a join request by ID.
+  """
+  def get_join_request!(id) do
+    CrewJoinRequest
+    |> Repo.get!(id)
+    |> Repo.preload([:user, :crew])
+  end
+
+  @doc """
+  Lists pending join requests for a crew.
+  """
+  def list_pending_join_requests(%Crew{} = crew) do
+    from(jr in CrewJoinRequest,
+      where: jr.crew_id == ^crew.id and jr.status == "pending",
+      order_by: [asc: jr.inserted_at],
+      preload: [:user]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists all join requests for a user.
+  """
+  def list_user_join_requests(%User{} = user) do
+    from(jr in CrewJoinRequest,
+      where: jr.user_id == ^user.id,
+      order_by: [desc: jr.inserted_at],
+      preload: [crew: :raft]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Accepts a join request.
+  Adds the user to the crew and cancels their other pending requests.
+  """
+  def accept_join_request(%CrewJoinRequest{} = request, %User{} = responded_by) do
+    # Check that user is validated
+    user = Repo.get!(User, request.user_id)
+
+    if not user.validated do
+      {:error, :user_not_validated}
+    else
+      Multi.new()
+      |> Multi.update(:request, CrewJoinRequest.response_changeset(request, %{
+        status: "accepted",
+        responded_by_id: responded_by.id
+      }))
+      |> Multi.insert(:crew_member, %CrewMember{
+        crew_id: request.crew_id,
+        user_id: request.user_id,
+        is_manager: false,
+        is_captain: false,
+        participation_status: "confirmed",
+        joined_at: DateTime.utc_now(:second)
+      })
+      |> Multi.run(:cancel_other_requests, fn repo, _ ->
+        {count, _} =
+          from(jr in CrewJoinRequest,
+            where: jr.user_id == ^request.user_id and jr.id != ^request.id and jr.status == "pending"
+          )
+          |> repo.update_all(set: [status: "cancelled"])
+
+        {:ok, count}
+      end)
+      |> Repo.transaction()
+    end
+  end
+
+  @doc """
+  Rejects a join request.
+  """
+  def reject_join_request(%CrewJoinRequest{} = request, %User{} = responded_by) do
+    request
+    |> CrewJoinRequest.response_changeset(%{
+      status: "rejected",
+      responded_by_id: responded_by.id
+    })
+    |> Repo.update()
+  end
+
+  @doc """
+  Checks if a user has a pending join request for a crew.
+  """
+  def has_pending_join_request?(%User{} = user, %Crew{} = crew) do
+    from(jr in CrewJoinRequest,
+      where: jr.user_id == ^user.id and jr.crew_id == ^crew.id and jr.status == "pending"
+    )
+    |> Repo.exists?()
   end
 end

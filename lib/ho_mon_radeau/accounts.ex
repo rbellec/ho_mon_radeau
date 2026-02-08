@@ -376,6 +376,16 @@ defmodule HoMonRadeau.Accounts do
   end
 
   @doc """
+  Lists all users with confirmed email.
+  """
+  def list_all_users do
+    User
+    |> where([u], not is_nil(u.confirmed_at))
+    |> order_by([u], desc: u.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
   Checks if a user can participate in the event.
   A user can participate if they are validated and have provided required personal info.
   """

@@ -21,6 +21,10 @@ defmodule HoMonRadeauWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    # Public raft pages
+    live "/radeaux", RaftLive.Index, :index
+    live "/radeaux/:slug", RaftLive.Show, :show
   end
 
   # Other scopes may use custom stacks.
@@ -62,17 +66,26 @@ defmodule HoMonRadeauWeb.Router do
     get "/users/settings/confirm-email/:token", UserSettingsController, :confirm_email
   end
 
+  # Routes requiring authenticated user (not necessarily validated)
+  scope "/", HoMonRadeauWeb do
+    pipe_through [:browser, :require_authenticated_user]
+
+    live "/mon-radeau", RaftLive.MyCrew, :show
+  end
+
   # Routes requiring validated user
   scope "/", HoMonRadeauWeb do
     pipe_through [:browser, :require_authenticated_user, :require_validated_user]
 
     live "/fiche-inscription", RegistrationFormLive.Index, :index
+    live "/radeaux/nouveau", RaftLive.New, :new
   end
 
   # Admin routes
   scope "/admin", HoMonRadeauWeb.Admin, as: :admin do
     pipe_through [:browser, :require_authenticated_user, :require_admin_user]
 
+    live "/utilisateurs", UserLive.Index, :index
     live "/fiches", RegistrationFormLive.Index, :index
     live "/fiches/:id", RegistrationFormLive.Show, :show
   end

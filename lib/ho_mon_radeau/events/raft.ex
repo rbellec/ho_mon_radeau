@@ -21,6 +21,9 @@ defmodule HoMonRadeau.Events.Raft do
     field :validated, :boolean, default: false
     field :validated_at, :utc_datetime
 
+    # Virtual fields
+    field :crew_count, :integer, virtual: true, default: 0
+
     # Relationships
     belongs_to :edition, Edition
     belongs_to :validated_by, User
