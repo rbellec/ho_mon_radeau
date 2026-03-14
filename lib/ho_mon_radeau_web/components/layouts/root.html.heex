@@ -7,104 +7,185 @@
     <.live_title default="Ho Mon Radeau" suffix=" · Tutto Blu">
       {assigns[:page_title]}
     </.live_title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+      rel="stylesheet"
+    />
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
-    <script>
-      (() => {
-        const setTheme = (theme) => {
-          if (theme === "system") {
-            localStorage.removeItem("phx:theme");
-            document.documentElement.removeAttribute("data-theme");
-          } else {
-            localStorage.setItem("phx:theme", theme);
-            document.documentElement.setAttribute("data-theme", theme);
-          }
-        };
-        if (!document.documentElement.hasAttribute("data-theme")) {
-          setTheme(localStorage.getItem("phx:theme") || "system");
-        }
-        window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
-        
-        window.addEventListener("phx:set-theme", (e) => setTheme(e.target.dataset.phxTheme));
-      })();
-    </script>
   </head>
-  <body class="bg-base-100 antialiased">
-    <header class="navbar bg-base-100 border-b border-base-200 px-4 sm:px-6 lg:px-8 sticky top-0 z-50">
-      <div class="flex-1 gap-2">
-        <a href="/" class="flex items-center gap-2 text-primary font-bold text-xl">
-          <span class="text-2xl">🚣</span>
-          <span class="hidden sm:inline">Ho Mon Radeau</span>
-        </a>
+  <body class="bg-white text-slate-900 antialiased font-sans">
+    <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center gap-6">
+            <a href="/" class="flex items-center gap-2 text-indigo-600 font-bold text-xl">
+              <span class="text-2xl">🚣</span>
+              <span class="hidden sm:inline">Ho Mon Radeau</span>
+            </a>
 
-        <%!-- Main navigation for authenticated users --%>
-        <%= if @current_scope do %>
-          <nav class="hidden md:flex ml-6">
-            <ul class="menu menu-horizontal px-1 space-x-1 text-sm">
-              <li><.link navigate={~p"/"} class="font-medium">Accueil</.link></li>
-              <li><.link navigate={~p"/radeaux"}>Les radeaux</.link></li>
-              <li><.link navigate={~p"/mon-radeau"}>Mon radeau</.link></li>
-            </ul>
-          </nav>
-        <% end %>
-      </div>
-      <div class="flex-none">
-        <ul class="menu menu-horizontal px-1 space-x-1 items-center text-sm">
-          <%= if @current_scope do %>
-            <%!-- Admin dropdown --%>
-            <%= if @current_scope.user.is_admin do %>
-              <li>
-                <details class="dropdown dropdown-end">
-                  <summary class="font-medium text-secondary">Admin</summary>
-                  <ul class="dropdown-content menu bg-base-200 rounded-box z-[1] w-52 p-2 shadow-lg mt-2">
-                    <li><.link href={~p"/admin/utilisateurs"}>Utilisateurs</.link></li>
-                    <li><.link href={~p"/admin/fiches"}>Fiches d'inscription</.link></li>
-                    <li><.link href={~p"/admin/radeaux"}>Radeaux</.link></li>
-                    <li>
-                      <.link href={~p"/admin/equipes-transverses"}>Équipes transverses</.link>
-                    </li>
-                    <li><.link href={~p"/admin/bidons"}>Bidons</.link></li>
-                    <li><.link href={~p"/admin/cuf"}>CUF</.link></li>
-                    <li><.link href={~p"/admin/departs"}>Départs</.link></li>
-                    <li class="divider"></li>
-                    <li><.link href={~p"/kaffy"}>Kaffy Admin</.link></li>
-                  </ul>
-                </details>
-              </li>
-            <% end %>
-
-            <%!-- User menu --%>
-            <li>
-              <details class="dropdown dropdown-end">
-                <summary class="font-medium">
-                  {@current_scope.user.nickname || @current_scope.user.email}
-                </summary>
-                <ul class="dropdown-content menu bg-base-200 rounded-box z-[1] w-52 p-2 shadow-lg mt-2">
-                  <li><.link navigate={~p"/mon-profil"}>Mon profil</.link></li>
-                  <li class="md:hidden"><.link navigate={~p"/"}>Accueil</.link></li>
-                  <li class="md:hidden"><.link navigate={~p"/radeaux"}>Les radeaux</.link></li>
-                  <li class="md:hidden"><.link navigate={~p"/mon-radeau"}>Mon radeau</.link></li>
-                  <li class="divider"></li>
-                  <li><.link href={~p"/users/log-out"} method="delete">Déconnexion</.link></li>
+            <%!-- Main navigation for authenticated users --%>
+            <%= if @current_scope do %>
+              <nav class="hidden md:flex">
+                <ul class="flex items-center gap-1">
+                  <li>
+                    <.link
+                      navigate={~p"/"}
+                      class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-indigo-600 rounded-lg"
+                    >
+                      Accueil
+                    </.link>
+                  </li>
+                  <li>
+                    <.link
+                      navigate={~p"/radeaux"}
+                      class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-indigo-600 rounded-lg"
+                    >
+                      Les radeaux
+                    </.link>
+                  </li>
+                  <li>
+                    <.link
+                      navigate={~p"/mon-radeau"}
+                      class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-indigo-600 rounded-lg"
+                    >
+                      Mon radeau
+                    </.link>
+                  </li>
                 </ul>
-              </details>
-            </li>
-          <% else %>
-            <li>
-              <a href="https://tuttoblu.framer.website/" target="_blank" class="hidden sm:flex">
+              </nav>
+            <% end %>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <%= if @current_scope do %>
+              <%!-- Admin dropdown --%>
+              <%= if @current_scope.user.is_admin do %>
+                <div class="relative group">
+                  <button class="px-3 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 rounded-lg hover:bg-indigo-50">
+                    Admin
+                  </button>
+                  <div class="hidden group-hover:block absolute right-0 mt-1 w-52 bg-white shadow-lg rounded-xl border border-slate-200 py-2 z-50">
+                    <.link
+                      href={~p"/admin/utilisateurs"}
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Utilisateurs
+                    </.link>
+                    <.link
+                      href={~p"/admin/fiches"}
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Fiches d'inscription
+                    </.link>
+                    <.link
+                      href={~p"/admin/radeaux"}
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Radeaux
+                    </.link>
+                    <.link
+                      href={~p"/admin/equipes-transverses"}
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Équipes transverses
+                    </.link>
+                    <.link
+                      href={~p"/admin/bidons"}
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Bidons
+                    </.link>
+                    <.link
+                      href={~p"/admin/cuf"}
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      CUF
+                    </.link>
+                    <.link
+                      href={~p"/admin/departs"}
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Départs
+                    </.link>
+                    <div class="border-t border-slate-100 my-1"></div>
+                    <.link
+                      href={~p"/kaffy"}
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Kaffy Admin
+                    </.link>
+                  </div>
+                </div>
+              <% end %>
+
+              <%!-- User menu --%>
+              <div class="relative group">
+                <button class="px-3 py-2 text-sm font-medium text-slate-700 hover:text-indigo-600 rounded-lg hover:bg-slate-50">
+                  {@current_scope.user.nickname || @current_scope.user.email}
+                </button>
+                <div class="hidden group-hover:block absolute right-0 mt-1 w-52 bg-white shadow-lg rounded-xl border border-slate-200 py-2 z-50">
+                  <.link
+                    navigate={~p"/mon-profil"}
+                    class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    Mon profil
+                  </.link>
+                  <.link
+                    navigate={~p"/"}
+                    class="block md:hidden px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    Accueil
+                  </.link>
+                  <.link
+                    navigate={~p"/radeaux"}
+                    class="block md:hidden px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    Les radeaux
+                  </.link>
+                  <.link
+                    navigate={~p"/mon-radeau"}
+                    class="block md:hidden px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    Mon radeau
+                  </.link>
+                  <div class="border-t border-slate-100 my-1"></div>
+                  <.link
+                    href={~p"/users/log-out"}
+                    method="delete"
+                    class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                  >
+                    Déconnexion
+                  </.link>
+                </div>
+              </div>
+            <% else %>
+              <a
+                href="https://tuttoblu.framer.website/"
+                target="_blank"
+                class="hidden sm:inline-flex px-3 py-2 text-sm font-medium text-slate-700 hover:text-indigo-600"
+              >
                 Tutto Blu
               </a>
-            </li>
-            <li>
-              <.link href={~p"/users/register"} class="btn btn-ghost btn-sm">Inscription</.link>
-            </li>
-            <li>
-              <.link href={~p"/users/log-in"} class="btn btn-primary btn-sm">Connexion</.link>
-            </li>
-          <% end %>
-        </ul>
-      </div>
+              <.link
+                href={~p"/users/register"}
+                class="px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-lg"
+              >
+                Inscription
+              </.link>
+              <.link
+                href={~p"/users/log-in"}
+                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg"
+              >
+                Connexion
+              </.link>
+            <% end %>
+          </div>
+        </div>
+      </nav>
     </header>
     {@inner_content}
   </body>
