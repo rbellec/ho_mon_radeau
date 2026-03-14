@@ -32,36 +32,38 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-4xl mx-auto">
-      <.header>
-        <.link navigate={~p"/admin/fiches"} class="text-slate-500 hover:text-slate-900">
-          <.icon name="hero-arrow-left" class="size-5" />
-        </.link>
-        Fiche d'inscription
-        <:subtitle>
-          {@form.user.nickname || @form.user.email}
-        </:subtitle>
-        <:actions>
-          <.status_badge status={@form.status} />
-        </:actions>
-      </.header>
+    <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <div class="max-w-4xl mx-auto">
+        <.header>
+          <.link navigate={~p"/admin/fiches"} class="text-slate-500 hover:text-slate-900">
+            <.icon name="hero-arrow-left" class="size-5" />
+          </.link>
+          Fiche d'inscription
+          <:subtitle>
+            {@form.user.nickname || @form.user.email}
+          </:subtitle>
+          <:actions>
+            <.status_badge status={@form.status} />
+          </:actions>
+        </.header>
 
-      <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="space-y-6">
-          <.info_card form={@form} />
-          <.action_card
-            form={@form}
-            show_reject_modal={@show_reject_modal}
-            rejection_reason={@rejection_reason}
-          />
-          <.history_card user={@form.user} edition={@form.edition} />
-        </div>
+        <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="space-y-6">
+            <.info_card form={@form} />
+            <.action_card
+              form={@form}
+              show_reject_modal={@show_reject_modal}
+              rejection_reason={@rejection_reason}
+            />
+            <.history_card user={@form.user} edition={@form.edition} />
+          </div>
 
-        <div>
-          <.file_preview file_url={@file_url} form={@form} />
+          <div>
+            <.file_preview file_url={@file_url} form={@form} />
+          </div>
         </div>
       </div>
-    </div>
+    </Layouts.app>
     """
   end
 

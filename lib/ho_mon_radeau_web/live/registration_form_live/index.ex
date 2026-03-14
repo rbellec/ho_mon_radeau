@@ -41,33 +41,35 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-2xl mx-auto">
-      <.header>
-        Fiche d'inscription
-        <:subtitle>
-          <%= if @form_type do %>
-            Fiche {if @form_type == :captain, do: "capitaine", else: "participant"}
-          <% else %>
-            Vous devez d'abord rejoindre un équipage
-          <% end %>
-        </:subtitle>
-      </.header>
+    <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <div class="max-w-2xl mx-auto">
+        <.header>
+          Fiche d'inscription
+          <:subtitle>
+            <%= if @form_type do %>
+              Fiche {if @form_type == :captain, do: "capitaine", else: "participant"}
+            <% else %>
+              Vous devez d'abord rejoindre un équipage
+            <% end %>
+          </:subtitle>
+        </.header>
 
-      <%= if @form_type do %>
-        <div class="mt-6 space-y-6">
-          <.form_instructions edition={@edition} form_type={@form_type} />
-          <.current_status form={@current_form} status={@form_status} />
-          <.upload_form uploads={@uploads} />
-        </div>
-      <% else %>
-        <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start gap-3 mt-6">
-          <.icon name="hero-exclamation-triangle" class="size-6" />
-          <span>
-            Vous devez d'abord rejoindre un équipage avant de pouvoir soumettre votre fiche d'inscription.
-          </span>
-        </div>
-      <% end %>
-    </div>
+        <%= if @form_type do %>
+          <div class="mt-6 space-y-6">
+            <.form_instructions edition={@edition} form_type={@form_type} />
+            <.current_status form={@current_form} status={@form_status} />
+            <.upload_form uploads={@uploads} />
+          </div>
+        <% else %>
+          <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start gap-3 mt-6">
+            <.icon name="hero-exclamation-triangle" class="size-6" />
+            <span>
+              Vous devez d'abord rejoindre un équipage avant de pouvoir soumettre votre fiche d'inscription.
+            </span>
+          </div>
+        <% end %>
+      </div>
+    </Layouts.app>
     """
   end
 

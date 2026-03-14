@@ -45,44 +45,46 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-6xl mx-auto">
-      <.header>
-        Fiches d'inscription
-        <:subtitle>
-          Édition {@edition.year} - {@pending_count} fiche(s) en attente
-        </:subtitle>
-        <:actions>
-          <div class="flex gap-2">
-            <button
-              phx-click="set-view"
-              phx-value-mode="list"
-              class={[
-                "rounded-lg px-3 py-1.5 text-sm font-medium transition",
-                @view_mode == :list && "bg-indigo-600 text-white hover:bg-indigo-700"
-              ]}
-            >
-              <.icon name="hero-list-bullet" class="size-4" /> Liste
-            </button>
-            <button
-              phx-click="set-view"
-              phx-value-mode="raft"
-              class={[
-                "rounded-lg px-3 py-1.5 text-sm font-medium transition",
-                @view_mode == :raft && "bg-indigo-600 text-white hover:bg-indigo-700"
-              ]}
-            >
-              <.icon name="hero-squares-2x2" class="size-4" /> Par radeau
-            </button>
-          </div>
-        </:actions>
-      </.header>
+    <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <div class="max-w-6xl mx-auto">
+        <.header>
+          Fiches d'inscription
+          <:subtitle>
+            Édition {@edition.year} - {@pending_count} fiche(s) en attente
+          </:subtitle>
+          <:actions>
+            <div class="flex gap-2">
+              <button
+                phx-click="set-view"
+                phx-value-mode="list"
+                class={[
+                  "rounded-lg px-3 py-1.5 text-sm font-medium transition",
+                  @view_mode == :list && "bg-indigo-600 text-white hover:bg-indigo-700"
+                ]}
+              >
+                <.icon name="hero-list-bullet" class="size-4" /> Liste
+              </button>
+              <button
+                phx-click="set-view"
+                phx-value-mode="raft"
+                class={[
+                  "rounded-lg px-3 py-1.5 text-sm font-medium transition",
+                  @view_mode == :raft && "bg-indigo-600 text-white hover:bg-indigo-700"
+                ]}
+              >
+                <.icon name="hero-squares-2x2" class="size-4" /> Par radeau
+              </button>
+            </div>
+          </:actions>
+        </.header>
 
-      <%= if @view_mode == :list do %>
-        <.list_view forms={@forms} filter_status={@filter_status} />
-      <% else %>
-        <.raft_view stats={@stats_by_raft} edition={@edition} />
-      <% end %>
-    </div>
+        <%= if @view_mode == :list do %>
+          <.list_view forms={@forms} filter_status={@filter_status} />
+        <% else %>
+          <.raft_view stats={@stats_by_raft} edition={@edition} />
+        <% end %>
+      </div>
+    </Layouts.app>
     """
   end
 
