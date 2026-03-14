@@ -94,7 +94,10 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLive.Index do
         Équipes transverses
         <:subtitle>{length(@teams)} équipe{if length(@teams) != 1, do: "s"}</:subtitle>
         <:actions>
-          <button class="btn btn-primary btn-sm" phx-click="show_form">
+          <button
+            class="bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-700 transition"
+            phx-click="show_form"
+          >
             + Créer une équipe
           </button>
         </:actions>
@@ -102,9 +105,9 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLive.Index do
 
       <%!-- Creation form --%>
       <%= if @show_form do %>
-        <div class="card bg-base-200 mt-6" id="team-form-card">
-          <div class="card-body">
-            <h3 class="card-title">Créer une équipe transverse</h3>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 mt-6" id="team-form-card">
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-slate-900">Créer une équipe transverse</h3>
             <.form
               for={@form}
               id="transverse-team-form"
@@ -113,12 +116,12 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLive.Index do
             >
               <div class="space-y-4">
                 <.input field={@form[:name]} type="text" label="Nom de l'équipe" />
-                <div class="form-control">
-                  <label class="label"><span class="label-text">Type / Fonction</span></label>
+                <div class="mb-3">
+                  <label class="block text-sm font-medium text-slate-700 mb-1">Type / Fonction</label>
                   <select
                     name={@form[:transverse_type].name}
                     id={@form[:transverse_type].id}
-                    class="select select-bordered"
+                    class="rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white"
                   >
                     <option value="">Choisir un type...</option>
                     <%= for type <- @transverse_types do %>
@@ -139,7 +142,11 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLive.Index do
                 <.input field={@form[:description]} type="textarea" label="Description" />
                 <div class="flex gap-2">
                   <.button variant="primary" phx-disable-with="Création...">Créer</.button>
-                  <button type="button" class="btn btn-ghost" phx-click="cancel_form">
+                  <button
+                    type="button"
+                    class="text-slate-600 hover:bg-slate-50 rounded-lg px-5 py-2.5 font-medium transition"
+                    phx-click="cancel_form"
+                  >
                     Annuler
                   </button>
                 </div>
@@ -150,34 +157,38 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLive.Index do
       <% end %>
 
       <div class="mt-6 overflow-x-auto">
-        <table class="table table-sm" id="transverse-teams-table">
+        <table class="w-full text-left" id="transverse-teams-table">
           <thead>
             <tr>
-              <th>Nom</th>
-              <th>Type</th>
-              <th>Membres</th>
-              <th>Actions</th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">Nom</th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">Type</th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                Membres
+              </th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             <%= for entry <- @teams do %>
-              <tr id={"team-#{entry.team.id}"}>
-                <td class="font-medium">{entry.team.name}</td>
-                <td>
-                  <span class="badge badge-ghost badge-sm">
+              <tr id={"team-#{entry.team.id}"} class="border-b border-slate-100 hover:bg-slate-50">
+                <td class="px-3 py-2 text-sm font-medium">{entry.team.name}</td>
+                <td class="px-3 py-2 text-sm">
+                  <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">
                     {type_label(entry.team.transverse_type)}
                   </span>
                 </td>
-                <td>{entry.member_count}</td>
-                <td class="flex gap-1">
+                <td class="px-3 py-2 text-sm">{entry.member_count}</td>
+                <td class="px-3 py-2 text-sm flex gap-1">
                   <.link
                     navigate={~p"/admin/equipes-transverses/#{entry.team.id}"}
-                    class="btn btn-ghost btn-xs"
+                    class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
                   >
                     Voir
                   </.link>
                   <button
-                    class="btn btn-ghost btn-xs text-error"
+                    class="text-xs text-red-600 hover:bg-red-50 rounded-md px-2 py-1 font-medium transition"
                     phx-click="delete_team"
                     phx-value-id={entry.team.id}
                     data-confirm={"Supprimer l'équipe \"#{entry.team.name}\" ?"}

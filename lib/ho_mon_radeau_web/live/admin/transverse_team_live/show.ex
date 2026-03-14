@@ -105,27 +105,30 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLive.Show do
             do: "s"}
         </:subtitle>
         <:actions>
-          <.link navigate={~p"/admin/equipes-transverses"} class="btn btn-ghost btn-sm">
+          <.link
+            navigate={~p"/admin/equipes-transverses"}
+            class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+          >
             ← Retour
           </.link>
         </:actions>
       </.header>
 
       <%= if @team.description do %>
-        <p class="mt-4 text-base-content/70">{@team.description}</p>
+        <p class="mt-4 text-slate-500">{@team.description}</p>
       <% end %>
 
       <%!-- Add member search --%>
-      <div class="card bg-base-200 mt-6" id="add-member-section">
-        <div class="card-body">
-          <h3 class="card-title text-sm">Ajouter un membre</h3>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 mt-6" id="add-member-section">
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-slate-900 text-sm">Ajouter un membre</h3>
           <form phx-change="search_users" id="search-member-form">
             <input
               type="text"
               name="query"
               value={@search_query}
               placeholder="Rechercher par pseudo ou email..."
-              class="input input-bordered input-sm w-full"
+              class="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
               phx-debounce="300"
               autocomplete="off"
             />
@@ -133,13 +136,13 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLive.Show do
           <%= if @search_results != [] do %>
             <ul class="mt-2 space-y-1">
               <%= for user <- @search_results do %>
-                <li class="flex items-center justify-between p-2 bg-base-100 rounded">
+                <li class="flex items-center justify-between p-2 bg-white rounded-lg">
                   <span>
                     {Accounts.display_name(user)}
-                    <span class="text-xs text-base-content/50">({user.email})</span>
+                    <span class="text-xs text-slate-400">({user.email})</span>
                   </span>
                   <button
-                    class="btn btn-success btn-xs"
+                    class="bg-green-600 text-white rounded-md px-2 py-1 text-xs font-medium hover:bg-green-700 transition"
                     phx-click="add_member"
                     phx-value-user-id={user.id}
                   >
@@ -158,19 +161,21 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLive.Show do
         <div class="space-y-2">
           <%= for member <- @team.crew_members do %>
             <div
-              class="flex items-center justify-between p-3 bg-base-200 rounded-lg"
+              class="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
               id={"member-#{member.user_id}"}
             >
               <div>
                 <span class="font-medium">{Accounts.display_name(member.user)}</span>
-                <span class="text-sm text-base-content/50">{member.user.email}</span>
+                <span class="text-sm font-normal text-slate-400">{member.user.email}</span>
                 <%= if member.is_manager do %>
-                  <span class="badge badge-secondary badge-xs ml-1">Coordinateur</span>
+                  <span class="bg-indigo-100 text-indigo-600 text-xs font-medium px-1.5 py-0.5 rounded-full ml-1">
+                    Coordinateur
+                  </span>
                 <% end %>
               </div>
               <div class="flex gap-1">
                 <button
-                  class="btn btn-ghost btn-xs"
+                  class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
                   phx-click="toggle_coordinator"
                   phx-value-user-id={member.user_id}
                 >
@@ -181,7 +186,7 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLive.Show do
                   <% end %>
                 </button>
                 <button
-                  class="btn btn-ghost btn-xs text-error"
+                  class="text-xs text-red-600 hover:bg-red-50 rounded-md px-2 py-1 font-medium transition"
                   phx-click="remove_member"
                   phx-value-user-id={member.user_id}
                   data-confirm="Retirer ce membre de l'équipe ?"

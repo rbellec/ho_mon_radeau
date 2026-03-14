@@ -109,7 +109,10 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
       {Accounts.display_name(@user)}
       <:subtitle>{@user.email}</:subtitle>
       <:actions>
-        <.link navigate={~p"/admin/utilisateurs"} class="btn btn-ghost btn-sm">
+        <.link
+          navigate={~p"/admin/utilisateurs"}
+          class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+        >
           ← Retour à la liste
         </.link>
       </:actions>
@@ -117,39 +120,39 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
 
     <div class="mt-8 grid gap-6 lg:grid-cols-2">
       <%!-- Informations personnelles --%>
-      <div class="card bg-base-200">
-        <div class="card-body">
-          <h3 class="card-title">Informations personnelles</h3>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-slate-900">Informations personnelles</h3>
 
           <dl class="space-y-3 mt-2">
             <div>
-              <dt class="text-sm text-base-content/60">Pseudo</dt>
+              <dt class="text-sm text-slate-400">Pseudo</dt>
               <dd class="font-medium">{@user.nickname || "—"}</dd>
             </div>
             <div>
-              <dt class="text-sm text-base-content/60">Prénom</dt>
+              <dt class="text-sm text-slate-400">Prénom</dt>
               <dd class="font-medium">{@user.first_name || "—"}</dd>
             </div>
             <div>
-              <dt class="text-sm text-base-content/60">Nom</dt>
+              <dt class="text-sm text-slate-400">Nom</dt>
               <dd class="font-medium">{@user.last_name || "—"}</dd>
             </div>
             <div>
-              <dt class="text-sm text-base-content/60">Téléphone</dt>
+              <dt class="text-sm text-slate-400">Téléphone</dt>
               <dd class="font-medium">{@user.phone_number || "—"}</dd>
             </div>
             <div>
-              <dt class="text-sm text-base-content/60">Inscrit·e le</dt>
+              <dt class="text-sm text-slate-400">Inscrit·e le</dt>
               <dd class="font-medium">{Calendar.strftime(@user.inserted_at, "%d/%m/%Y à %H:%M")}</dd>
             </div>
             <div>
-              <dt class="text-sm text-base-content/60">Email confirmé</dt>
+              <dt class="text-sm text-slate-400">Email confirmé</dt>
               <dd class="font-medium">
                 <%= if @user.confirmed_at do %>
-                  <span class="text-success">Oui</span>
+                  <span class="text-green-600">Oui</span>
                   ({Calendar.strftime(@user.confirmed_at, "%d/%m/%Y")})
                 <% else %>
-                  <span class="text-error">Non</span>
+                  <span class="text-red-600">Non</span>
                 <% end %>
               </dd>
             </div>
@@ -158,48 +161,59 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
       </div>
 
       <%!-- Statuts et actions --%>
-      <div class="card bg-base-200">
-        <div class="card-body">
-          <h3 class="card-title">Statuts</h3>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-slate-900">Statuts</h3>
 
           <div class="space-y-4 mt-2">
             <div class="flex items-center justify-between">
               <div>
                 <p class="font-medium">Validation équipe d'accueil</p>
                 <%= if @user.validated do %>
-                  <span class="badge badge-success">Validé·e</span>
+                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    Validé·e
+                  </span>
                 <% else %>
-                  <span class="badge badge-warning">En attente</span>
+                  <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    En attente
+                  </span>
                 <% end %>
               </div>
               <%= if @user.validated do %>
                 <button
-                  class="btn btn-sm btn-ghost text-error"
+                  class="text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition"
                   phx-click="invalidate"
                   data-confirm="Révoquer la validation ?"
                 >
                   Révoquer
                 </button>
               <% else %>
-                <button class="btn btn-sm btn-primary" phx-click="validate">
+                <button
+                  class="bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-700 transition"
+                  phx-click="validate"
+                >
                   Valider
                 </button>
               <% end %>
             </div>
 
-            <div class="divider my-2"></div>
+            <div class="border-t border-slate-100 my-3"></div>
 
             <div class="flex items-center justify-between">
               <div>
                 <p class="font-medium">Droits administrateur</p>
                 <%= if @user.is_admin do %>
-                  <span class="badge badge-info">Admin</span>
+                  <span class="bg-indigo-100 text-indigo-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    Admin
+                  </span>
                 <% else %>
-                  <span class="badge badge-ghost">Non admin</span>
+                  <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    Non admin
+                  </span>
                 <% end %>
               </div>
               <button
-                class={"btn btn-sm #{if @user.is_admin, do: "btn-ghost text-error", else: "btn-secondary"}"}
+                class={"#{if @user.is_admin, do: "text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition", else: "bg-slate-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-slate-700 transition"}"}
                 phx-click="toggle_admin"
                 data-confirm={
                   if @user.is_admin,
@@ -215,32 +229,38 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
       </div>
 
       <%!-- Équipage --%>
-      <div class="card bg-base-200">
-        <div class="card-body">
-          <h3 class="card-title">Équipage</h3>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-slate-900">Équipage</h3>
 
           <%= if @raft do %>
             <div class="mt-2">
               <.link
                 navigate={~p"/radeaux/#{@raft.slug}"}
-                class="link link-primary text-lg font-medium"
+                class="text-indigo-600 hover:underline text-lg font-medium"
               >
                 {@raft.name}
               </.link>
 
               <div class="flex flex-wrap gap-2 mt-2">
                 <%= if @crew_membership && @crew_membership.is_captain do %>
-                  <span class="badge badge-primary">Capitaine</span>
+                  <span class="bg-indigo-100 text-indigo-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    Capitaine
+                  </span>
                 <% end %>
                 <%= if @crew_membership && @crew_membership.is_manager do %>
-                  <span class="badge badge-secondary">Gestionnaire</span>
+                  <span class="bg-indigo-100 text-indigo-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    Gestionnaire
+                  </span>
                 <% end %>
                 <%= for role <- (@crew_membership && @crew_membership.roles) || [] do %>
-                  <span class="badge badge-ghost">{role}</span>
+                  <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {role}
+                  </span>
                 <% end %>
               </div>
 
-              <p class="text-sm text-base-content/60 mt-2">
+              <p class="text-sm text-slate-400 mt-2">
                 Membre depuis le {Calendar.strftime(
                   @crew_membership.joined_at || @crew_membership.inserted_at,
                   "%d/%m/%Y"
@@ -248,57 +268,65 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
               </p>
             </div>
           <% else %>
-            <p class="text-base-content/60 mt-2">Aucun équipage</p>
+            <p class="text-slate-400 mt-2">Aucun équipage</p>
           <% end %>
         </div>
       </div>
 
       <%!-- Fiche d'inscription --%>
-      <div class="card bg-base-200">
-        <div class="card-body">
-          <h3 class="card-title">Fiche d'inscription</h3>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-slate-900">Fiche d'inscription</h3>
 
           <%= if @edition do %>
             <div class="mt-2">
               <%= case @form_status do %>
                 <% :missing -> %>
-                  <span class="badge badge-ghost">Non déposée</span>
+                  <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    Non déposée
+                  </span>
                 <% :pending -> %>
-                  <span class="badge badge-warning">En attente de validation</span>
+                  <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    En attente de validation
+                  </span>
                   <%= if @current_form do %>
                     <.link
                       navigate={~p"/admin/fiches/#{@current_form.id}"}
-                      class="btn btn-sm btn-primary mt-2"
+                      class="bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-700 transition mt-2 inline-block"
                     >
                       Voir la fiche
                     </.link>
                   <% end %>
                 <% :approved -> %>
-                  <span class="badge badge-success">Approuvée</span>
+                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    Approuvée
+                  </span>
                   <%= if @current_form do %>
                     <.link
                       navigate={~p"/admin/fiches/#{@current_form.id}"}
-                      class="btn btn-sm btn-ghost mt-2"
+                      class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition mt-2 inline-block"
                     >
                       Voir la fiche
                     </.link>
                   <% end %>
                 <% :rejected -> %>
-                  <span class="badge badge-error">Refusée</span>
+                  <span class="bg-red-100 text-red-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    Refusée
+                  </span>
                   <%= if @current_form do %>
                     <.link
                       navigate={~p"/admin/fiches/#{@current_form.id}"}
-                      class="btn btn-sm btn-ghost mt-2"
+                      class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition mt-2 inline-block"
                     >
                       Voir la fiche
                     </.link>
                   <% end %>
                 <% _ -> %>
-                  <span class="text-base-content/60">—</span>
+                  <span class="text-slate-400">—</span>
               <% end %>
             </div>
           <% else %>
-            <p class="text-base-content/60 mt-2">Aucune édition en cours</p>
+            <p class="text-slate-400 mt-2">Aucune édition en cours</p>
           <% end %>
         </div>
       </div>

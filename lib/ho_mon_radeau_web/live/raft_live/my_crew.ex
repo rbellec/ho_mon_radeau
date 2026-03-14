@@ -319,7 +319,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
         {@raft.name}
         <:subtitle>Page équipage</:subtitle>
         <:actions>
-          <.link navigate={~p"/radeaux/#{@raft.slug}"} class="btn btn-ghost btn-sm">
+          <.link
+            navigate={~p"/radeaux/#{@raft.slug}"}
+            class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+          >
             Voir la page publique
           </.link>
         </:actions>
@@ -329,27 +332,31 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
         <div class="lg:col-span-2 space-y-8">
           <%!-- Pending join requests (managers only) --%>
           <%= if @is_manager && length(@pending_requests) > 0 do %>
-            <div class="card bg-warning/10 border border-warning">
-              <div class="card-body">
-                <h3 class="card-title text-warning">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl">
+              <div class="p-6">
+                <h3 class="text-lg font-semibold text-amber-700">
                   Demandes d'adhésion ({length(@pending_requests)})
                 </h3>
                 <div class="space-y-4 mt-2">
                   <%= for request <- @pending_requests do %>
-                    <div class="flex items-start justify-between gap-4 p-3 bg-base-100 rounded-lg">
+                    <div class="flex items-start justify-between gap-4 p-3 bg-white rounded-lg">
                       <div>
                         <p class="font-medium">{Accounts.display_name(request.user)}</p>
                         <%= if request.user.validated do %>
-                          <span class="badge badge-success badge-sm">Validé·e</span>
+                          <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                            Validé·e
+                          </span>
                         <% else %>
-                          <span class="badge badge-warning badge-sm">En attente validation</span>
+                          <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                            En attente validation
+                          </span>
                         <% end %>
                         <%= if request.message do %>
-                          <p class="text-sm text-base-content/70 mt-1 italic">
+                          <p class="text-sm text-slate-500 mt-1 italic">
                             "{request.message}"
                           </p>
                         <% end %>
-                        <p class="text-xs text-base-content/50 mt-1">
+                        <p class="text-xs text-slate-400 mt-1">
                           Demande envoyée le {Calendar.strftime(
                             request.inserted_at,
                             "%d/%m/%Y à %H:%M"
@@ -359,7 +366,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                       <div class="flex gap-2">
                         <%= if request.user.validated do %>
                           <button
-                            class="btn btn-success btn-sm"
+                            class="bg-green-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-green-700 transition"
                             phx-click="accept_request"
                             phx-value-id={request.id}
                           >
@@ -367,7 +374,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                           </button>
                         <% end %>
                         <button
-                          class="btn btn-ghost btn-sm"
+                          class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
                           phx-click="reject_request"
                           phx-value-id={request.id}
                           data-confirm="Êtes-vous sûr·e de vouloir refuser cette demande ?"
@@ -383,9 +390,9 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           <% end %>
 
           <%!-- Roles summary --%>
-          <div class="card bg-base-200" id="roles-summary">
-            <div class="card-body">
-              <h3 class="card-title">État des rôles</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="roles-summary">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-slate-900">État des rôles</h3>
 
               <%!-- À pourvoir (required roles that are unfilled) --%>
               <% unfilled_required = Enum.filter(@required_roles, fn r -> @roles_summary[r] == [] end)
@@ -394,10 +401,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                 if(is_nil(@captain), do: ["captain" | unfilled_required], else: unfilled_required) %>
               <%= if unfilled_required != [] do %>
                 <div class="mt-3">
-                  <h4 class="text-sm font-semibold text-warning mb-1">À pourvoir</h4>
+                  <h4 class="text-sm font-semibold text-amber-600 mb-1">À pourvoir</h4>
                   <div class="space-y-1">
                     <%= for role <- unfilled_required do %>
-                      <div class="flex items-center gap-2 text-warning">
+                      <div class="flex items-center gap-2 text-amber-600">
                         <.icon name="hero-exclamation-triangle-mini" class="size-4" />
                         <span class="font-medium">{role_label(role)}</span>
                       </div>
@@ -411,11 +418,11 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
               filled = if(@captain, do: ["captain" | filled], else: filled) %>
               <%= if filled != [] do %>
                 <div class="mt-3">
-                  <h4 class="text-sm font-semibold text-success mb-1">Rôles actuels</h4>
+                  <h4 class="text-sm font-semibold text-green-600 mb-1">Rôles actuels</h4>
                   <div class="space-y-1">
                     <%= for role <- filled do %>
                       <div class="flex items-center gap-2">
-                        <.icon name="hero-check-circle-mini" class="size-4 text-success" />
+                        <.icon name="hero-check-circle-mini" class="size-4 text-green-600" />
                         <span class="font-medium">{role_label(role)} :</span>
                         <span>
                           <%= if role == "captain" do %>
@@ -434,10 +441,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
               <% unfilled_optional = Enum.filter(@optional_roles, fn r -> @roles_summary[r] == [] end) %>
               <%= if unfilled_optional != [] do %>
                 <div class="mt-3">
-                  <h4 class="text-sm font-semibold text-base-content/50 mb-1">Optionnels</h4>
+                  <h4 class="text-sm font-semibold text-slate-400 mb-1">Optionnels</h4>
                   <div class="space-y-1">
                     <%= for role <- unfilled_optional do %>
-                      <div class="flex items-center gap-2 text-base-content/40">
+                      <div class="flex items-center gap-2 text-slate-300">
                         <.icon name="hero-minus-circle-mini" class="size-4" />
                         <span>{role_label(role)}</span>
                       </div>
@@ -449,25 +456,25 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           </div>
 
           <%!-- My roles (self-declaration) --%>
-          <div class="card bg-base-200" id="my-roles">
-            <div class="card-body">
-              <h3 class="card-title">Mon profil dans l'équipage</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="my-roles">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-slate-900">Mon profil dans l'équipage</h3>
               <form phx-submit="save_my_roles" id="my-roles-form">
                 <div class="space-y-2 mt-2">
                   <%= for role <- @available_roles do %>
-                    <label class="label cursor-pointer justify-start gap-3">
+                    <label class="flex items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         name={"roles[#{role}]"}
                         value="true"
                         checked={role in (@my_member.roles || [])}
-                        class="checkbox checkbox-primary checkbox-sm"
+                        class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                       />
-                      <span class="label-text">{role_label(role)}</span>
+                      <span class="text-sm text-slate-700">{role_label(role)}</span>
                     </label>
                   <% end %>
                 </div>
-                <p class="text-xs text-base-content/50 mt-2">
+                <p class="text-xs text-slate-400 mt-2">
                   Le rôle de capitaine est attribué par les gestionnaires.
                 </p>
                 <div class="mt-4">
@@ -476,9 +483,9 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                   </.button>
                 </div>
               </form>
-              <div class="mt-6 pt-4 border-t border-base-300">
+              <div class="mt-6 pt-4 border-t border-slate-200">
                 <button
-                  class="btn btn-ghost btn-sm text-error"
+                  class="text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition"
                   phx-click="leave_crew"
                   data-confirm={
                     if(@is_captain,
@@ -496,41 +503,45 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           </div>
 
           <%!-- Raft info --%>
-          <div class="card bg-base-200">
-            <div class="card-body">
-              <h3 class="card-title">Informations</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-slate-900">Informations</h3>
 
               <%= if @raft.description do %>
                 <div class="mt-2">
-                  <p class="text-sm font-medium text-base-content/60">Description</p>
+                  <p class="text-sm font-medium text-slate-400">Description</p>
                   <p class="whitespace-pre-wrap">{@raft.description}</p>
                 </div>
               <% end %>
 
               <%= if @raft.forum_url do %>
                 <div class="mt-4">
-                  <p class="text-sm font-medium text-base-content/60">Lien forum</p>
-                  <a href={@raft.forum_url} target="_blank" class="link link-primary">
+                  <p class="text-sm font-medium text-slate-400">Lien forum</p>
+                  <a href={@raft.forum_url} target="_blank" class="text-indigo-600 hover:underline">
                     {@raft.forum_url}
                   </a>
                 </div>
               <% end %>
 
               <div class="mt-4">
-                <p class="text-sm font-medium text-base-content/60">Statut</p>
+                <p class="text-sm font-medium text-slate-400">Statut</p>
                 <%= if @raft.validated do %>
-                  <span class="badge badge-success">Radeau validé</span>
+                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center">
+                    Radeau validé
+                  </span>
                 <% else %>
-                  <span class="badge badge-ghost">En attente de validation admin</span>
+                  <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    En attente de validation admin
+                  </span>
                 <% end %>
               </div>
             </div>
           </div>
 
           <%!-- Drums section --%>
-          <div class="card bg-base-200" id="drums-section">
-            <div class="card-body">
-              <h3 class="card-title">Bidons</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="drums-section">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-slate-900">Bidons</h3>
 
               <%!-- Summary --%>
               <%= if @drums_summary.requests != [] do %>
@@ -542,13 +553,17 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                         ({req.unit_price} €/bidon)
                       </span>
                       <%= if req.status == "paid" do %>
-                        <span class="badge badge-success badge-xs">Payé</span>
+                        <span class="bg-green-100 text-green-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                          Payé
+                        </span>
                       <% else %>
-                        <span class="badge badge-warning badge-xs">En attente</span>
+                        <span class="bg-amber-100 text-amber-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                          En attente
+                        </span>
                       <% end %>
                     </div>
                   <% end %>
-                  <div class="text-sm font-medium pt-2 border-t border-base-300">
+                  <div class="text-sm font-medium pt-2 border-t border-slate-200">
                     Total payé : {@drums_summary.total_paid_quantity} bidons — {@drums_summary.total_paid_amount} €
                   </div>
                 </div>
@@ -579,7 +594,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                     </.button>
                   </div>
                   <.input field={@drum_form[:note]} type="text" label="Note (optionnel)" />
-                  <p class="text-xs text-base-content/50 mt-2">
+                  <p class="text-xs text-slate-400 mt-2">
                     Tarif : {@drum_settings.unit_price} € / bidon
                     <%= if @drum_settings.rib_iban do %>
                       — IBAN : {@drum_settings.rib_iban}
@@ -591,9 +606,9 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           </div>
 
           <%!-- CUF section --%>
-          <div class="card bg-base-200" id="cuf-section">
-            <div class="card-body">
-              <h3 class="card-title">CUF (Cotisation Urbaine Flottante)</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="cuf-section">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-slate-900">CUF (Cotisation Urbaine Flottante)</h3>
 
               <div class="space-y-2 mt-2 text-sm">
                 <p>
@@ -606,7 +621,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                 </p>
 
                 <%= if @cuf_summary.pending do %>
-                  <div class="alert alert-warning text-sm mt-2">
+                  <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start gap-3 text-sm mt-2">
                     <.icon name="hero-clock-mini" class="size-4" />
                     <span>
                       Déclaration en attente : {@cuf_summary.pending.participant_count} participants
@@ -623,7 +638,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                   <form phx-submit="submit_cuf" id="cuf-declaration-form">
                     <div class="space-y-1">
                       <%= for member <- @raft.crew.crew_members do %>
-                        <label class="label cursor-pointer justify-start gap-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
                           <input
                             type="checkbox"
                             name={"participants[#{member.user_id}]"}
@@ -632,18 +647,18 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                               member.user_id in ((@cuf_summary.pending &&
                                                     @cuf_summary.pending.participant_user_ids) || [])
                             }
-                            class="checkbox checkbox-primary checkbox-sm"
+                            class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                           />
-                          <span class="label-text">
+                          <span class="text-sm text-slate-700">
                             {Accounts.display_name(member.user)}
                             <%= unless member.user.validated do %>
-                              <span class="text-warning text-xs">(non validé)</span>
+                              <span class="text-amber-600 text-xs">(non validé)</span>
                             <% end %>
                           </span>
                         </label>
                       <% end %>
                     </div>
-                    <p class="text-xs text-base-content/50 mt-2">
+                    <p class="text-xs text-slate-400 mt-2">
                       Montant : {@cuf_settings.unit_price} € / personne
                       <%= if @cuf_settings.rib_iban do %>
                         — IBAN : {@cuf_settings.rib_iban}
@@ -661,15 +676,22 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           </div>
 
           <%!-- Quick links --%>
-          <div class="card bg-base-200">
-            <div class="card-body">
-              <h3 class="card-title">Actions</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-slate-900">Actions</h3>
               <div class="flex flex-wrap gap-2 mt-2">
-                <.link navigate={~p"/fiche-inscription"} class="btn btn-primary btn-sm">
+                <.link
+                  navigate={~p"/fiche-inscription"}
+                  class="bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-700 transition inline-flex items-center"
+                >
                   Ma fiche d'inscription
                 </.link>
                 <%= if @raft.forum_url do %>
-                  <a href={@raft.forum_url} target="_blank" class="btn btn-ghost btn-sm">
+                  <a
+                    href={@raft.forum_url}
+                    target="_blank"
+                    class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+                  >
                     Discussion forum
                   </a>
                 <% end %>
@@ -680,37 +702,46 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
         <%!-- Crew members sidebar --%>
         <div>
-          <div class="card bg-base-200">
-            <div class="card-body">
-              <h3 class="card-title">
-                Équipage <span class="badge badge-ghost">{length(@raft.crew.crew_members)}</span>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-slate-900">
+                Équipage
+                <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                  {length(@raft.crew.crew_members)}
+                </span>
               </h3>
 
               <ul class="space-y-4 mt-2" id="crew-members-list">
                 <%= for member <- @raft.crew.crew_members do %>
-                  <li class="p-3 bg-base-100 rounded-lg">
+                  <li class="p-3 bg-white rounded-lg">
                     <div class="flex items-center justify-between">
                       <div>
                         <p class="font-medium">{Accounts.display_name(member.user)}</p>
                         <div class="flex flex-wrap gap-1 mt-1">
                           <%= if member.is_captain do %>
-                            <span class="badge badge-primary badge-xs">Capitaine ★</span>
+                            <span class="bg-indigo-100 text-indigo-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                              Capitaine ★
+                            </span>
                           <% end %>
                           <%= if member.is_manager do %>
-                            <span class="badge badge-secondary badge-xs">Gestionnaire</span>
+                            <span class="bg-indigo-100 text-indigo-600 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                              Gestionnaire
+                            </span>
                           <% end %>
                           <%= for role <- member.roles || [] do %>
-                            <span class="badge badge-ghost badge-xs">{role_label(role)}</span>
+                            <span class="bg-slate-100 text-slate-600 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                              {role_label(role)}
+                            </span>
                           <% end %>
                         </div>
                       </div>
                     </div>
                     <%!-- Manager actions --%>
                     <%= if @is_manager && member.user_id != @current_scope.user.id do %>
-                      <div class="flex flex-wrap gap-1 mt-2 pt-2 border-t border-base-200">
+                      <div class="flex flex-wrap gap-1 mt-2 pt-2 border-t border-slate-100">
                         <%= if member.is_captain do %>
                           <button
-                            class="btn btn-ghost btn-xs"
+                            class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
                             phx-click="remove_captain"
                             data-confirm="Retirer le rôle de capitaine ?"
                           >
@@ -718,7 +749,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                           </button>
                         <% else %>
                           <button
-                            class="btn btn-ghost btn-xs"
+                            class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
                             phx-click="set_captain"
                             phx-value-user-id={member.user_id}
                             data-confirm={
@@ -734,7 +765,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                         <% end %>
                         <%= if member.is_manager do %>
                           <button
-                            class="btn btn-ghost btn-xs"
+                            class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
                             phx-click="demote_manager"
                             phx-value-user-id={member.user_id}
                             data-confirm="Retirer le rôle de gestionnaire ?"
@@ -743,7 +774,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                           </button>
                         <% else %>
                           <button
-                            class="btn btn-ghost btn-xs"
+                            class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
                             phx-click="promote_manager"
                             phx-value-user-id={member.user_id}
                           >
@@ -751,7 +782,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                           </button>
                         <% end %>
                         <button
-                          class="btn btn-ghost btn-xs text-error"
+                          class="text-xs text-red-600 hover:bg-red-50 rounded-md px-2 py-1 font-medium transition"
                           phx-click="remove_member"
                           phx-value-user-id={member.user_id}
                           data-confirm={"Retirer #{Accounts.display_name(member.user)} de l'équipage ?"}

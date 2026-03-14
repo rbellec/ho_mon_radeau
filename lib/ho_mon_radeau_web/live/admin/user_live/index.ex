@@ -81,23 +81,23 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
     </.header>
 
     <div class="mt-6">
-      <div class="tabs tabs-boxed mb-4">
+      <div class="flex gap-1 bg-slate-100 rounded-lg p-1 mb-4">
         <button
-          class={"tab #{if @filter == "all", do: "tab-active"}"}
+          class={"px-3 py-1.5 text-sm font-medium rounded-md transition #{if @filter == "all", do: "bg-white text-indigo-600 shadow-sm", else: "text-slate-600 hover:text-slate-900"}"}
           phx-click="filter"
           phx-value-filter="all"
         >
           Tous
         </button>
         <button
-          class={"tab #{if @filter == "pending", do: "tab-active"}"}
+          class={"px-3 py-1.5 text-sm font-medium rounded-md transition #{if @filter == "pending", do: "bg-white text-indigo-600 shadow-sm", else: "text-slate-600 hover:text-slate-900"}"}
           phx-click="filter"
           phx-value-filter="pending"
         >
           En attente
         </button>
         <button
-          class={"tab #{if @filter == "validated", do: "tab-active"}"}
+          class={"px-3 py-1.5 text-sm font-medium rounded-md transition #{if @filter == "validated", do: "bg-white text-indigo-600 shadow-sm", else: "text-slate-600 hover:text-slate-900"}"}
           phx-click="filter"
           phx-value-filter="validated"
         >
@@ -106,51 +106,67 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
       </div>
 
       <div class="overflow-x-auto">
-        <table class="table table-zebra">
+        <table class="w-full text-left">
           <thead>
             <tr>
-              <th>Pseudo</th>
-              <th>Email</th>
-              <th>Nom</th>
-              <th>Inscrit·e le</th>
-              <th>Statut</th>
-              <th>Actions</th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-4 py-3">
+                Pseudo
+              </th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-4 py-3">
+                Email
+              </th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-4 py-3">Nom</th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-4 py-3">
+                Inscrit·e le
+              </th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-4 py-3">
+                Statut
+              </th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-4 py-3">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             <%= for user <- @users do %>
               <tr
-                class="hover cursor-pointer"
+                class="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
                 phx-click={JS.navigate(~p"/admin/utilisateurs/#{user.id}")}
               >
-                <td class="font-medium">
+                <td class="px-4 py-3 text-sm font-medium">
                   {Accounts.display_name(user)}
                 </td>
-                <td>{user.email}</td>
-                <td>
+                <td class="px-4 py-3 text-sm">{user.email}</td>
+                <td class="px-4 py-3 text-sm">
                   <%= if user.first_name || user.last_name do %>
                     {user.first_name} {user.last_name}
                   <% else %>
-                    <span class="text-base-content/50">—</span>
+                    <span class="text-slate-400">—</span>
                   <% end %>
                 </td>
-                <td>
+                <td class="px-4 py-3 text-sm">
                   {Calendar.strftime(user.inserted_at, "%d/%m/%Y")}
                 </td>
-                <td>
+                <td class="px-4 py-3 text-sm">
                   <%= if user.validated do %>
-                    <span class="badge badge-success">Validé·e</span>
+                    <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      Validé·e
+                    </span>
                   <% else %>
-                    <span class="badge badge-warning">En attente</span>
+                    <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      En attente
+                    </span>
                   <% end %>
                   <%= if user.is_admin do %>
-                    <span class="badge badge-info">Admin</span>
+                    <span class="bg-indigo-100 text-indigo-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      Admin
+                    </span>
                   <% end %>
                 </td>
-                <td>
+                <td class="px-4 py-3 text-sm">
                   <%= if user.validated do %>
                     <button
-                      class="btn btn-sm btn-ghost text-error"
+                      class="text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition"
                       phx-click="invalidate"
                       phx-value-id={user.id}
                     >
@@ -158,7 +174,7 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
                     </button>
                   <% else %>
                     <button
-                      class="btn btn-sm btn-primary"
+                      class="bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-700 transition"
                       phx-click="validate"
                       phx-value-id={user.id}
                     >
@@ -172,7 +188,7 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
         </table>
 
         <%= if Enum.empty?(@users) do %>
-          <div class="text-center py-8 text-base-content/60">
+          <div class="text-center py-8 text-slate-400">
             <%= case @filter do %>
               <% "pending" -> %>
                 Aucun utilisateur en attente de validation.

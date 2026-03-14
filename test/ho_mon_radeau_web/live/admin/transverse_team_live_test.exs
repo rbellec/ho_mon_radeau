@@ -107,7 +107,7 @@ defmodule HoMonRadeauWeb.Admin.TransverseTeamLiveTest do
       |> render_click()
 
       assert render(view) =~ "mis à jour"
-      assert has_element?(view, "#member-#{member.id} .badge", "Coordinateur")
+      assert has_element?(view, "#member-#{member.id}", "Coordinateur")
     end
   end
 end

@@ -51,7 +51,7 @@ defmodule HoMonRadeauWeb.Admin.RaftLiveTest do
       |> render_click()
 
       assert render(view) =~ "validé"
-      assert has_element?(view, "#raft-#{raft.id} .badge-success", "Participant")
+      assert has_element?(view, "#raft-#{raft.id}", "Participant")
     end
 
     test "invalidates a validated raft", %{conn: conn, admin: admin} do

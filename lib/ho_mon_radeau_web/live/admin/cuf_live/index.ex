@@ -80,30 +80,30 @@ defmodule HoMonRadeauWeb.Admin.CUFLive.Index do
 
       <%!-- Stats --%>
       <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-6" id="cuf-stats">
-        <div class="stat bg-base-200 rounded-lg p-4">
-          <div class="stat-title text-xs">Participants validés</div>
-          <div class="stat-value text-lg">
+        <div class="bg-slate-50 rounded-lg p-4">
+          <div class="text-xs text-slate-500 font-medium">Participants validés</div>
+          <div class="text-lg font-bold text-slate-900">
             {@stats.validated}
             <%= if @stats.limit do %>
-              <span class="text-sm font-normal text-base-content/50">/ {@stats.limit}</span>
+              <span class="text-sm font-normal text-slate-400">/ {@stats.limit}</span>
             <% end %>
           </div>
         </div>
-        <div class="stat bg-base-200 rounded-lg p-4">
-          <div class="stat-title text-xs">Montant CUF / personne</div>
-          <div class="stat-value text-lg">{@settings.unit_price} €</div>
+        <div class="bg-slate-50 rounded-lg p-4">
+          <div class="text-xs text-slate-500 font-medium">Montant CUF / personne</div>
+          <div class="text-lg font-bold text-slate-900">{@settings.unit_price} €</div>
         </div>
-        <div class="stat bg-base-200 rounded-lg p-4">
-          <div class="stat-title text-xs">Déclarations</div>
-          <div class="stat-value text-lg">{length(@declarations)}</div>
+        <div class="bg-slate-50 rounded-lg p-4">
+          <div class="text-xs text-slate-500 font-medium">Déclarations</div>
+          <div class="text-lg font-bold text-slate-900">{length(@declarations)}</div>
         </div>
       </div>
 
       <%!-- Settings --%>
       <details class="mt-6">
         <summary class="cursor-pointer font-medium">Configuration</summary>
-        <div class="card bg-base-200 mt-2">
-          <div class="card-body">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 mt-2">
+          <div class="p-6">
             <.form for={@settings_form} id="cuf-settings-form" phx-submit="update_settings">
               <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <.input
@@ -134,7 +134,14 @@ defmodule HoMonRadeauWeb.Admin.CUFLive.Index do
       <div class="mt-6">
         <div class="flex gap-2 mb-4">
           <button
-            class={["btn btn-sm", if(@filter_status == "all", do: "btn-primary", else: "btn-ghost")]}
+            class={[
+              if(@filter_status == "all",
+                do:
+                  "bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-700 transition",
+                else:
+                  "text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+              )
+            ]}
             phx-click="filter"
             phx-value-status="all"
           >
@@ -142,8 +149,12 @@ defmodule HoMonRadeauWeb.Admin.CUFLive.Index do
           </button>
           <button
             class={[
-              "btn btn-sm",
-              if(@filter_status == "pending", do: "btn-warning", else: "btn-ghost")
+              if(@filter_status == "pending",
+                do:
+                  "bg-amber-500 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-amber-600 transition",
+                else:
+                  "text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+              )
             ]}
             phx-click="filter"
             phx-value-status="pending"
@@ -152,8 +163,12 @@ defmodule HoMonRadeauWeb.Admin.CUFLive.Index do
           </button>
           <button
             class={[
-              "btn btn-sm",
-              if(@filter_status == "validated", do: "btn-success", else: "btn-ghost")
+              if(@filter_status == "validated",
+                do:
+                  "bg-green-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-green-700 transition",
+                else:
+                  "text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+              )
             ]}
             phx-click="filter"
             phx-value-status="validated"
@@ -163,35 +178,51 @@ defmodule HoMonRadeauWeb.Admin.CUFLive.Index do
         </div>
 
         <div class="overflow-x-auto">
-          <table class="table table-sm" id="cuf-declarations-table">
+          <table class="w-full text-left" id="cuf-declarations-table">
             <thead>
               <tr>
-                <th>Radeau</th>
-                <th>Participants</th>
-                <th>Montant</th>
-                <th>Statut</th>
-                <th>Date</th>
-                <th>Actions</th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                  Radeau
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                  Participants
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                  Montant
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                  Statut
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                  Date
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               <%= for decl <- @declarations do %>
-                <tr id={"cuf-#{decl.id}"}>
-                  <td class="font-medium">{decl.crew.raft.name}</td>
-                  <td>{decl.participant_count}</td>
-                  <td>{decl.total_amount} €</td>
-                  <td>
+                <tr id={"cuf-#{decl.id}"} class="border-b border-slate-100 hover:bg-slate-50">
+                  <td class="px-3 py-2 text-sm font-medium">{decl.crew.raft.name}</td>
+                  <td class="px-3 py-2 text-sm">{decl.participant_count}</td>
+                  <td class="px-3 py-2 text-sm">{decl.total_amount} €</td>
+                  <td class="px-3 py-2 text-sm">
                     <%= if decl.status == "validated" do %>
-                      <span class="badge badge-success badge-sm">Validée</span>
+                      <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                        Validée
+                      </span>
                     <% else %>
-                      <span class="badge badge-warning badge-sm">En attente</span>
+                      <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                        En attente
+                      </span>
                     <% end %>
                   </td>
-                  <td>{Calendar.strftime(decl.inserted_at, "%d/%m/%Y")}</td>
-                  <td>
+                  <td class="px-3 py-2 text-sm">{Calendar.strftime(decl.inserted_at, "%d/%m/%Y")}</td>
+                  <td class="px-3 py-2 text-sm">
                     <%= if decl.status == "pending" do %>
                       <button
-                        class="btn btn-success btn-xs"
+                        class="bg-green-600 text-white rounded-md px-2 py-1 text-xs font-medium hover:bg-green-700 transition"
                         phx-click="validate_declaration"
                         phx-value-id={decl.id}
                         data-confirm={"Valider la CUF de #{decl.crew.raft.name} (#{decl.participant_count} participants, #{decl.total_amount} €) ?"}

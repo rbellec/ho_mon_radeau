@@ -56,14 +56,20 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
             <button
               phx-click="set-view"
               phx-value-mode="list"
-              class={["btn btn-sm", @view_mode == :list && "btn-primary"]}
+              class={[
+                "rounded-lg px-3 py-1.5 text-sm font-medium transition",
+                @view_mode == :list && "bg-indigo-600 text-white hover:bg-indigo-700"
+              ]}
             >
               <.icon name="hero-list-bullet" class="size-4" /> Liste
             </button>
             <button
               phx-click="set-view"
               phx-value-mode="raft"
-              class={["btn btn-sm", @view_mode == :raft && "btn-primary"]}
+              class={[
+                "rounded-lg px-3 py-1.5 text-sm font-medium transition",
+                @view_mode == :raft && "bg-indigo-600 text-white hover:bg-indigo-700"
+              ]}
             >
               <.icon name="hero-squares-2x2" class="size-4" /> Par radeau
             </button>
@@ -87,35 +93,47 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
         <button
           phx-click="filter"
           phx-value-status=""
-          class={["btn btn-sm", is_nil(@filter_status) && "btn-primary"]}
+          class={[
+            "rounded-lg px-3 py-1.5 text-sm font-medium transition",
+            is_nil(@filter_status) && "bg-indigo-600 text-white hover:bg-indigo-700"
+          ]}
         >
           Toutes
         </button>
         <button
           phx-click="filter"
           phx-value-status="pending"
-          class={["btn btn-sm", @filter_status == "pending" && "btn-primary"]}
+          class={[
+            "rounded-lg px-3 py-1.5 text-sm font-medium transition",
+            @filter_status == "pending" && "bg-indigo-600 text-white hover:bg-indigo-700"
+          ]}
         >
           En attente
         </button>
         <button
           phx-click="filter"
           phx-value-status="approved"
-          class={["btn btn-sm", @filter_status == "approved" && "btn-primary"]}
+          class={[
+            "rounded-lg px-3 py-1.5 text-sm font-medium transition",
+            @filter_status == "approved" && "bg-indigo-600 text-white hover:bg-indigo-700"
+          ]}
         >
           Validées
         </button>
         <button
           phx-click="filter"
           phx-value-status="rejected"
-          class={["btn btn-sm", @filter_status == "rejected" && "btn-primary"]}
+          class={[
+            "rounded-lg px-3 py-1.5 text-sm font-medium transition",
+            @filter_status == "rejected" && "bg-indigo-600 text-white hover:bg-indigo-700"
+          ]}
         >
           Rejetées
         </button>
       </div>
 
       <%= if @forms == [] do %>
-        <div class="alert">
+        <div class="bg-slate-50 border border-slate-200 text-slate-600 rounded-xl p-4 flex items-start gap-3">
           <.icon name="hero-inbox" class="size-6" />
           <span>Aucune fiche trouvée</span>
         </div>
@@ -123,8 +141,8 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
         <.table id="forms" rows={@forms}>
           <:col :let={form} label="Participant">
             <div class="flex items-center gap-2">
-              <div class="avatar placeholder">
-                <div class="bg-base-300 text-base-content rounded-full w-8">
+              <div>
+                <div class="bg-slate-100 text-slate-600 rounded-full w-8 h-8 flex items-center justify-center">
                   <span class="text-xs">
                     {String.first(form.user.nickname || form.user.email) |> String.upcase()}
                   </span>
@@ -132,15 +150,15 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
               </div>
               <div>
                 <div class="font-medium">{form.user.nickname || "Sans pseudo"}</div>
-                <div class="text-xs text-base-content/70">{form.user.email}</div>
+                <div class="text-xs text-slate-500">{form.user.email}</div>
               </div>
             </div>
           </:col>
           <:col :let={form} label="Type">
             <span class={[
-              "badge",
-              form.form_type == "captain" && "badge-warning",
-              form.form_type == "participant" && "badge-info"
+              "text-xs font-medium px-2.5 py-0.5 rounded-full",
+              form.form_type == "captain" && "bg-amber-100 text-amber-700",
+              form.form_type == "participant" && "bg-indigo-100 text-indigo-700"
             ]}>
               {if form.form_type == "captain", do: "Capitaine", else: "Participant"}
             </span>
@@ -152,7 +170,10 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
             {Calendar.strftime(form.uploaded_at, "%d/%m/%Y %H:%M")}
           </:col>
           <:action :let={form}>
-            <.link navigate={~p"/admin/fiches/#{form.id}"} class="btn btn-ghost btn-sm">
+            <.link
+              navigate={~p"/admin/fiches/#{form.id}"}
+              class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+            >
               <.icon name="hero-eye" class="size-4" />
             </.link>
           </:action>
@@ -166,53 +187,85 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
     ~H"""
     <div class="mt-6">
       <%= if @stats == [] do %>
-        <div class="alert">
+        <div class="bg-slate-50 border border-slate-200 text-slate-600 rounded-xl p-4 flex items-start gap-3">
           <.icon name="hero-inbox" class="size-6" />
           <span>Aucun radeau trouvé</span>
         </div>
       <% else %>
         <div class="overflow-x-auto">
-          <table class="table table-zebra">
+          <table class="w-full text-left">
             <thead>
               <tr>
-                <th>Radeau</th>
-                <th class="text-center">Membres</th>
-                <th class="text-center">Validées</th>
-                <th class="text-center">En attente</th>
-                <th class="text-center">Rejetées</th>
-                <th class="text-center">Manquantes</th>
-                <th></th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                  Radeau
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2 text-center">
+                  Membres
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2 text-center">
+                  Validées
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2 text-center">
+                  En attente
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2 text-center">
+                  Rejetées
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2 text-center">
+                  Manquantes
+                </th>
+                <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2"></th>
               </tr>
             </thead>
             <tbody>
               <%= for stat <- @stats do %>
-                <tr>
-                  <td class="font-medium">{stat.raft_name}</td>
-                  <td class="text-center">{stat.total_members}</td>
-                  <td class="text-center">
-                    <span class="badge badge-success">{stat.approved}</span>
+                <tr class="border-b border-slate-100 hover:bg-slate-50">
+                  <td class="px-3 py-2 text-sm font-medium">{stat.raft_name}</td>
+                  <td class="px-3 py-2 text-sm text-center">{stat.total_members}</td>
+                  <td class="px-3 py-2 text-sm text-center">
+                    <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      {stat.approved}
+                    </span>
                   </td>
-                  <td class="text-center">
-                    <span class={["badge", stat.pending > 0 && "badge-info"]}>
+                  <td class="px-3 py-2 text-sm text-center">
+                    <span class={[
+                      "text-xs font-medium px-2.5 py-0.5 rounded-full",
+                      if(stat.pending > 0,
+                        do: "bg-indigo-100 text-indigo-700",
+                        else: "bg-slate-100 text-slate-600"
+                      )
+                    ]}>
                       {stat.pending}
                     </span>
                   </td>
-                  <td class="text-center">
-                    <span class={["badge", stat.rejected > 0 && "badge-error"]}>
+                  <td class="px-3 py-2 text-sm text-center">
+                    <span class={[
+                      "text-xs font-medium px-2.5 py-0.5 rounded-full",
+                      if(stat.rejected > 0,
+                        do: "bg-red-100 text-red-700",
+                        else: "bg-slate-100 text-slate-600"
+                      )
+                    ]}>
                       {stat.rejected}
                     </span>
                   </td>
-                  <td class="text-center">
-                    <span class={["badge", stat.missing > 0 && "badge-warning"]}>
+                  <td class="px-3 py-2 text-sm text-center">
+                    <span class={[
+                      "text-xs font-medium px-2.5 py-0.5 rounded-full",
+                      if(stat.missing > 0,
+                        do: "bg-amber-100 text-amber-700",
+                        else: "bg-slate-100 text-slate-600"
+                      )
+                    ]}>
                       {stat.missing}
                     </span>
                   </td>
-                  <td>
+                  <td class="px-3 py-2 text-sm">
                     <%= if stat.missing > 0 || stat.rejected > 0 do %>
                       <button
                         phx-click="send-reminder"
                         phx-value-raft-id={stat.raft_id}
-                        class="btn btn-ghost btn-sm"
+                        class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
                         title="Envoyer un rappel"
                       >
                         <.icon name="hero-envelope" class="size-4" />
@@ -232,10 +285,10 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
   defp status_badge(assigns) do
     ~H"""
     <span class={[
-      "badge",
-      @status == "pending" && "badge-info",
-      @status == "approved" && "badge-success",
-      @status == "rejected" && "badge-error"
+      "text-xs font-medium px-2.5 py-0.5 rounded-full",
+      @status == "pending" && "bg-indigo-100 text-indigo-700",
+      @status == "approved" && "bg-green-100 text-green-700",
+      @status == "rejected" && "bg-red-100 text-red-700"
     ]}>
       {case @status do
         "pending" -> "En attente"

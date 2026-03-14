@@ -34,7 +34,7 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
     ~H"""
     <div class="max-w-4xl mx-auto">
       <.header>
-        <.link navigate={~p"/admin/fiches"} class="text-base-content/70 hover:text-base-content">
+        <.link navigate={~p"/admin/fiches"} class="text-slate-500 hover:text-slate-900">
           <.icon name="hero-arrow-left" class="size-5" />
         </.link>
         Fiche d'inscription
@@ -67,53 +67,53 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
 
   defp info_card(assigns) do
     ~H"""
-    <div class="card bg-base-200">
-      <div class="card-body">
-        <h2 class="card-title">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="p-6">
+        <h2 class="text-lg font-semibold text-slate-900">
           <.icon name="hero-user" class="size-5" /> Informations
         </h2>
 
         <dl class="space-y-2 mt-4">
           <div class="flex justify-between">
-            <dt class="text-base-content/70">Participant</dt>
+            <dt class="text-slate-500">Participant</dt>
             <dd class="font-medium">{@form.user.nickname || "Sans pseudo"}</dd>
           </div>
           <div class="flex justify-between">
-            <dt class="text-base-content/70">Email</dt>
+            <dt class="text-slate-500">Email</dt>
             <dd>{@form.user.email}</dd>
           </div>
           <div class="flex justify-between">
-            <dt class="text-base-content/70">Type de fiche</dt>
+            <dt class="text-slate-500">Type de fiche</dt>
             <dd>
               <span class={[
-                "badge",
-                @form.form_type == "captain" && "badge-warning",
-                @form.form_type == "participant" && "badge-info"
+                "text-xs font-medium px-2.5 py-0.5 rounded-full",
+                @form.form_type == "captain" && "bg-amber-100 text-amber-700",
+                @form.form_type == "participant" && "bg-indigo-100 text-indigo-700"
               ]}>
                 {if @form.form_type == "captain", do: "Capitaine", else: "Participant"}
               </span>
             </dd>
           </div>
           <div class="flex justify-between">
-            <dt class="text-base-content/70">Fichier</dt>
+            <dt class="text-slate-500">Fichier</dt>
             <dd>{@form.file_name}</dd>
           </div>
           <div class="flex justify-between">
-            <dt class="text-base-content/70">Taille</dt>
+            <dt class="text-slate-500">Taille</dt>
             <dd>{format_file_size(@form.file_size)}</dd>
           </div>
           <div class="flex justify-between">
-            <dt class="text-base-content/70">Envoyée le</dt>
+            <dt class="text-slate-500">Envoyée le</dt>
             <dd>{Calendar.strftime(@form.uploaded_at, "%d/%m/%Y à %H:%M")}</dd>
           </div>
           <%= if @form.reviewed_at do %>
             <div class="flex justify-between">
-              <dt class="text-base-content/70">Revue le</dt>
+              <dt class="text-slate-500">Revue le</dt>
               <dd>{Calendar.strftime(@form.reviewed_at, "%d/%m/%Y à %H:%M")}</dd>
             </div>
             <%= if @form.reviewed_by do %>
               <div class="flex justify-between">
-                <dt class="text-base-content/70">Par</dt>
+                <dt class="text-slate-500">Par</dt>
                 <dd>{@form.reviewed_by.nickname || @form.reviewed_by.email}</dd>
               </div>
             <% end %>
@@ -121,7 +121,7 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
         </dl>
 
         <%= if @form.status == "rejected" && @form.rejection_reason do %>
-          <div class="alert alert-error mt-4">
+          <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-start gap-3 mt-4">
             <.icon name="hero-exclamation-circle" class="size-5" />
             <div>
               <strong>Motif du rejet :</strong>
@@ -136,41 +136,56 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
 
   defp action_card(assigns) do
     ~H"""
-    <div class="card bg-base-200">
-      <div class="card-body">
-        <h2 class="card-title">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="p-6">
+        <h2 class="text-lg font-semibold text-slate-900">
           <.icon name="hero-cog-6-tooth" class="size-5" /> Actions
         </h2>
 
         <%= if @form.status == "pending" do %>
           <div class="flex gap-2 mt-4">
-            <button phx-click="approve" class="btn btn-success flex-1">
+            <button
+              phx-click="approve"
+              class="bg-green-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-green-700 transition flex-1"
+            >
               <.icon name="hero-check" class="size-5" /> Valider
             </button>
-            <button phx-click="show-reject-modal" class="btn btn-error flex-1">
+            <button
+              phx-click="show-reject-modal"
+              class="bg-red-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-red-700 transition flex-1"
+            >
               <.icon name="hero-x-mark" class="size-5" /> Rejeter
             </button>
           </div>
         <% else %>
-          <p class="text-base-content/70 mt-4">
+          <p class="text-slate-500 mt-4">
             Cette fiche a déjà été traitée.
           </p>
         <% end %>
 
         <%= if @show_reject_modal do %>
-          <div class="mt-4 p-4 bg-base-300 rounded-lg">
+          <div class="mt-4 p-4 bg-slate-100 rounded-lg">
             <h3 class="font-semibold mb-2">Motif du rejet</h3>
             <form phx-submit="reject">
               <textarea
                 name="reason"
-                class="textarea textarea-bordered w-full"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                 placeholder="Expliquez pourquoi cette fiche est rejetée..."
                 rows="3"
                 required
               ><%= @rejection_reason %></textarea>
               <div class="flex gap-2 mt-2">
-                <button type="submit" class="btn btn-error btn-sm">Confirmer le rejet</button>
-                <button type="button" phx-click="hide-reject-modal" class="btn btn-ghost btn-sm">
+                <button
+                  type="submit"
+                  class="bg-red-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-red-700 transition"
+                >
+                  Confirmer le rejet
+                </button>
+                <button
+                  type="button"
+                  phx-click="hide-reject-modal"
+                  class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+                >
                   Annuler
                 </button>
               </div>
@@ -187,36 +202,30 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
     assigns = assign(assigns, :forms, forms)
 
     ~H"""
-    <div class="card bg-base-200">
-      <div class="card-body">
-        <h2 class="card-title">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="p-6">
+        <h2 class="text-lg font-semibold text-slate-900">
           <.icon name="hero-clock" class="size-5" /> Historique
         </h2>
 
         <%= if length(@forms) > 1 do %>
-          <ul class="timeline timeline-vertical mt-4">
-            <%= for {form, idx} <- Enum.with_index(@forms) do %>
-              <li>
-                <%= if idx > 0 do %>
-                  <hr />
-                <% end %>
-                <div class="timeline-start text-xs text-base-content/70">
+          <div class="space-y-4 mt-4">
+            <%= for {form, _idx} <- Enum.with_index(@forms) do %>
+              <div class="flex items-center gap-3">
+                <div class="text-xs text-slate-400 w-12 shrink-0">
                   {Calendar.strftime(form.uploaded_at, "%d/%m")}
                 </div>
-                <div class="timeline-middle">
+                <div>
                   <.status_icon status={form.status} />
                 </div>
-                <div class="timeline-end timeline-box">
+                <div class="bg-white rounded-lg border border-slate-200 p-3">
                   {form.file_name}
                 </div>
-                <%= if idx < length(@forms) - 1 do %>
-                  <hr />
-                <% end %>
-              </li>
+              </div>
             <% end %>
-          </ul>
+          </div>
         <% else %>
-          <p class="text-base-content/70 mt-2">Première soumission</p>
+          <p class="text-slate-500 mt-2">Première soumission</p>
         <% end %>
       </div>
     </div>
@@ -225,9 +234,9 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
 
   defp file_preview(assigns) do
     ~H"""
-    <div class="card bg-base-200 h-full">
-      <div class="card-body">
-        <h2 class="card-title">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 h-full">
+      <div class="p-6">
+        <h2 class="text-lg font-semibold text-slate-900">
           <.icon name="hero-document" class="size-5" /> Aperçu
         </h2>
 
@@ -238,16 +247,20 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
             </div>
           <% else %>
             <div class="mt-4">
-              <iframe src={@file_url} class="w-full h-[600px] rounded-lg border border-base-300">
+              <iframe src={@file_url} class="w-full h-[600px] rounded-lg border border-slate-200">
               </iframe>
             </div>
           <% end %>
-          <a href={@file_url} target="_blank" class="btn btn-ghost btn-sm mt-4">
+          <a
+            href={@file_url}
+            target="_blank"
+            class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition mt-4 inline-block"
+          >
             <.icon name="hero-arrow-top-right-on-square" class="size-4" />
             Ouvrir dans un nouvel onglet
           </a>
         <% else %>
-          <div class="alert alert-warning mt-4">
+          <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start gap-3 mt-4">
             <.icon name="hero-exclamation-triangle" class="size-5" />
             <span>Impossible de charger l'aperçu du fichier</span>
           </div>
@@ -260,10 +273,10 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
   defp status_badge(assigns) do
     ~H"""
     <span class={[
-      "badge badge-lg",
-      @status == "pending" && "badge-info",
-      @status == "approved" && "badge-success",
-      @status == "rejected" && "badge-error"
+      "text-sm font-semibold px-3 py-1 rounded-full",
+      @status == "pending" && "bg-indigo-100 text-indigo-700",
+      @status == "approved" && "bg-green-100 text-green-700",
+      @status == "rejected" && "bg-red-100 text-red-700"
     ]}>
       {case @status do
         "pending" -> "En attente"
@@ -277,10 +290,10 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
   defp status_icon(assigns) do
     ~H"""
     <span class={[
-      "size-4 rounded-full",
-      @status == "pending" && "bg-info",
-      @status == "approved" && "bg-success",
-      @status == "rejected" && "bg-error"
+      "size-4 rounded-full inline-block",
+      @status == "pending" && "bg-indigo-500",
+      @status == "approved" && "bg-green-500",
+      @status == "rejected" && "bg-red-500"
     ]}>
     </span>
     """
