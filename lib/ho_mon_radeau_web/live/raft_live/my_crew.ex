@@ -4,6 +4,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   alias HoMonRadeau.Events
   alias HoMonRadeau.Events.CrewMember
   alias HoMonRadeau.Accounts
+  alias HoMonRadeau.Drums
 
   @role_labels %{
     "lead_construction" => "Lead construction",
@@ -171,6 +172,45 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     end
   end
 
+  @impl true
+  def handle_event("validate_drums", %{"drum_request" => params}, socket) do
+    changeset =
+      Drums.change_drum_request(
+        socket.assigns.pending_drum_request || %Drums.DrumRequest{},
+        params
+      )
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, :drum_form, to_form(changeset))}
+  end
+
+  @impl true
+  def handle_event("submit_drums", %{"drum_request" => params}, socket) do
+    crew = socket.assigns.crew
+    pending = socket.assigns.pending_drum_request
+
+    result =
+      if pending do
+        Drums.update_drum_request(pending, params)
+      else
+        Drums.create_drum_request(crew.id, params)
+      end
+
+    case result do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Demande de bidons enregistrée.")
+         |> load_crew_data()}
+
+      {:error, :already_paid} ->
+        {:noreply, put_flash(socket, :error, "Cette demande est déjà payée.")}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :drum_form, to_form(changeset))}
+    end
+  end
+
   defp load_crew_data(socket) do
     crew = socket.assigns.crew
     user = socket.assigns.current_scope.user
@@ -179,6 +219,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     pending_requests = if is_manager, do: Events.list_pending_join_requests(crew), else: []
     captain = Events.get_captain(crew.id)
     roles_summary = Events.get_roles_summary(crew.id)
+    drums_summary = Drums.get_crew_summary(crew.id)
+    pending_drum = Drums.get_pending_request(crew.id)
+    drum_settings = Drums.get_settings()
+    drum_form = to_form(Drums.change_drum_request(pending_drum || %Drums.DrumRequest{}))
 
     socket
     |> assign(:page_title, "Mon radeau - #{raft.name}")
@@ -187,6 +231,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     |> assign(:pending_requests, pending_requests)
     |> assign(:captain, captain)
     |> assign(:roles_summary, roles_summary)
+    |> assign(:drums_summary, drums_summary)
+    |> assign(:pending_drum_request, pending_drum)
+    |> assign(:drum_settings, drum_settings)
+    |> assign(:drum_form, drum_form)
   end
 
   defp role_label(role), do: Map.get(@role_labels, role, role)
@@ -354,6 +402,69 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                 <% else %>
                   <span class="badge badge-ghost">En attente de validation admin</span>
                 <% end %>
+              </div>
+            </div>
+          </div>
+
+          <%!-- Drums section --%>
+          <div class="card bg-base-200" id="drums-section">
+            <div class="card-body">
+              <h3 class="card-title">Bidons</h3>
+
+              <%!-- Summary --%>
+              <%= if @drums_summary.requests != [] do %>
+                <div class="space-y-2 mt-2">
+                  <%= for req <- @drums_summary.requests do %>
+                    <div class="flex items-center justify-between text-sm">
+                      <span>
+                        {req.quantity} bidons — {req.total_amount} €
+                        ({req.unit_price} €/bidon)
+                      </span>
+                      <%= if req.status == "paid" do %>
+                        <span class="badge badge-success badge-xs">Payé</span>
+                      <% else %>
+                        <span class="badge badge-warning badge-xs">En attente</span>
+                      <% end %>
+                    </div>
+                  <% end %>
+                  <div class="text-sm font-medium pt-2 border-t border-base-300">
+                    Total payé : {@drums_summary.total_paid_quantity} bidons — {@drums_summary.total_paid_amount} €
+                  </div>
+                </div>
+              <% end %>
+
+              <%!-- Request form --%>
+              <div class="mt-4">
+                <h4 class="text-sm font-medium mb-2">
+                  {if @pending_drum_request, do: "Modifier la demande", else: "Nouvelle demande"}
+                </h4>
+                <.form
+                  for={@drum_form}
+                  id="drum-request-form"
+                  phx-change="validate_drums"
+                  phx-submit="submit_drums"
+                >
+                  <div class="flex items-end gap-4">
+                    <div class="flex-1">
+                      <.input
+                        field={@drum_form[:quantity]}
+                        type="number"
+                        label="Nombre de bidons"
+                        min="0"
+                      />
+                    </div>
+                    <.button variant="primary" phx-disable-with="Envoi...">
+                      {if @pending_drum_request, do: "Modifier", else: "Demander"}
+                    </.button>
+                  </div>
+                  <.input field={@drum_form[:note]} type="text" label="Note (optionnel)" />
+                  <p class="text-xs text-base-content/50 mt-2">
+                    Tarif : {@drum_settings.unit_price} € / bidon
+                    <%= if @drum_settings.rib_iban do %>
+                      — IBAN : {@drum_settings.rib_iban}
+                    <% end %>
+                  </p>
+                </.form>
               </div>
             </div>
           </div>
