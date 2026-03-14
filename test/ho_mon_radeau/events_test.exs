@@ -126,4 +126,91 @@ defmodule HoMonRadeau.EventsTest do
       assert "must be after start date" in errors_on(changeset).end_date
     end
   end
+
+  describe "crew member roles" do
+    import HoMonRadeau.AccountsFixtures
+
+    setup do
+      edition = edition_fixture(%{year: 2026, is_current: true})
+      user = user_fixture(%{email: "captain@test.com"})
+      user2 = user_fixture(%{email: "member@test.com"})
+
+      user =
+        user |> Ecto.Changeset.change(validated: true) |> HoMonRadeau.Repo.update!()
+
+      user2 =
+        user2 |> Ecto.Changeset.change(validated: true) |> HoMonRadeau.Repo.update!()
+
+      {:ok, %{crew: crew}} =
+        Events.create_raft_with_crew(user, %{name: "Test Raft"}, edition.id)
+
+      # Add second member
+      {:ok, member2} =
+        %HoMonRadeau.Events.CrewMember{}
+        |> HoMonRadeau.Events.CrewMember.changeset(%{crew_id: crew.id, user_id: user2.id})
+        |> HoMonRadeau.Repo.insert()
+
+      member1 = Events.get_crew_member(crew.id, user.id)
+
+      %{crew: crew, user: user, user2: user2, member1: member1, member2: member2}
+    end
+
+    test "update_member_roles/2 sets roles on a member", %{member1: member} do
+      assert {:ok, updated} = Events.update_member_roles(member, ["cooking", "safe_contact"])
+      assert "cooking" in updated.roles
+      assert "safe_contact" in updated.roles
+    end
+
+    test "update_member_roles/2 clears roles when empty list", %{member1: member} do
+      {:ok, _} = Events.update_member_roles(member, ["cooking"])
+      {:ok, updated} = Events.update_member_roles(member, [])
+      assert updated.roles == []
+    end
+
+    test "update_member_roles/2 rejects invalid roles", %{member1: member} do
+      assert {:error, changeset} = Events.update_member_roles(member, ["invalid_role"])
+      assert errors_on(changeset)[:roles]
+    end
+
+    test "set_captain/2 sets a member as captain", %{crew: crew, user2: user2} do
+      {:ok, captain} = Events.set_captain(crew.id, user2.id)
+      assert captain.is_captain == true
+    end
+
+    test "set_captain/2 replaces existing captain", %{crew: crew, user: user, user2: user2} do
+      {:ok, _} = Events.set_captain(crew.id, user.id)
+      {:ok, new_captain} = Events.set_captain(crew.id, user2.id)
+      assert new_captain.is_captain == true
+
+      # Old captain should no longer be captain
+      old = Events.get_crew_member(crew.id, user.id)
+      assert old.is_captain == false
+    end
+
+    test "get_captain/1 returns the captain", %{crew: crew, user: user} do
+      {:ok, _} = Events.set_captain(crew.id, user.id)
+      captain = Events.get_captain(crew.id)
+      assert captain.user_id == user.id
+    end
+
+    test "get_captain/1 returns nil when no captain", %{crew: crew} do
+      assert Events.get_captain(crew.id) == nil
+    end
+
+    test "remove_captain/1 removes captain role", %{crew: crew, user: user} do
+      {:ok, _} = Events.set_captain(crew.id, user.id)
+      Events.remove_captain(crew.id)
+      assert Events.get_captain(crew.id) == nil
+    end
+
+    test "get_roles_summary/1 returns role assignments", %{crew: crew, member1: m1, member2: m2} do
+      {:ok, _} = Events.update_member_roles(m1, ["cooking"])
+      {:ok, _} = Events.update_member_roles(m2, ["cooking", "safe_contact"])
+
+      summary = Events.get_roles_summary(crew.id)
+      assert length(summary["cooking"]) == 2
+      assert length(summary["safe_contact"]) == 1
+      assert summary["lead_construction"] == []
+    end
+  end
 end

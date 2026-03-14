@@ -19,6 +19,7 @@ defmodule HoMonRadeau.Events do
   }
 
   alias HoMonRadeau.Storage
+  alias HoMonRadeau.Accounts
   alias HoMonRadeau.Accounts.User
 
   ## Editions
@@ -488,6 +489,65 @@ defmodule HoMonRadeau.Events do
     |> where([cm], cm.crew_id == ^crew_id and cm.is_manager == true)
     |> preload(:user)
     |> Repo.all()
+  end
+
+  @doc """
+  Updates a crew member's self-declared roles.
+  """
+  def update_member_roles(%CrewMember{} = member, roles) when is_list(roles) do
+    member
+    |> CrewMember.update_changeset(%{roles: roles})
+    |> Repo.update()
+  end
+
+  @doc """
+  Gets the captain of a crew. Returns nil if no captain is set.
+  """
+  def get_captain(crew_id) do
+    CrewMember
+    |> where([cm], cm.crew_id == ^crew_id and cm.is_captain == true)
+    |> preload(:user)
+    |> Repo.one()
+  end
+
+  @doc """
+  Removes the captain role from the current captain of a crew.
+  """
+  def remove_captain(crew_id) do
+    from(cm in CrewMember, where: cm.crew_id == ^crew_id and cm.is_captain == true)
+    |> Repo.update_all(set: [is_captain: false])
+  end
+
+  @doc """
+  Returns a summary of role assignments for a crew.
+  Returns a map of %{role_name => [display_names]}.
+  """
+  def get_roles_summary(crew_id) do
+    members =
+      CrewMember
+      |> where([cm], cm.crew_id == ^crew_id)
+      |> preload(:user)
+      |> Repo.all()
+
+    required_roles = CrewMember.valid_roles()
+
+    summary =
+      for role <- required_roles, into: %{} do
+        holders =
+          members
+          |> Enum.filter(fn m -> role in (m.roles || []) end)
+          |> Enum.map(fn m -> Accounts.display_name(m.user) end)
+
+        {role, holders}
+      end
+
+    captain =
+      case Enum.find(members, & &1.is_captain) do
+        nil -> nil
+        m -> Accounts.display_name(m.user)
+      end
+
+    Map.put(summary, "captain", if(captain, do: [captain], else: []))
   end
 
   ## Raft Links
