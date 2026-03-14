@@ -5,6 +5,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   alias HoMonRadeau.Events.CrewMember
   alias HoMonRadeau.Accounts
   alias HoMonRadeau.Drums
+  alias HoMonRadeau.CUF
 
   @role_labels %{
     "lead_construction" => "Lead construction",
@@ -173,6 +174,28 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   end
 
   @impl true
+  def handle_event("submit_cuf", %{"participants" => participants}, socket) do
+    crew = socket.assigns.crew
+    selected_ids = for {id, "true"} <- participants, do: String.to_integer(id)
+
+    case CUF.create_declaration(crew.id, selected_ids) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Déclaration CUF enregistrée.")
+         |> load_crew_data()}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Erreur lors de la déclaration.")}
+    end
+  end
+
+  @impl true
+  def handle_event("submit_cuf", _params, socket) do
+    {:noreply, put_flash(socket, :error, "Veuillez sélectionner au moins un participant.")}
+  end
+
+  @impl true
   def handle_event("validate_drums", %{"drum_request" => params}, socket) do
     changeset =
       Drums.change_drum_request(
@@ -223,6 +246,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     pending_drum = Drums.get_pending_request(crew.id)
     drum_settings = Drums.get_settings()
     drum_form = to_form(Drums.change_drum_request(pending_drum || %Drums.DrumRequest{}))
+    cuf_summary = CUF.get_crew_cuf_summary(crew.id)
+    cuf_settings = CUF.get_settings()
+    my_member = Events.get_crew_member(crew.id, user.id)
+    is_captain = my_member && my_member.is_captain
 
     socket
     |> assign(:page_title, "Mon radeau - #{raft.name}")
@@ -235,6 +262,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     |> assign(:pending_drum_request, pending_drum)
     |> assign(:drum_settings, drum_settings)
     |> assign(:drum_form, drum_form)
+    |> assign(:cuf_summary, cuf_summary)
+    |> assign(:cuf_settings, cuf_settings)
+    |> assign(:my_member, my_member)
+    |> assign(:is_captain, is_captain)
   end
 
   defp role_label(role), do: Map.get(@role_labels, role, role)
@@ -466,6 +497,76 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                   </p>
                 </.form>
               </div>
+            </div>
+          </div>
+
+          <%!-- CUF section --%>
+          <div class="card bg-base-200" id="cuf-section">
+            <div class="card-body">
+              <h3 class="card-title">CUF (Cotisation Urbaine Flottante)</h3>
+
+              <div class="space-y-2 mt-2 text-sm">
+                <p>
+                  Participants validés :
+                  <span class="font-medium">{@cuf_summary.total_validated_participants}</span>
+                </p>
+                <p>
+                  Montant total validé :
+                  <span class="font-medium">{@cuf_summary.total_validated_amount} €</span>
+                </p>
+
+                <%= if @cuf_summary.pending do %>
+                  <div class="alert alert-warning text-sm mt-2">
+                    <.icon name="hero-clock-mini" class="size-4" />
+                    <span>
+                      Déclaration en attente : {@cuf_summary.pending.participant_count} participants
+                      ({@cuf_summary.pending.total_amount} €)
+                    </span>
+                  </div>
+                <% end %>
+              </div>
+
+              <%!-- Captain can declare participants --%>
+              <%= if @is_captain do %>
+                <div class="mt-4">
+                  <h4 class="text-sm font-medium mb-2">Déclarer les participants</h4>
+                  <form phx-submit="submit_cuf" id="cuf-declaration-form">
+                    <div class="space-y-1">
+                      <%= for member <- @raft.crew.crew_members do %>
+                        <label class="label cursor-pointer justify-start gap-3">
+                          <input
+                            type="checkbox"
+                            name={"participants[#{member.user_id}]"}
+                            value="true"
+                            checked={
+                              member.user_id in ((@cuf_summary.pending &&
+                                                    @cuf_summary.pending.participant_user_ids) || [])
+                            }
+                            class="checkbox checkbox-primary checkbox-sm"
+                          />
+                          <span class="label-text">
+                            {Accounts.display_name(member.user)}
+                            <%= unless member.user.validated do %>
+                              <span class="text-warning text-xs">(non validé)</span>
+                            <% end %>
+                          </span>
+                        </label>
+                      <% end %>
+                    </div>
+                    <p class="text-xs text-base-content/50 mt-2">
+                      Montant : {@cuf_settings.unit_price} € / personne
+                      <%= if @cuf_settings.rib_iban do %>
+                        — IBAN : {@cuf_settings.rib_iban}
+                      <% end %>
+                    </p>
+                    <div class="mt-4">
+                      <.button variant="primary" phx-disable-with="Envoi...">
+                        Soumettre la déclaration
+                      </.button>
+                    </div>
+                  </form>
+                </div>
+              <% end %>
             </div>
           </div>
 
