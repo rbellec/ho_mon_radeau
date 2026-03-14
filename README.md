@@ -22,9 +22,8 @@ L'application permet aux équipages de :
 **👉 La première étape est de lire les spécifications détaillées dans [`docs/features/`](./docs/features/)**
 
 Vous y trouverez :
-- **12 features complètement spécifiées** avec cas d'usage, règles métier, maquettes UI, et notes techniques
+- **16 features complètement spécifiées** avec cas d'usage, règles métier, maquettes UI, et notes techniques
 - La liste complète dans [`docs/features/README.md`](./docs/features/README.md)
-- Les clarifications et décisions dans [`docs/features/notes-clarifications.md`](./docs/features/notes-clarifications.md)
 
 ### 2. Proposer des améliorations
 
@@ -41,17 +40,16 @@ Si vous souhaitez contribuer au code :
 - Le code doit être en **anglais** (noms de variables, commentaires)
 - La documentation doit être en **français**
 
-## 🤖 Développement optimisé pour Claude Code
+## 🤖 Développement assisté par IA (Ralph Loop)
 
-Ce projet a été conçu en collaboration avec **[Claude Code](https://claude.ai/code)**, l'outil CLI d'Anthropic pour le développement assisté par IA.
+Ce projet utilise la technique **[Ralph Loop](https://ghuntley.com/ralph/)** — une boucle d'itération continue avec Claude Code qui implémente les features automatiquement à partir des spécifications dans `docs/features/`.
 
-Les spécifications détaillées dans `docs/features/` permettent à Claude Code (ou à n'importe quel développeur·euse) de comprendre rapidement le contexte et de contribuer efficacement.
+```bash
+# Lancer une boucle d'implémentation automatique
+/ralph-loop:ralph-loop "$(cat PROMPT.md)" --completion-promise "MVP COMPLETE" --max-iterations 30
+```
 
-**Avantages :**
-- Documentation exhaustive et structurée
-- Contexte complet pour chaque feature
-- Règles métier clairement définies
-- Notes techniques précises
+Les spécifications dans `docs/features/` servent de source de vérité pour l'IA comme pour les développeur·euses humain·es.
 
 ## 📚 Stack Technique
 
@@ -72,7 +70,9 @@ Les spécifications détaillées dans `docs/features/` permettent à Claude Code
 ### Infrastructure
 - **Développement :** Docker Compose local
 - **Production :** Fly.io
+- **Stockage fichiers :** Tigris (S3-compatible, Fly.io)
 - **Email dev :** Mailcatcher
+- **Admin :** Kaffy (interface CRUD intégrée)
 
 ## 🚀 Installation Rapide
 
@@ -102,7 +102,10 @@ docker compose exec app iex -S mix
 # Migrations
 docker compose run --rm app mix ecto.migrate
 
-# Tests
+# Tests + vérification complète (compile, format, tests)
+docker compose run --rm -e MIX_ENV=test app mix precommit
+
+# Tests seuls
 docker compose run --rm -e MIX_ENV=test app mix test
 
 # Format code
@@ -115,9 +118,17 @@ docker compose down
 docker compose exec app mix run priv/repo/seeds_dev.exs
 ```
 
-### Console et administration
+### Données de test
 
-Pour manipuler les données (valider des utilisateurs, passer admin, gérer les équipages), voir la documentation détaillée : **[`docs/console.md`](./docs/console.md)**
+```bash
+# Créer les utilisateurs et radeaux de test
+docker compose exec app mix run priv/repo/seeds_dev.exs
+
+# Comptes de test :
+# Admin    : admin@tuttoblu.test / password123
+# Marins   : marin1@example.com … marin4@example.com / password123
+# En attente : nouveau1@example.com / password123
+```
 
 ## 📂 Structure du Projet
 
@@ -129,9 +140,9 @@ ho_mon_radeau/
 ├── Dockerfile             # Image Phoenix/Elixir
 ├── docs/
 │   └── features/          # 📖 Documentation complète des features (COMMENCEZ ICI)
-├── lib/                   # Code Elixir (à venir)
-│   ├── ho_mon_radeau/     # Business logic
-│   └── ho_mon_radeau_web/ # Phoenix web layer
+├── lib/
+│   ├── ho_mon_radeau/     # Business logic (contextes, schémas)
+│   └── ho_mon_radeau_web/ # Phoenix web layer (LiveViews, controllers)
 ├── config/                # Configuration Phoenix
 ├── priv/                  # Assets, migrations
 └── test/                  # Tests
