@@ -74,7 +74,7 @@ defmodule HoMonRadeauWeb.RaftLive.New do
           placeholder="Le Radeau de la Méduse"
           required
         />
-        <p class="text-sm text-base-content/60 -mt-2">
+        <p class="text-sm text-slate-400 -mt-2">
           Ce nom sera visible publiquement et doit être unique.
         </p>
 
@@ -85,7 +85,7 @@ defmodule HoMonRadeauWeb.RaftLive.New do
           placeholder="Une phrase pour décrire votre équipage..."
           maxlength="150"
         />
-        <p class="text-sm text-base-content/60 -mt-2">
+        <p class="text-sm text-slate-400 -mt-2">
           Affichée dans la liste des radeaux (150 caractères max).
         </p>
 
@@ -103,15 +103,22 @@ defmodule HoMonRadeauWeb.RaftLive.New do
           label="Lien forum (optionnel)"
           placeholder="https://forum.flotille-tutto-blu.org/..."
         />
-        <p class="text-sm text-base-content/60 -mt-2">
+        <p class="text-sm text-slate-400 -mt-2">
           Lien vers la discussion de votre équipage sur le forum.
         </p>
 
         <div class="flex gap-4 pt-4">
-          <button type="submit" class="btn btn-primary" phx-disable-with="Création...">
+          <button
+            type="submit"
+            class="bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center"
+            phx-disable-with="Création..."
+          >
             Créer le radeau
           </button>
-          <.link navigate={~p"/radeaux"} class="btn btn-ghost">
+          <.link
+            navigate={~p"/radeaux"}
+            class="text-slate-600 hover:bg-slate-50 rounded-lg px-5 py-2.5 font-medium transition"
+          >
             Annuler
           </.link>
         </div>

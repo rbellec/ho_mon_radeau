@@ -61,8 +61,8 @@ defmodule HoMonRadeauWeb.ProfileLive do
       <div class="space-y-8">
         <%!-- Header section --%>
         <div class="flex items-center gap-4" id="profile-header">
-          <div class="avatar placeholder">
-            <div class="bg-primary text-primary-content rounded-full w-16 h-16 flex items-center justify-center text-2xl">
+          <div>
+            <div class="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl">
               {String.first(@user.nickname || @user.email)}
             </div>
           </div>
@@ -72,11 +72,11 @@ defmodule HoMonRadeauWeb.ProfileLive do
             </h1>
             <div id="validation-status" class="mt-1">
               <%= if @user.validated do %>
-                <span class="badge badge-success gap-1">
+                <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                   <.icon name="hero-check-circle-mini" class="size-4" /> Compte validé
                 </span>
               <% else %>
-                <span class="badge badge-warning gap-1">
+                <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
                   <.icon name="hero-clock-mini" class="size-4" /> En attente de validation
                 </span>
               <% end %>
@@ -84,7 +84,7 @@ defmodule HoMonRadeauWeb.ProfileLive do
             <%= if @raft do %>
               <div class="mt-1 text-sm" id="crew-membership">
                 Membre de :
-                <.link navigate={~p"/mon-radeau"} class="link link-primary font-medium">
+                <.link navigate={~p"/mon-radeau"} class="text-indigo-600 hover:underline font-medium">
                   {@raft.name}
                 </.link>
               </div>
@@ -93,7 +93,9 @@ defmodule HoMonRadeauWeb.ProfileLive do
               <div class="mt-1 text-sm" id="transverse-teams">
                 Équipes :
                 <%= for team <- @transverse_teams do %>
-                  <span class="badge badge-ghost badge-sm">{team.name}</span>
+                  <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {team.name}
+                  </span>
                 <% end %>
               </div>
             <% end %>
@@ -102,7 +104,10 @@ defmodule HoMonRadeauWeb.ProfileLive do
 
         <%!-- Validation warning --%>
         <%= unless @user.validated do %>
-          <div class="alert alert-warning" id="validation-warning">
+          <div
+            class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start gap-3"
+            id="validation-warning"
+          >
             <.icon name="hero-clock" class="size-5" />
             <div>
               <p class="font-medium">
@@ -117,9 +122,9 @@ defmodule HoMonRadeauWeb.ProfileLive do
         <% end %>
 
         <%!-- Profile form --%>
-        <div class="card bg-base-200 shadow-sm">
-          <div class="card-body">
-            <h2 class="card-title text-lg">Informations personnelles</h2>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div class="p-6">
+            <h2 class="text-lg font-semibold text-slate-900">Informations personnelles</h2>
 
             <.form for={@form} id="profile-form" phx-change="validate" phx-submit="save">
               <div class="space-y-4">
@@ -140,8 +145,8 @@ defmodule HoMonRadeauWeb.ProfileLive do
                   placeholder="06 12 34 56 78"
                 />
 
-                <div class="form-control">
-                  <label class="label cursor-pointer justify-start gap-3">
+                <div class="mb-3">
+                  <label class="flex items-center gap-3 cursor-pointer">
                     <input
                       type="hidden"
                       name={@form[:profile_picture_public].name}
@@ -157,19 +162,22 @@ defmodule HoMonRadeauWeb.ProfileLive do
                           @form[:profile_picture_public].value
                         )
                       }
-                      class="checkbox checkbox-primary"
+                      class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                       id={@form[:profile_picture_public].id}
                     />
-                    <span class="label-text">Photo de profil publique</span>
+                    <span class="text-sm text-slate-700">Photo de profil publique</span>
                   </label>
-                  <p class="text-xs text-base-content/60 ml-10">
+                  <p class="text-xs text-slate-400 ml-10">
                     Si activé, votre photo sera visible sur les pages publiques des radeaux
                   </p>
                 </div>
 
                 <%!-- Missing name warning --%>
                 <%= if is_nil(@user.first_name) or @user.first_name == "" or is_nil(@user.last_name) or @user.last_name == "" do %>
-                  <div class="alert alert-info text-sm" id="name-required-warning">
+                  <div
+                    class="bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl p-4 flex items-start gap-3 text-sm"
+                    id="name-required-warning"
+                  >
                     <.icon name="hero-information-circle-mini" class="size-4" />
                     <span>Prénom et Nom sont requis pour participer à l'événement.</span>
                   </div>
@@ -186,26 +194,32 @@ defmodule HoMonRadeauWeb.ProfileLive do
         </div>
 
         <%!-- Account settings links --%>
-        <div class="card bg-base-200 shadow-sm">
-          <div class="card-body">
-            <h2 class="card-title text-lg">Paramètres du compte</h2>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div class="p-6">
+            <h2 class="text-lg font-semibold text-slate-900">Paramètres du compte</h2>
             <div class="space-y-3">
               <div class="flex items-center justify-between" id="email-setting">
                 <div>
                   <span class="text-sm font-medium">Email</span>
-                  <p class="text-sm text-base-content/60">{@user.email}</p>
+                  <p class="text-sm text-slate-400">{@user.email}</p>
                 </div>
-                <.link href={~p"/users/settings"} class="btn btn-ghost btn-sm">
+                <.link
+                  href={~p"/users/settings"}
+                  class="text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg px-3 py-1.5 font-medium transition"
+                >
                   Modifier
                 </.link>
               </div>
-              <div class="divider my-0" />
+              <div class="border-t border-slate-100 my-3" />
               <div class="flex items-center justify-between" id="password-setting">
                 <div>
                   <span class="text-sm font-medium">Mot de passe</span>
-                  <p class="text-sm text-base-content/60">••••••••</p>
+                  <p class="text-sm text-slate-400">••••••••</p>
                 </div>
-                <.link href={~p"/users/settings"} class="btn btn-ghost btn-sm">
+                <.link
+                  href={~p"/users/settings"}
+                  class="text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg px-3 py-1.5 font-medium transition"
+                >
                   Modifier
                 </.link>
               </div>

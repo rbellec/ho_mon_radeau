@@ -5,7 +5,10 @@
         Register for an account
         <:subtitle>
           Already registered?
-          <.link navigate={~p"/users/log-in"} class="font-semibold text-brand hover:underline">
+          <.link
+            navigate={~p"/users/log-in"}
+            class="font-semibold text-indigo-600 hover:underline"
+          >
             Log in
           </.link>
           to your account now.
@@ -36,7 +39,10 @@
         required
       />
 
-      <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">
+      <.button
+        phx-disable-with="Creating account..."
+        class="w-full bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center justify-center"
+      >
         Create an account
       </.button>
     </.form>

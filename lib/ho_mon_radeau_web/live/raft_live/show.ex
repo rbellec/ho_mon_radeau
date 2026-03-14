@@ -78,13 +78,20 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
       {@raft.name}
       <:subtitle>
         <%= if @raft.validated do %>
-          <span class="badge badge-success">Radeau validé</span>
+          <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center">
+            Radeau validé
+          </span>
         <% else %>
-          <span class="badge badge-ghost">Radeau proposé</span>
+          <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            Radeau proposé
+          </span>
         <% end %>
       </:subtitle>
       <:actions>
-        <.link navigate={~p"/radeaux"} class="btn btn-ghost btn-sm">
+        <.link
+          navigate={~p"/radeaux"}
+          class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+        >
           ← Retour à la liste
         </.link>
       </:actions>
@@ -102,7 +109,7 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
         <%= if @raft.forum_url do %>
           <div>
             <h3 class="font-semibold mb-2">Lien forum</h3>
-            <a href={@raft.forum_url} target="_blank" class="link link-primary">
+            <a href={@raft.forum_url} target="_blank" class="text-indigo-600 hover:underline">
               {@raft.forum_url}
             </a>
           </div>
@@ -110,27 +117,31 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
       </div>
 
       <div class="space-y-6">
-        <div class="card bg-base-200">
-          <div class="card-body">
-            <h3 class="card-title">Équipage</h3>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+          <div class="p-6">
+            <h3 class="text-lg font-semibold text-slate-900">Équipage</h3>
             <p class="text-3xl font-bold">
               {length(@raft.crew.crew_members)}
-              <span class="text-base font-normal text-base-content/60">
+              <span class="text-base font-normal text-slate-400">
                 membre{if length(@raft.crew.crew_members) > 1, do: "s"}
               </span>
             </p>
 
-            <div class="divider"></div>
+            <div class="border-t border-slate-100 my-4"></div>
 
             <ul class="space-y-2">
               <%= for member <- @raft.crew.crew_members do %>
                 <li class="flex items-center gap-2">
                   <span class="font-medium">{Accounts.display_name(member.user)}</span>
                   <%= if member.is_captain do %>
-                    <span class="badge badge-primary badge-sm">Capitaine</span>
+                    <span class="bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                      Capitaine
+                    </span>
                   <% end %>
                   <%= if member.is_manager do %>
-                    <span class="badge badge-secondary badge-sm">Gestionnaire</span>
+                    <span class="bg-indigo-100 text-indigo-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                      Gestionnaire
+                    </span>
                   <% end %>
                 </li>
               <% end %>
@@ -139,38 +150,46 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
         </div>
 
         <%= if @current_scope do %>
-          <div class="card bg-base-200">
-            <div class="card-body">
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="p-6">
               <%= cond do %>
                 <% @is_member -> %>
-                  <p class="text-success font-medium">
+                  <p class="text-green-600 font-medium">
                     ✓ Vous êtes membre de cet équipage
                   </p>
-                  <.link navigate={~p"/mon-radeau"} class="btn btn-primary btn-sm mt-2">
+                  <.link
+                    navigate={~p"/mon-radeau"}
+                    class="bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-700 transition inline-flex items-center mt-2"
+                  >
                     Voir la page équipage
                   </.link>
                 <% @user_crew != nil -> %>
-                  <p class="text-base-content/60">
+                  <p class="text-slate-400">
                     Vous êtes déjà membre d'un autre équipage.
                   </p>
                 <% @has_pending_request -> %>
-                  <p class="text-info">
+                  <p class="text-indigo-500">
                     ⏳ Votre demande est en attente de validation.
                   </p>
                 <% !@current_scope.user.validated -> %>
-                  <p class="text-warning text-sm">
+                  <p class="text-amber-600 text-sm">
                     Votre compte doit être validé par l'équipe d'accueil avant de pouvoir rejoindre un équipage.
                   </p>
                 <% true -> %>
-                  <h3 class="card-title text-base">Rejoindre cet équipage</h3>
+                  <h3 class="text-lg font-semibold text-slate-900 text-base">
+                    Rejoindre cet équipage
+                  </h3>
                   <form phx-submit="request_join" class="space-y-3">
                     <textarea
                       name="message"
-                      class="textarea textarea-bordered w-full"
+                      class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                       placeholder="Message de motivation (optionnel)"
                       rows="3"
                     ></textarea>
-                    <button type="submit" class="btn btn-primary w-full">
+                    <button
+                      type="submit"
+                      class="bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center w-full"
+                    >
                       Demander à rejoindre
                     </button>
                   </form>
@@ -178,10 +197,12 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
             </div>
           </div>
         <% else %>
-          <div class="card bg-base-200">
-            <div class="card-body">
-              <p class="text-base-content/60">
-                <.link navigate={~p"/users/log-in"} class="link">Connectez-vous</.link>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="p-6">
+              <p class="text-slate-400">
+                <.link navigate={~p"/users/log-in"} class="text-indigo-600 hover:underline">
+                  Connectez-vous
+                </.link>
                 pour rejoindre cet équipage.
               </p>
             </div>

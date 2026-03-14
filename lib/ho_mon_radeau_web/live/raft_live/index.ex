@@ -58,7 +58,10 @@ defmodule HoMonRadeauWeb.RaftLive.Index do
       </:subtitle>
       <:actions>
         <%= if @current_scope && @current_scope.user.validated && is_nil(@user_crew) do %>
-          <.link navigate={~p"/radeaux/nouveau"} class="btn btn-primary">
+          <.link
+            navigate={~p"/radeaux/nouveau"}
+            class="bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center"
+          >
             Créer un radeau
           </.link>
         <% end %>
@@ -67,20 +70,8 @@ defmodule HoMonRadeauWeb.RaftLive.Index do
 
     <div class="mt-8">
       <%= if @current_scope && !@current_scope.user.validated do %>
-        <div class="alert alert-warning mb-6">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            />
-          </svg>
+        <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start gap-3 mb-6">
+          <.icon name="hero-exclamation-triangle" class="size-6 shrink-0" />
           <span>
             Votre compte doit être validé par l'équipe d'accueil avant de pouvoir rejoindre un radeau.
           </span>
@@ -88,25 +79,32 @@ defmodule HoMonRadeauWeb.RaftLive.Index do
       <% end %>
 
       <%= if @user_crew do %>
-        <div class="alert alert-info mb-6">
+        <div class="bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl p-4 flex items-start gap-3 mb-6">
           <.icon name="hero-information-circle" class="size-6" />
           <span>
             <%= if @user_raft do %>
               Votre radeau :
-              <.link navigate={~p"/mon-radeau"} class="link font-medium">{@user_raft.name}</.link>
+              <.link navigate={~p"/mon-radeau"} class="text-indigo-600 hover:underline font-medium">
+                {@user_raft.name}
+              </.link>
             <% else %>
-              <.link navigate={~p"/mon-radeau"} class="link">Voir la page de votre radeau</.link>
+              <.link navigate={~p"/mon-radeau"} class="text-indigo-600 hover:underline">
+                Voir la page de votre radeau
+              </.link>
             <% end %>
           </span>
         </div>
       <% end %>
 
       <%= if Enum.empty?(@rafts) do %>
-        <div class="text-center py-12 text-base-content/60">
+        <div class="text-center py-12 text-slate-400">
           <p class="text-xl mb-4">Aucun radeau pour le moment</p>
           <%= if @current_scope && @current_scope.user.validated && is_nil(@user_crew) do %>
             <p>Soyez le premier à créer un radeau !</p>
-            <.link navigate={~p"/radeaux/nouveau"} class="btn btn-primary mt-4">
+            <.link
+              navigate={~p"/radeaux/nouveau"}
+              class="bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center mt-4"
+            >
               Créer un radeau
             </.link>
           <% end %>
@@ -116,20 +114,22 @@ defmodule HoMonRadeauWeb.RaftLive.Index do
           <%= for raft <- @rafts do %>
             <.link
               navigate={~p"/radeaux/#{raft.slug}"}
-              class="card bg-base-200 hover:bg-base-300 transition-colors"
+              class="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-colors"
             >
-              <div class="card-body">
-                <h2 class="card-title">
+              <div class="p-6">
+                <h2 class="text-lg font-semibold text-slate-900">
                   {raft.name}
                   <%= if raft.validated do %>
-                    <span class="badge badge-success badge-sm">Validé</span>
+                    <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center">
+                      Validé
+                    </span>
                   <% end %>
                 </h2>
                 <%= if raft.description_short do %>
-                  <p class="text-base-content/70">{raft.description_short}</p>
+                  <p class="text-slate-500">{raft.description_short}</p>
                 <% end %>
-                <div class="card-actions justify-end mt-2">
-                  <span class="text-sm text-base-content/50">
+                <div class="flex flex-wrap gap-2 justify-end mt-2">
+                  <span class="text-sm text-slate-400">
                     {raft.crew_count} membre{if raft.crew_count > 1, do: "s"}
                   </span>
                 </div>

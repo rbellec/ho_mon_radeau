@@ -60,7 +60,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
           <.upload_form uploads={@uploads} />
         </div>
       <% else %>
-        <div class="alert alert-warning mt-6">
+        <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start gap-3 mt-6">
           <.icon name="hero-exclamation-triangle" class="size-6" />
           <span>
             Vous devez d'abord rejoindre un équipage avant de pouvoir soumettre votre fiche d'inscription.
@@ -73,18 +73,18 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
 
   defp form_instructions(assigns) do
     ~H"""
-    <div class="card bg-base-200">
-      <div class="card-body">
-        <h2 class="card-title">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="p-6">
+        <h2 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
           <.icon name="hero-document-text" class="size-6" /> Instructions
         </h2>
 
-        <p class="text-base-content/80">
+        <p class="text-slate-600">
           Pour participer à Tutto Blu, vous devez remplir et signer votre fiche d'inscription.
         </p>
 
         <%= if @edition.registration_deadline do %>
-          <div class="alert alert-info mt-4">
+          <div class="bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl p-4 flex items-start gap-3 mt-4">
             <.icon name="hero-calendar" class="size-5" />
             <span>
               <strong>Date limite :</strong>
@@ -95,20 +95,28 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
 
         <div class="mt-4">
           <h3 class="font-semibold mb-2">Étapes :</h3>
-          <ol class="list-decimal list-inside space-y-2 text-base-content/80">
+          <ol class="list-decimal list-inside space-y-2 text-slate-600">
             <li>
               Téléchargez le document :
               <%= if @form_type == :captain && @edition.captain_form_url do %>
-                <a href={@edition.captain_form_url} target="_blank" class="link link-primary">
+                <a
+                  href={@edition.captain_form_url}
+                  target="_blank"
+                  class="text-indigo-600 hover:underline"
+                >
                   Fiche capitaine
                 </a>
               <% else %>
                 <%= if @edition.participant_form_url do %>
-                  <a href={@edition.participant_form_url} target="_blank" class="link link-primary">
+                  <a
+                    href={@edition.participant_form_url}
+                    target="_blank"
+                    class="text-indigo-600 hover:underline"
+                  >
                     Fiche participant
                   </a>
                 <% else %>
-                  <span class="text-warning">(lien à venir)</span>
+                  <span class="text-amber-600">(lien à venir)</span>
                 <% end %>
               <% end %>
             </li>
@@ -124,14 +132,14 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
 
   defp current_status(assigns) do
     ~H"""
-    <div class="card bg-base-200">
-      <div class="card-body">
-        <h2 class="card-title">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="p-6">
+        <h2 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
           <.icon name="hero-clipboard-document-check" class="size-6" /> Statut actuel
         </h2>
 
         <div class={[
-          "alert mt-2",
+          "mt-2",
           status_alert_class(@status)
         ]}>
           <.icon name={status_icon(@status)} class="size-5" />
@@ -139,7 +147,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
         </div>
 
         <%= if @form && @status == :rejected && @form.rejection_reason do %>
-          <div class="alert alert-error mt-2">
+          <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-start gap-3 mt-2">
             <.icon name="hero-exclamation-circle" class="size-5" />
             <div>
               <strong>Motif du rejet :</strong>
@@ -149,7 +157,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
         <% end %>
 
         <%= if @form do %>
-          <div class="mt-4 text-sm text-base-content/70">
+          <div class="mt-4 text-sm text-slate-500">
             <p>
               <strong>Dernier envoi :</strong>
               {Calendar.strftime(@form.uploaded_at, "%d/%m/%Y à %H:%M")}
@@ -167,26 +175,26 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
 
   defp upload_form(assigns) do
     ~H"""
-    <div class="card bg-base-200">
-      <div class="card-body">
-        <h2 class="card-title">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div class="p-6">
+        <h2 class="text-lg font-semibold text-slate-900 flex items-center gap-2">
           <.icon name="hero-arrow-up-tray" class="size-6" /> Envoyer votre fiche
         </h2>
 
         <form phx-submit="save" phx-change="validate" class="mt-4">
           <div
-            class="border-2 border-dashed border-base-300 rounded-lg p-8 text-center hover:border-primary transition-colors"
+            class="border-2 border-dashed border-slate-200 rounded-lg p-8 text-center hover:border-indigo-500 transition-colors"
             phx-drop-target={@uploads.form_file.ref}
           >
             <.live_file_input upload={@uploads.form_file} class="hidden" />
 
             <%= for entry <- @uploads.form_file.entries do %>
-              <div class="flex items-center justify-between bg-base-100 p-3 rounded-lg mb-4">
+              <div class="flex items-center justify-between bg-white p-3 rounded-lg mb-4">
                 <div class="flex items-center gap-3">
-                  <.icon name="hero-document" class="size-8 text-primary" />
+                  <.icon name="hero-document" class="size-8 text-indigo-600" />
                   <div class="text-left">
                     <p class="font-medium">{entry.client_name}</p>
-                    <p class="text-sm text-base-content/70">
+                    <p class="text-sm text-slate-500">
                       {format_file_size(entry.client_size)}
                     </p>
                   </div>
@@ -195,43 +203,46 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
                   type="button"
                   phx-click="cancel-upload"
                   phx-value-ref={entry.ref}
-                  class="btn btn-ghost btn-sm btn-circle"
+                  class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full p-1 transition"
                 >
                   <.icon name="hero-x-mark" class="size-5" />
                 </button>
               </div>
 
-              <div class="w-full bg-base-300 rounded-full h-2 mb-4">
-                <div class="bg-primary h-2 rounded-full" style={"width: #{entry.progress}%"}></div>
+              <div class="w-full bg-slate-100 rounded-full h-2 mb-4">
+                <div class="bg-indigo-600 h-2 rounded-full" style={"width: #{entry.progress}%"}></div>
               </div>
 
               <%= for err <- upload_errors(@uploads.form_file, entry) do %>
-                <p class="text-error text-sm">{error_to_string(err)}</p>
+                <p class="text-red-600 text-sm">{error_to_string(err)}</p>
               <% end %>
             <% end %>
 
             <%= if @uploads.form_file.entries == [] do %>
-              <.icon name="hero-cloud-arrow-up" class="size-12 mx-auto text-base-content/50" />
-              <p class="mt-2 text-base-content/70">
+              <.icon name="hero-cloud-arrow-up" class="size-12 mx-auto text-slate-400" />
+              <p class="mt-2 text-slate-500">
                 Glissez-déposez votre fichier ici ou
-                <label for={@uploads.form_file.ref} class="link link-primary cursor-pointer">
+                <label
+                  for={@uploads.form_file.ref}
+                  class="text-indigo-600 hover:underline cursor-pointer"
+                >
                   parcourez
                 </label>
               </p>
-              <p class="text-sm text-base-content/50 mt-1">
+              <p class="text-sm text-slate-400 mt-1">
                 PDF ou image (max 10 Mo)
               </p>
             <% end %>
           </div>
 
           <%= for err <- upload_errors(@uploads.form_file) do %>
-            <p class="text-error text-sm mt-2">{error_to_string(err)}</p>
+            <p class="text-red-600 text-sm mt-2">{error_to_string(err)}</p>
           <% end %>
 
           <div class="mt-4">
             <button
               type="submit"
-              class="btn btn-primary w-full"
+              class="w-full bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center justify-center"
               disabled={@uploads.form_file.entries == []}
             >
               <.icon name="hero-arrow-up-tray" class="size-5" /> Envoyer ma fiche
@@ -295,10 +306,18 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
 
   # Helper functions
 
-  defp status_alert_class(:missing), do: "alert-warning"
-  defp status_alert_class(:pending), do: "alert-info"
-  defp status_alert_class(:approved), do: "alert-success"
-  defp status_alert_class(:rejected), do: "alert-error"
+  defp status_alert_class(:missing),
+    do: "bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start gap-3"
+
+  defp status_alert_class(:pending),
+    do:
+      "bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-xl p-4 flex items-start gap-3"
+
+  defp status_alert_class(:approved),
+    do: "bg-green-50 border border-green-200 text-green-800 rounded-xl p-4 flex items-start gap-3"
+
+  defp status_alert_class(:rejected),
+    do: "bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 flex items-start gap-3"
 
   defp status_icon(:missing), do: "hero-exclamation-triangle"
   defp status_icon(:pending), do: "hero-clock"

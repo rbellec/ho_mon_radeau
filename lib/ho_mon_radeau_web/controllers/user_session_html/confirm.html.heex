@@ -16,11 +16,14 @@
         name={@form[:remember_me].name}
         value="true"
         phx-disable-with="Confirming..."
-        class="btn btn-primary w-full"
+        class="w-full bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center justify-center"
       >
         Confirm and stay logged in
       </.button>
-      <.button phx-disable-with="Confirming..." class="btn btn-primary btn-soft w-full mt-2">
+      <.button
+        phx-disable-with="Confirming..."
+        class="w-full text-indigo-600 hover:bg-indigo-50 rounded-lg px-5 py-2.5 font-medium transition inline-flex items-center justify-center mt-2"
+      >
         Confirm and log in only this time
       </.button>
     </.form>
@@ -34,7 +37,11 @@
     >
       <input type="hidden" name={@form[:token].name} value={@form[:token].value} />
       <%= if @current_scope do %>
-        <.button variant="primary" phx-disable-with="Logging in..." class="btn btn-primary w-full">
+        <.button
+          variant="primary"
+          phx-disable-with="Logging in..."
+          class="w-full bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center justify-center"
+        >
           Log in
         </.button>
       <% else %>
@@ -42,17 +49,23 @@
           name={@form[:remember_me].name}
           value="true"
           phx-disable-with="Logging in..."
-          class="btn btn-primary w-full"
+          class="w-full bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center justify-center"
         >
           Keep me logged in on this device
         </.button>
-        <.button phx-disable-with="Logging in..." class="btn btn-primary btn-soft w-full mt-2">
+        <.button
+          phx-disable-with="Logging in..."
+          class="w-full text-indigo-600 hover:bg-indigo-50 rounded-lg px-5 py-2.5 font-medium transition inline-flex items-center justify-center mt-2"
+        >
           Log me in only this time
         </.button>
       <% end %>
     </.form>
 
-    <p :if={!@user.confirmed_at} class="alert alert-outline mt-8">
+    <p
+      :if={!@user.confirmed_at}
+      class="bg-slate-50 border border-slate-200 text-slate-700 rounded-xl p-4 mt-8 text-sm"
+    >
       Tip: If you prefer passwords, you can enable them in the user settings.
     </p>
   </div>
