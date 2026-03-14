@@ -24,13 +24,24 @@ defmodule HoMonRadeauWeb.RaftLive.Index do
 
   defp assign_user_context(socket) do
     # current_scope is set by on_mount hook in router
-    user_crew =
-      case socket.assigns.current_scope do
-        %{user: user} -> Events.get_user_crew(user)
-        _ -> nil
-      end
+    case socket.assigns.current_scope do
+      %{user: user} ->
+        user_crew = Events.get_user_crew(user)
 
-    assign(socket, :user_crew, user_crew)
+        user_raft =
+          if user_crew do
+            Events.get_raft!(user_crew.raft_id)
+          end
+
+        socket
+        |> assign(:user_crew, user_crew)
+        |> assign(:user_raft, user_raft)
+
+      _ ->
+        socket
+        |> assign(:user_crew, nil)
+        |> assign(:user_raft, nil)
+    end
   end
 
   @impl true
@@ -78,22 +89,14 @@ defmodule HoMonRadeauWeb.RaftLive.Index do
 
       <%= if @user_crew do %>
         <div class="alert alert-info mb-6">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="stroke-current shrink-0 h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
+          <.icon name="hero-information-circle" class="size-6" />
           <span>
-            Vous êtes membre d'un équipage.
-            <.link navigate={~p"/mon-radeau"} class="link">Voir mon radeau</.link>
+            <%= if @user_raft do %>
+              Votre radeau :
+              <.link navigate={~p"/mon-radeau"} class="link font-medium">{@user_raft.name}</.link>
+            <% else %>
+              <.link navigate={~p"/mon-radeau"} class="link">Voir la page de votre radeau</.link>
+            <% end %>
           </span>
         </div>
       <% end %>

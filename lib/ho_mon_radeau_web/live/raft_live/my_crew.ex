@@ -8,6 +8,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   alias HoMonRadeau.CUF
 
   @role_labels %{
+    "captain" => "Capitaine",
     "lead_construction" => "Lead construction",
     "cooking" => "Cuisine",
     "safe_contact" => "Interlocuteur SAFE",
@@ -306,7 +307,11 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
   @impl true
   def render(assigns) do
-    assigns = assign(assigns, :available_roles, CrewMember.valid_roles())
+    assigns =
+      assigns
+      |> assign(:available_roles, CrewMember.valid_roles())
+      |> assign(:required_roles, CrewMember.required_roles())
+      |> assign(:optional_roles, CrewMember.optional_roles())
 
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
@@ -381,30 +386,65 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           <div class="card bg-base-200" id="roles-summary">
             <div class="card-body">
               <h3 class="card-title">État des rôles</h3>
-              <div class="space-y-2 mt-2">
-                <div class="flex items-center gap-2">
-                  <%= if @captain do %>
-                    <.icon name="hero-check-circle-mini" class="size-4 text-success" />
-                    <span class="font-medium">Capitaine :</span>
-                    <span>{Accounts.display_name(@captain.user)}</span>
-                  <% else %>
-                    <.icon name="hero-exclamation-triangle-mini" class="size-4 text-warning" />
-                    <span class="font-medium text-warning">Capitaine : personne</span>
-                  <% end %>
-                </div>
-                <%= for role <- @available_roles do %>
-                  <div class="flex items-center gap-2">
-                    <%= if @roles_summary[role] != [] do %>
-                      <.icon name="hero-check-circle-mini" class="size-4 text-success" />
-                      <span class="font-medium">{role_label(role)} :</span>
-                      <span>{Enum.join(@roles_summary[role], ", ")}</span>
-                    <% else %>
-                      <.icon name="hero-exclamation-triangle-mini" class="size-4 text-warning" />
-                      <span class="font-medium text-warning">{role_label(role)} : personne</span>
+
+              <%!-- À pourvoir (required roles that are unfilled) --%>
+              <% unfilled_required = Enum.filter(@required_roles, fn r -> @roles_summary[r] == [] end)
+
+              unfilled_required =
+                if(is_nil(@captain), do: ["captain" | unfilled_required], else: unfilled_required) %>
+              <%= if unfilled_required != [] do %>
+                <div class="mt-3">
+                  <h4 class="text-sm font-semibold text-warning mb-1">À pourvoir</h4>
+                  <div class="space-y-1">
+                    <%= for role <- unfilled_required do %>
+                      <div class="flex items-center gap-2 text-warning">
+                        <.icon name="hero-exclamation-triangle-mini" class="size-4" />
+                        <span class="font-medium">{role_label(role)}</span>
+                      </div>
                     <% end %>
                   </div>
-                <% end %>
-              </div>
+                </div>
+              <% end %>
+
+              <%!-- Rôles actuels (filled roles) --%>
+              <% filled = Enum.filter(@available_roles, fn r -> @roles_summary[r] != [] end)
+              filled = if(@captain, do: ["captain" | filled], else: filled) %>
+              <%= if filled != [] do %>
+                <div class="mt-3">
+                  <h4 class="text-sm font-semibold text-success mb-1">Rôles actuels</h4>
+                  <div class="space-y-1">
+                    <%= for role <- filled do %>
+                      <div class="flex items-center gap-2">
+                        <.icon name="hero-check-circle-mini" class="size-4 text-success" />
+                        <span class="font-medium">{role_label(role)} :</span>
+                        <span>
+                          <%= if role == "captain" do %>
+                            {Accounts.display_name(@captain.user)}
+                          <% else %>
+                            {Enum.join(@roles_summary[role], ", ")}
+                          <% end %>
+                        </span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <%!-- Optionnels (optional roles that are unfilled) --%>
+              <% unfilled_optional = Enum.filter(@optional_roles, fn r -> @roles_summary[r] == [] end) %>
+              <%= if unfilled_optional != [] do %>
+                <div class="mt-3">
+                  <h4 class="text-sm font-semibold text-base-content/50 mb-1">Optionnels</h4>
+                  <div class="space-y-1">
+                    <%= for role <- unfilled_optional do %>
+                      <div class="flex items-center gap-2 text-base-content/40">
+                        <.icon name="hero-minus-circle-mini" class="size-4" />
+                        <span>{role_label(role)}</span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
             </div>
           </div>
 

@@ -11,15 +11,9 @@ defmodule HoMonRadeau.Events.CrewMember do
 
   @participation_statuses ~w(pending confirmed declined)
 
-  @valid_roles ~w(
-    lead_construction
-    cooking
-    safe_contact
-    logistics
-    music
-    decoration
-    other
-  )
+  @required_roles ~w(lead_construction cooking safe_contact)
+  @optional_roles ~w(logistics music decoration other)
+  @valid_roles @required_roles ++ @optional_roles
 
   schema "crew_members" do
     field :is_manager, :boolean, default: false
@@ -44,6 +38,16 @@ defmodule HoMonRadeau.Events.CrewMember do
   Returns the list of valid roles.
   """
   def valid_roles, do: @valid_roles
+
+  @doc """
+  Returns the list of required roles (should be filled for a crew to function).
+  """
+  def required_roles, do: @required_roles
+
+  @doc """
+  Returns the list of optional roles.
+  """
+  def optional_roles, do: @optional_roles
 
   @doc """
   Changeset for creating a crew member.
