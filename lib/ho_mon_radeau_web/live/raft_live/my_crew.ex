@@ -174,6 +174,40 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   end
 
   @impl true
+  def handle_event("leave_crew", _params, socket) do
+    user = socket.assigns.current_scope.user
+    crew = socket.assigns.crew
+
+    case Events.leave_crew(user.id, crew.id) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Vous avez quitté l'équipage.")
+         |> redirect(to: ~p"/radeaux")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Erreur lors du départ.")}
+    end
+  end
+
+  @impl true
+  def handle_event("remove_member", %{"user-id" => user_id}, socket) do
+    crew = socket.assigns.crew
+    current_user = socket.assigns.current_scope.user
+
+    case Events.leave_crew(String.to_integer(user_id), crew.id, removed_by_id: current_user.id) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Membre retiré de l'équipage.")
+         |> load_crew_data()}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Erreur lors du retrait.")}
+    end
+  end
+
+  @impl true
   def handle_event("submit_cuf", %{"participants" => participants}, socket) do
     crew = socket.assigns.crew
     selected_ids = for {id, "true"} <- participants, do: String.to_integer(id)
@@ -402,6 +436,22 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                   </.button>
                 </div>
               </form>
+              <div class="mt-6 pt-4 border-t border-base-300">
+                <button
+                  class="btn btn-ghost btn-sm text-error"
+                  phx-click="leave_crew"
+                  data-confirm={
+                    if(@is_captain,
+                      do:
+                        "Vous êtes le capitaine. En quittant, le rôle sera retiré. Quitter quand même ?",
+                      else: "Voulez-vous vraiment quitter l'équipage ?"
+                    )
+                  }
+                  id="leave-crew-btn"
+                >
+                  Quitter cet équipage
+                </button>
+              </div>
             </div>
           </div>
 
@@ -660,6 +710,14 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                             Nommer gestionnaire
                           </button>
                         <% end %>
+                        <button
+                          class="btn btn-ghost btn-xs text-error"
+                          phx-click="remove_member"
+                          phx-value-user-id={member.user_id}
+                          data-confirm={"Retirer #{Accounts.display_name(member.user)} de l'équipage ?"}
+                        >
+                          Retirer
+                        </button>
                       </div>
                     <% end %>
                   </li>

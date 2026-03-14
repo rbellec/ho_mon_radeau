@@ -607,6 +607,80 @@ defmodule HoMonRadeau.Events do
     Map.put(summary, "captain", if(captain, do: [captain], else: []))
   end
 
+  ## Crew Departures
+
+  alias HoMonRadeau.Events.CrewDeparture
+
+  @doc """
+  Removes a member from a crew and records the departure.
+  If removed_by_id is nil, it's a voluntary departure.
+  """
+  def leave_crew(user_id, crew_id, opts \\ []) do
+    removed_by_id = Keyword.get(opts, :removed_by_id)
+
+    case get_crew_member(crew_id, user_id) do
+      nil ->
+        {:error, :not_found}
+
+      member ->
+        cuf_status = get_member_cuf_status(member)
+
+        Multi.new()
+        |> Multi.delete(:member, member)
+        |> Multi.insert(:departure, fn _ ->
+          CrewDeparture.changeset(%CrewDeparture{}, %{
+            user_id: user_id,
+            crew_id: crew_id,
+            removed_by_id: removed_by_id,
+            cuf_status_at_departure: cuf_status,
+            was_captain: member.is_captain,
+            was_manager: member.is_manager
+          })
+        end)
+        |> Repo.transaction()
+    end
+  end
+
+  defp get_member_cuf_status(%CrewMember{participation_status: "confirmed"}), do: "validated"
+  defp get_member_cuf_status(%CrewMember{participation_status: "pending"}), do: "none"
+  defp get_member_cuf_status(_), do: "none"
+
+  @doc """
+  Lists all crew departures for admin view.
+  """
+  def list_crew_departures(filters \\ %{}) do
+    query =
+      from(d in CrewDeparture,
+        left_join: u in User,
+        on: u.id == d.user_id,
+        left_join: c in Crew,
+        on: c.id == d.crew_id,
+        left_join: r in Raft,
+        on: r.id == c.raft_id,
+        preload: [user: u, crew: {c, raft: r}],
+        order_by: [desc: d.inserted_at]
+      )
+
+    query
+    |> maybe_filter_departures_by_crew(filters["crew_id"])
+    |> maybe_filter_departures_by_cuf(filters["cuf_status"])
+    |> Repo.all()
+  end
+
+  defp maybe_filter_departures_by_crew(query, nil), do: query
+  defp maybe_filter_departures_by_crew(query, ""), do: query
+
+  defp maybe_filter_departures_by_crew(query, crew_id) do
+    from([d] in query, where: d.crew_id == ^crew_id)
+  end
+
+  defp maybe_filter_departures_by_cuf(query, nil), do: query
+  defp maybe_filter_departures_by_cuf(query, "all"), do: query
+
+  defp maybe_filter_departures_by_cuf(query, status) do
+    from([d] in query, where: d.cuf_status_at_departure == ^status)
+  end
+
   ## Transverse Teams
 
   @doc """

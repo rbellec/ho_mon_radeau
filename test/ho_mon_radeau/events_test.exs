@@ -214,6 +214,50 @@ defmodule HoMonRadeau.EventsTest do
     end
   end
 
+  describe "crew departures" do
+    import HoMonRadeau.AccountsFixtures
+
+    setup do
+      edition = edition_fixture(%{year: 2030, is_current: true})
+      user = user_fixture(%{email: "leaving@test.com"})
+      user = user |> Ecto.Changeset.change(validated: true) |> HoMonRadeau.Repo.update!()
+
+      {:ok, %{crew: crew}} =
+        Events.create_raft_with_crew(user, %{name: "Departure Raft"}, edition.id)
+
+      %{crew: crew, user: user}
+    end
+
+    test "leave_crew/2 removes member and records departure", %{crew: crew, user: user} do
+      assert {:ok, %{member: _, departure: departure}} = Events.leave_crew(user.id, crew.id)
+      assert departure.user_id == user.id
+      assert departure.crew_id == crew.id
+      assert departure.was_manager == true
+      assert is_nil(departure.removed_by_id)
+    end
+
+    test "leave_crew/3 with removed_by records who removed", %{crew: crew, user: user} do
+      admin = user_fixture(%{email: "admin_remover@test.com"})
+
+      assert {:ok, %{departure: departure}} =
+               Events.leave_crew(user.id, crew.id, removed_by_id: admin.id)
+
+      assert departure.removed_by_id == admin.id
+    end
+
+    test "leave_crew/2 returns error for non-member", %{crew: crew} do
+      non_member = user_fixture(%{email: "nonmember@test.com"})
+      assert {:error, :not_found} = Events.leave_crew(non_member.id, crew.id)
+    end
+
+    test "list_crew_departures/0 returns departures", %{crew: crew, user: user} do
+      {:ok, _} = Events.leave_crew(user.id, crew.id)
+      departures = Events.list_crew_departures()
+      assert length(departures) >= 1
+      assert hd(departures).user_id == user.id
+    end
+  end
+
   describe "transverse teams" do
     import HoMonRadeau.AccountsFixtures
 
