@@ -82,6 +82,7 @@ defmodule HoMonRadeauWeb.Router do
       pipe_through :browser
 
       live "/mon-radeau", RaftLive.MyCrew, :show
+      live "/mon-profil", ProfileLive, :show
     end
   end
 
