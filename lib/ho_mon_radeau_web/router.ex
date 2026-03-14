@@ -123,6 +123,8 @@ defmodule HoMonRadeauWeb.Router do
       live "/fiches", RegistrationFormLive.Index, :index
       live "/fiches/:id", RegistrationFormLive.Show, :show
       live "/radeaux", RaftLive.Index, :index
+      live "/equipes-transverses", TransverseTeamLive.Index, :index
+      live "/equipes-transverses/:id", TransverseTeamLive.Show, :show
     end
   end
 

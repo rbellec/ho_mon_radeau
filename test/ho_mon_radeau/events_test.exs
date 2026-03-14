@@ -213,4 +213,83 @@ defmodule HoMonRadeau.EventsTest do
       assert summary["lead_construction"] == []
     end
   end
+
+  describe "transverse teams" do
+    import HoMonRadeau.AccountsFixtures
+
+    test "create_transverse_team/1 creates a team" do
+      assert {:ok, team} =
+               Events.create_transverse_team(%{
+                 name: "SAFE",
+                 transverse_type: "safe_team",
+                 description: "Safety team"
+               })
+
+      assert team.name == "SAFE"
+      assert team.is_transverse == true
+      assert team.transverse_type == "safe_team"
+    end
+
+    test "create_transverse_team/1 rejects invalid type" do
+      assert {:error, changeset} =
+               Events.create_transverse_team(%{name: "Bad", transverse_type: "invalid"})
+
+      assert errors_on(changeset)[:transverse_type]
+    end
+
+    test "list_transverse_teams/0 returns all teams" do
+      {:ok, _} =
+        Events.create_transverse_team(%{name: "Team A", transverse_type: "welcome_team"})
+
+      {:ok, _} = Events.create_transverse_team(%{name: "Team B", transverse_type: "safe_team"})
+
+      teams = Events.list_transverse_teams()
+      assert length(teams) == 2
+    end
+
+    test "add and remove transverse team members" do
+      {:ok, team} =
+        Events.create_transverse_team(%{name: "Bidons", transverse_type: "drums_team"})
+
+      user = user_fixture()
+
+      assert {:ok, _member} = Events.add_transverse_team_member(team.id, user.id)
+
+      loaded = Events.get_transverse_team!(team.id)
+      assert length(loaded.crew_members) == 1
+
+      assert {:ok, _} = Events.remove_transverse_team_member(team.id, user.id)
+
+      loaded = Events.get_transverse_team!(team.id)
+      assert length(loaded.crew_members) == 0
+    end
+
+    test "get_user_transverse_teams/1 returns user's teams" do
+      user = user_fixture()
+
+      {:ok, team1} =
+        Events.create_transverse_team(%{name: "Team 1", transverse_type: "security"})
+
+      {:ok, team2} =
+        Events.create_transverse_team(%{name: "Team 2", transverse_type: "medical"})
+
+      Events.add_transverse_team_member(team1.id, user.id)
+      Events.add_transverse_team_member(team2.id, user.id)
+
+      teams = Events.get_user_transverse_teams(user)
+      assert length(teams) == 2
+    end
+
+    test "member_of_team_type?/2 checks team type membership" do
+      user = user_fixture()
+
+      {:ok, team} =
+        Events.create_transverse_team(%{name: "Accueil", transverse_type: "welcome_team"})
+
+      refute Events.member_of_team_type?(user, "welcome_team")
+
+      Events.add_transverse_team_member(team.id, user.id)
+      assert Events.member_of_team_type?(user, "welcome_team")
+    end
+  end
 end

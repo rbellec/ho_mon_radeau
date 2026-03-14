@@ -386,6 +386,20 @@ defmodule HoMonRadeau.Accounts do
   end
 
   @doc """
+  Searches users by nickname or email. Returns up to 10 results.
+  """
+  def search_users(query) when is_binary(query) do
+    search = "%#{query}%"
+
+    User
+    |> where([u], ilike(u.email, ^search) or ilike(u.nickname, ^search))
+    |> where([u], not is_nil(u.confirmed_at))
+    |> limit(10)
+    |> order_by([u], asc: u.email)
+    |> Repo.all()
+  end
+
+  @doc """
   Checks if a user can participate in the event.
   A user can participate if they are validated and have provided required personal info.
   """

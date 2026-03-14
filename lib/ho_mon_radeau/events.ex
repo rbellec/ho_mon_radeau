@@ -607,6 +607,111 @@ defmodule HoMonRadeau.Events do
     Map.put(summary, "captain", if(captain, do: [captain], else: []))
   end
 
+  ## Transverse Teams
+
+  @doc """
+  Lists all transverse teams with member counts.
+  """
+  def list_transverse_teams do
+    from(c in Crew,
+      where: c.is_transverse == true,
+      left_join: cm in CrewMember,
+      on: cm.crew_id == c.id,
+      group_by: c.id,
+      select: %{team: c, member_count: count(cm.id)},
+      order_by: c.name
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a transverse team by ID.
+  """
+  def get_transverse_team!(id) do
+    Crew
+    |> where([c], c.id == ^id and c.is_transverse == true)
+    |> Repo.one!()
+    |> Repo.preload(crew_members: :user)
+  end
+
+  @doc """
+  Creates a transverse team.
+  """
+  def create_transverse_team(attrs) do
+    %Crew{}
+    |> Crew.transverse_changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a transverse team.
+  """
+  def update_transverse_team(%Crew{} = team, attrs) do
+    team
+    |> Crew.transverse_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a transverse team.
+  """
+  def delete_transverse_team(%Crew{} = team) do
+    Repo.delete(team)
+  end
+
+  @doc """
+  Returns transverse teams a user belongs to.
+  """
+  def get_user_transverse_teams(%User{} = user) do
+    from(c in Crew,
+      join: cm in CrewMember,
+      on: cm.crew_id == c.id,
+      where: cm.user_id == ^user.id and c.is_transverse == true,
+      order_by: c.name
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Adds a member to a transverse team.
+  """
+  def add_transverse_team_member(team_id, user_id, opts \\ []) do
+    is_manager = Keyword.get(opts, :is_manager, false)
+
+    %CrewMember{}
+    |> CrewMember.changeset(%{crew_id: team_id, user_id: user_id, is_manager: is_manager})
+    |> Repo.insert()
+  end
+
+  @doc """
+  Removes a member from a transverse team.
+  """
+  def remove_transverse_team_member(team_id, user_id) do
+    case get_crew_member(team_id, user_id) do
+      nil -> {:error, :not_found}
+      member -> Repo.delete(member)
+    end
+  end
+
+  @doc """
+  Checks if a user is a member of a specific transverse team type.
+  """
+  def member_of_team_type?(%User{} = user, team_type) do
+    from(cm in CrewMember,
+      join: c in Crew,
+      on: c.id == cm.crew_id,
+      where: cm.user_id == ^user.id and c.transverse_type == ^team_type
+    )
+    |> Repo.exists?()
+  end
+
+  @doc """
+  Returns a changeset for a transverse team.
+  """
+  def change_transverse_team(%Crew{} = team, attrs \\ %{}) do
+    Crew.transverse_changeset(team, attrs)
+  end
+
   ## Raft Links
 
   @doc """

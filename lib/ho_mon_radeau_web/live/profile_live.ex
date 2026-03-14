@@ -15,12 +15,15 @@ defmodule HoMonRadeauWeb.ProfileLive do
         Events.get_raft!(user_crew.raft_id)
       end
 
+    transverse_teams = Events.get_user_transverse_teams(user)
+
     {:ok,
      socket
      |> assign(:page_title, "Mon profil")
      |> assign(:user, user)
      |> assign(:user_crew, user_crew)
      |> assign(:raft, raft)
+     |> assign(:transverse_teams, transverse_teams)
      |> assign(:form, to_form(changeset))}
   end
 
@@ -84,6 +87,14 @@ defmodule HoMonRadeauWeb.ProfileLive do
                 <.link navigate={~p"/mon-radeau"} class="link link-primary font-medium">
                   {@raft.name}
                 </.link>
+              </div>
+            <% end %>
+            <%= if @transverse_teams != [] do %>
+              <div class="mt-1 text-sm" id="transverse-teams">
+                Équipes :
+                <%= for team <- @transverse_teams do %>
+                  <span class="badge badge-ghost badge-sm">{team.name}</span>
+                <% end %>
               </div>
             <% end %>
           </div>
