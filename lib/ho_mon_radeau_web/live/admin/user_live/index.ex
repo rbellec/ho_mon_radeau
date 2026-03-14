@@ -8,13 +8,14 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
     {:ok,
      socket
      |> assign(:page_title, "Gestion des utilisateurs")
-     |> assign(:filter, "pending")
-     |> load_users("pending")}
+     |> assign(:filter, "all")
+     |> assign(:search, "")
+     |> load_users("all")}
   end
 
   @impl true
   def handle_params(params, _url, socket) do
-    filter = params["filter"] || "pending"
+    filter = params["filter"] || "all"
 
     {:noreply,
      socket
@@ -76,11 +77,18 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
     ~H"""
     <.header>
       Gestion des utilisateurs
-      <:subtitle>Validation des nouveaux participant·es</:subtitle>
+      <:subtitle><%= length(@users) %> utilisateur<%= if length(@users) > 1, do: "s" %></:subtitle>
     </.header>
 
     <div class="mt-6">
       <div class="tabs tabs-boxed mb-4">
+        <button
+          class={"tab #{if @filter == "all", do: "tab-active"}"}
+          phx-click="filter"
+          phx-value-filter="all"
+        >
+          Tous
+        </button>
         <button
           class={"tab #{if @filter == "pending", do: "tab-active"}"}
           phx-click="filter"
@@ -94,13 +102,6 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
           phx-value-filter="validated"
         >
           Validés
-        </button>
-        <button
-          class={"tab #{if @filter == "all", do: "tab-active"}"}
-          phx-click="filter"
-          phx-value-filter="all"
-        >
-          Tous
         </button>
       </div>
 
@@ -118,7 +119,7 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
           </thead>
           <tbody>
             <%= for user <- @users do %>
-              <tr>
+              <tr class="hover cursor-pointer" phx-click={JS.navigate(~p"/admin/utilisateurs/#{user.id}")}>
                 <td class="font-medium">
                   <%= Accounts.display_name(user) %>
                 </td>
@@ -149,7 +150,6 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
                       class="btn btn-sm btn-ghost text-error"
                       phx-click="invalidate"
                       phx-value-id={user.id}
-                      data-confirm="Êtes-vous sûr·e de vouloir révoquer la validation ?"
                     >
                       Révoquer
                     </button>

@@ -28,7 +28,8 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
   end
 
   defp assign_user_context(socket) do
-    case socket.assigns[:current_scope] do
+    # current_scope is set by on_mount hook in router
+    case socket.assigns.current_scope do
       %{user: user} ->
         user_crew = Events.get_user_crew(user)
         is_member = user_crew && user_crew.id == socket.assigns.raft.crew.id

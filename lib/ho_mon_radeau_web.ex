@@ -21,7 +21,8 @@ defmodule HoMonRadeauWeb do
 
   def router do
     quote do
-      use Phoenix.Router, helpers: false
+      # helpers: true needed for Kaffy admin interface
+      use Phoenix.Router, helpers: true
 
       # Import common connection and controller functions to use in pipelines
       import Plug.Conn

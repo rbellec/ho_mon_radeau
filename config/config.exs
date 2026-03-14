@@ -77,6 +77,13 @@ config :phoenix, :json_library, Jason
 config :ho_mon_radeau, :storage,
   enabled: false
 
+# Kaffy admin interface configuration
+config :kaffy,
+  otp_app: :ho_mon_radeau,
+  ecto_repo: HoMonRadeau.Repo,
+  router: HoMonRadeauWeb.Router,
+  resources: &HoMonRadeauWeb.KaffyConfig.create_resources/1
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"

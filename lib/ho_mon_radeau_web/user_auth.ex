@@ -7,6 +7,75 @@ defmodule HoMonRadeauWeb.UserAuth do
   alias HoMonRadeau.Accounts
   alias HoMonRadeau.Accounts.Scope
 
+  @doc """
+  LiveView on_mount callback to assign current_scope to the socket.
+  Used in live_session to make user scope available to all LiveViews.
+  """
+  def on_mount(:mount_current_scope, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+    {:cont, socket}
+  end
+
+  def on_mount(:require_authenticated_user, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+
+    if socket.assigns.current_scope && socket.assigns.current_scope.user do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+        |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+      {:halt, socket}
+    end
+  end
+
+  def on_mount(:require_validated_user, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+    user = socket.assigns.current_scope && socket.assigns.current_scope.user
+
+    if user && user.validated do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "Votre compte doit être validé par l'équipe d'accueil.")
+        |> Phoenix.LiveView.redirect(to: ~p"/")
+
+      {:halt, socket}
+    end
+  end
+
+  def on_mount(:require_admin_user, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+    user = socket.assigns.current_scope && socket.assigns.current_scope.user
+
+    if user && user.is_admin do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "Accès réservé aux administrateurs.")
+        |> Phoenix.LiveView.redirect(to: ~p"/")
+
+      {:halt, socket}
+    end
+  end
+
+  defp mount_current_scope(socket, session) do
+    Phoenix.Component.assign_new(socket, :current_scope, fn ->
+      if token = session["user_token"] do
+        case Accounts.get_user_by_session_token(token) do
+          {user, _inserted_at} -> Scope.for_user(user)
+          _ -> nil
+        end
+      else
+        nil
+      end
+    end)
+  end
+
   # Make the remember me cookie valid for 14 days. This should match
   # the session validity setting in UserToken.
   @max_cookie_age_in_days 14

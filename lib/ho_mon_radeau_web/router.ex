@@ -1,5 +1,6 @@
 defmodule HoMonRadeauWeb.Router do
   use HoMonRadeauWeb, :router
+  use Kaffy.Routes, scope: "/kaffy", pipe_through: [:browser, :require_authenticated_user, :require_admin_user]
 
   import HoMonRadeauWeb.UserAuth
 
@@ -21,10 +22,15 @@ defmodule HoMonRadeauWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+  end
 
-    # Public raft pages
-    live "/radeaux", RaftLive.Index, :index
-    live "/radeaux/:slug", RaftLive.Show, :show
+  # Public LiveView routes with optional user scope
+  live_session :public, on_mount: [{HoMonRadeauWeb.UserAuth, :mount_current_scope}] do
+    scope "/", HoMonRadeauWeb do
+      pipe_through :browser
+
+      live "/radeaux", RaftLive.Index, :index
+    end
   end
 
   # Other scopes may use custom stacks.
@@ -67,27 +73,52 @@ defmodule HoMonRadeauWeb.Router do
   end
 
   # Routes requiring authenticated user (not necessarily validated)
-  scope "/", HoMonRadeauWeb do
-    pipe_through [:browser, :require_authenticated_user]
+  live_session :authenticated,
+    on_mount: [{HoMonRadeauWeb.UserAuth, :require_authenticated_user}] do
+    scope "/", HoMonRadeauWeb do
+      pipe_through :browser
 
-    live "/mon-radeau", RaftLive.MyCrew, :show
+      live "/mon-radeau", RaftLive.MyCrew, :show
+    end
   end
 
   # Routes requiring validated user
-  scope "/", HoMonRadeauWeb do
-    pipe_through [:browser, :require_authenticated_user, :require_validated_user]
+  live_session :validated,
+    on_mount: [
+      {HoMonRadeauWeb.UserAuth, :require_authenticated_user},
+      {HoMonRadeauWeb.UserAuth, :require_validated_user}
+    ] do
+    scope "/", HoMonRadeauWeb do
+      pipe_through :browser
 
-    live "/fiche-inscription", RegistrationFormLive.Index, :index
-    live "/radeaux/nouveau", RaftLive.New, :new
+      live "/fiche-inscription", RegistrationFormLive.Index, :index
+      live "/radeaux/nouveau", RaftLive.New, :new
+    end
+  end
+
+  # Public raft detail page (must be after /radeaux/nouveau to avoid slug conflict)
+  live_session :public_raft, on_mount: [{HoMonRadeauWeb.UserAuth, :mount_current_scope}] do
+    scope "/", HoMonRadeauWeb do
+      pipe_through :browser
+
+      live "/radeaux/:slug", RaftLive.Show, :show
+    end
   end
 
   # Admin routes
-  scope "/admin", HoMonRadeauWeb.Admin, as: :admin do
-    pipe_through [:browser, :require_authenticated_user, :require_admin_user]
+  live_session :admin,
+    on_mount: [
+      {HoMonRadeauWeb.UserAuth, :require_authenticated_user},
+      {HoMonRadeauWeb.UserAuth, :require_admin_user}
+    ] do
+    scope "/admin", HoMonRadeauWeb.Admin, as: :admin do
+      pipe_through :browser
 
-    live "/utilisateurs", UserLive.Index, :index
-    live "/fiches", RegistrationFormLive.Index, :index
-    live "/fiches/:id", RegistrationFormLive.Show, :show
+      live "/utilisateurs", UserLive.Index, :index
+      live "/utilisateurs/:id", UserLive.Show, :show
+      live "/fiches", RegistrationFormLive.Index, :index
+      live "/fiches/:id", RegistrationFormLive.Show, :show
+    end
   end
 
   scope "/", HoMonRadeauWeb do

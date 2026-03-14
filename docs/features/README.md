@@ -63,3 +63,6 @@ Détails d'implémentation spécifiques
 | 011 | Gestion des bidons | ✅ Documenté | P1 |
 | 012 | CUF (Cotisation Urbaine Flottante) | ✅ Documenté | P1 |
 | 013 | Fiches d'inscription | ✅ Documenté | P0 - MVP |
+| 014 | Interface d'administration (Kaffy + LiveViews) | ✅ Documenté | P0 - MVP |
+| 015 | Page profil utilisateur | ✅ Documenté | P0 - MVP |
+| 016 | Quitter un équipage | ✅ Documenté | P1 |

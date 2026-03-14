@@ -27,6 +27,13 @@ defmodule HoMonRadeauWeb.Endpoint do
     only: HoMonRadeauWeb.static_paths(),
     raise_on_missing_only: code_reloading?
 
+  # Serve Kaffy admin assets
+  plug Plug.Static,
+    at: "/kaffy",
+    from: :kaffy,
+    gzip: not code_reloading?,
+    only: ~w(assets)
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do

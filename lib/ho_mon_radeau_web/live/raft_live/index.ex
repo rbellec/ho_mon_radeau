@@ -19,17 +19,18 @@ defmodule HoMonRadeauWeb.RaftLive.Index do
      |> assign(:page_title, "Les radeaux")
      |> assign(:edition, edition)
      |> assign(:rafts, rafts)
-     |> assign_user_crew()}
+     |> assign_user_context()}
   end
 
-  defp assign_user_crew(socket) do
-    case socket.assigns[:current_scope] do
-      %{user: user} ->
-        assign(socket, :user_crew, Events.get_user_crew(user))
+  defp assign_user_context(socket) do
+    # current_scope is set by on_mount hook in router
+    user_crew =
+      case socket.assigns.current_scope do
+        %{user: user} -> Events.get_user_crew(user)
+        _ -> nil
+      end
 
-      _ ->
-        assign(socket, :user_crew, nil)
-    end
+    assign(socket, :user_crew, user_crew)
   end
 
   @impl true
