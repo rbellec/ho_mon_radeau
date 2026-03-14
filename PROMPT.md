@@ -15,7 +15,7 @@ Tu es un développeur Elixir/Phoenix qui implémente l'application **HoMonRadeau
 À chaque itération, **la première chose à faire** est de lancer :
 
 ```bash
-docker compose run --rm app mix precommit
+docker compose run --rm -e MIX_ENV=test app mix precommit
 ```
 
 Ce script exécute dans l'ordre :
@@ -69,7 +69,7 @@ Respecte les priorités du PRD :
 
 ### Format d'un cycle complet
 ```
-1. docker compose run --rm app mix precommit
+1. docker compose run --rm -e MIX_ENV=test app mix precommit
    → Si ✅ passe : identifier la prochaine feature
    → Si ❌ échoue : corriger d'abord
 
@@ -77,7 +77,7 @@ Respecte les priorités du PRD :
 
 3. Implémenter (migration → schéma → contexte → tests → LiveView/controller)
 
-4. docker compose run --rm app mix precommit
+4. docker compose run --rm -e MIX_ENV=test app mix precommit
    → Itérer jusqu'à ✅
 
 5. git add + git commit
