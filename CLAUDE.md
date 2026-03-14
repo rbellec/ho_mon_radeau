@@ -29,10 +29,14 @@ ho_mon_radeau/
 ```
 
 ### Development Workflow
-1. All services run via Docker Compose
+1. All services run via Docker Compose (`docker compose`, not `docker-compose`)
 2. Database accessible locally (port forward optional, see docker-compose.yml)
 3. Use mailcatcher for email testing in development
 4. LiveView for minimal frontend interactions
+
+### Claude Code Conventions
+- **Never use `cd`** in bash commands — the working directory is already the project root
+- Run tests with: `docker compose run --rm -e MIX_ENV=test app mix precommit`
 
 ### Stack
 - **Language:** Elixir (latest stable)
