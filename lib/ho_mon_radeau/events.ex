@@ -268,6 +268,63 @@ defmodule HoMonRadeau.Events do
   end
 
   @doc """
+  Lists rafts for admin view with member counts, with optional filters.
+  Filters: status ("validated" | "proposed" | nil), name (string search).
+  """
+  def list_admin_rafts(filters \\ %{}) do
+    edition = get_current_edition()
+
+    if is_nil(edition) do
+      []
+    else
+      query =
+        from(r in Raft,
+          where: r.edition_id == ^edition.id,
+          left_join: c in Crew,
+          on: c.raft_id == r.id,
+          left_join: cm in CrewMember,
+          on: cm.crew_id == c.id,
+          left_join: captain in CrewMember,
+          on: captain.crew_id == c.id and captain.is_captain == true,
+          left_join: captain_user in User,
+          on: captain_user.id == captain.user_id,
+          group_by: [r.id, captain_user.id, captain_user.nickname, captain_user.email],
+          select: %{
+            raft: r,
+            member_count: count(cm.id),
+            captain_name:
+              fragment(
+                "COALESCE(?, ?)",
+                captain_user.nickname,
+                captain_user.email
+              )
+          },
+          order_by: [desc: r.validated, asc: r.name]
+        )
+
+      query
+      |> maybe_filter_name(filters["name"])
+      |> maybe_filter_status(filters["status"])
+      |> Repo.all()
+    end
+  end
+
+  defp maybe_filter_name(query, nil), do: query
+  defp maybe_filter_name(query, ""), do: query
+
+  defp maybe_filter_name(query, name) do
+    from([r] in query, where: ilike(r.name, ^"%#{name}%"))
+  end
+
+  defp maybe_filter_status(query, "validated"),
+    do: from([r] in query, where: r.validated == true)
+
+  defp maybe_filter_status(query, "proposed"),
+    do: from([r] in query, where: r.validated == false)
+
+  defp maybe_filter_status(query, _), do: query
+
+  @doc """
   Validates a raft (admin action).
   """
   def validate_raft(%Raft{} = raft, %User{} = admin) do
