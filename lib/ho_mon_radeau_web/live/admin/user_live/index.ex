@@ -77,7 +77,7 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
     ~H"""
     <.header>
       Gestion des utilisateurs
-      <:subtitle><%= length(@users) %> utilisateur<%= if length(@users) > 1, do: "s" %></:subtitle>
+      <:subtitle>{length(@users)} utilisateur{if length(@users) > 1, do: "s"}</:subtitle>
     </.header>
 
     <div class="mt-6">
@@ -119,20 +119,23 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Index do
           </thead>
           <tbody>
             <%= for user <- @users do %>
-              <tr class="hover cursor-pointer" phx-click={JS.navigate(~p"/admin/utilisateurs/#{user.id}")}>
+              <tr
+                class="hover cursor-pointer"
+                phx-click={JS.navigate(~p"/admin/utilisateurs/#{user.id}")}
+              >
                 <td class="font-medium">
-                  <%= Accounts.display_name(user) %>
+                  {Accounts.display_name(user)}
                 </td>
-                <td><%= user.email %></td>
+                <td>{user.email}</td>
                 <td>
                   <%= if user.first_name || user.last_name do %>
-                    <%= user.first_name %> <%= user.last_name %>
+                    {user.first_name} {user.last_name}
                   <% else %>
                     <span class="text-base-content/50">—</span>
                   <% end %>
                 </td>
                 <td>
-                  <%= Calendar.strftime(user.inserted_at, "%d/%m/%Y") %>
+                  {Calendar.strftime(user.inserted_at, "%d/%m/%Y")}
                 </td>
                 <td>
                   <%= if user.validated do %>

@@ -7,7 +7,17 @@ defmodule HoMonRadeau.Events do
   import Ecto.Query, warn: false
   alias Ecto.Multi
   alias HoMonRadeau.Repo
-  alias HoMonRadeau.Events.{Edition, Raft, Crew, CrewMember, CrewJoinRequest, RaftLink, RegistrationForm}
+
+  alias HoMonRadeau.Events.{
+    Edition,
+    Raft,
+    Crew,
+    CrewMember,
+    CrewJoinRequest,
+    RaftLink,
+    RegistrationForm
+  }
+
   alias HoMonRadeau.Storage
   alias HoMonRadeau.Accounts.User
 
@@ -840,10 +850,13 @@ defmodule HoMonRadeau.Events do
       {:error, :user_not_validated}
     else
       Multi.new()
-      |> Multi.update(:request, CrewJoinRequest.response_changeset(request, %{
-        status: "accepted",
-        responded_by_id: responded_by.id
-      }))
+      |> Multi.update(
+        :request,
+        CrewJoinRequest.response_changeset(request, %{
+          status: "accepted",
+          responded_by_id: responded_by.id
+        })
+      )
       |> Multi.insert(:crew_member, %CrewMember{
         crew_id: request.crew_id,
         user_id: request.user_id,
@@ -855,7 +868,8 @@ defmodule HoMonRadeau.Events do
       |> Multi.run(:cancel_other_requests, fn repo, _ ->
         {count, _} =
           from(jr in CrewJoinRequest,
-            where: jr.user_id == ^request.user_id and jr.id != ^request.id and jr.status == "pending"
+            where:
+              jr.user_id == ^request.user_id and jr.id != ^request.id and jr.status == "pending"
           )
           |> repo.update_all(set: [status: "cancelled"])
 

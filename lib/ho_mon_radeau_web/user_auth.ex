@@ -40,7 +40,10 @@ defmodule HoMonRadeauWeb.UserAuth do
     else
       socket =
         socket
-        |> Phoenix.LiveView.put_flash(:error, "Votre compte doit être validé par l'équipe d'accueil.")
+        |> Phoenix.LiveView.put_flash(
+          :error,
+          "Votre compte doit être validé par l'équipe d'accueil."
+        )
         |> Phoenix.LiveView.redirect(to: ~p"/")
 
       {:halt, socket}
@@ -296,7 +299,10 @@ defmodule HoMonRadeauWeb.UserAuth do
       conn
     else
       conn
-      |> put_flash(:error, "Votre compte doit être validé par l'équipe d'accueil pour accéder à cette page.")
+      |> put_flash(
+        :error,
+        "Votre compte doit être validé par l'équipe d'accueil pour accéder à cette page."
+      )
       |> redirect(to: ~p"/")
       |> halt()
     end

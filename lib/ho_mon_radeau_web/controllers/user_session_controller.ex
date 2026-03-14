@@ -28,7 +28,10 @@ defmodule HoMonRadeauWeb.UserSessionController do
       # User has a password - confirm them but require password login
       {:ok, :confirmed_with_password, _user} ->
         conn
-        |> put_flash(:info, "Email confirmé ! Vous pouvez maintenant vous connecter avec votre mot de passe.")
+        |> put_flash(
+          :info,
+          "Email confirmé ! Vous pouvez maintenant vous connecter avec votre mot de passe."
+        )
         |> redirect(to: ~p"/users/log-in")
 
       {:error, :not_found} ->

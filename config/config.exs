@@ -74,8 +74,7 @@ config :logger, :default_formatter,
 config :phoenix, :json_library, Jason
 
 # Default storage configuration (disabled by default)
-config :ho_mon_radeau, :storage,
-  enabled: false
+config :ho_mon_radeau, :storage, enabled: false
 
 # Kaffy admin interface configuration
 config :kaffy,

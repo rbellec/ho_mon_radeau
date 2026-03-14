@@ -106,8 +106,8 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
   def render(assigns) do
     ~H"""
     <.header>
-      <%= Accounts.display_name(@user) %>
-      <:subtitle><%= @user.email %></:subtitle>
+      {Accounts.display_name(@user)}
+      <:subtitle>{@user.email}</:subtitle>
       <:actions>
         <.link navigate={~p"/admin/utilisateurs"} class="btn btn-ghost btn-sm">
           ← Retour à la liste
@@ -124,30 +124,30 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
           <dl class="space-y-3 mt-2">
             <div>
               <dt class="text-sm text-base-content/60">Pseudo</dt>
-              <dd class="font-medium"><%= @user.nickname || "—" %></dd>
+              <dd class="font-medium">{@user.nickname || "—"}</dd>
             </div>
             <div>
               <dt class="text-sm text-base-content/60">Prénom</dt>
-              <dd class="font-medium"><%= @user.first_name || "—" %></dd>
+              <dd class="font-medium">{@user.first_name || "—"}</dd>
             </div>
             <div>
               <dt class="text-sm text-base-content/60">Nom</dt>
-              <dd class="font-medium"><%= @user.last_name || "—" %></dd>
+              <dd class="font-medium">{@user.last_name || "—"}</dd>
             </div>
             <div>
               <dt class="text-sm text-base-content/60">Téléphone</dt>
-              <dd class="font-medium"><%= @user.phone_number || "—" %></dd>
+              <dd class="font-medium">{@user.phone_number || "—"}</dd>
             </div>
             <div>
               <dt class="text-sm text-base-content/60">Inscrit·e le</dt>
-              <dd class="font-medium"><%= Calendar.strftime(@user.inserted_at, "%d/%m/%Y à %H:%M") %></dd>
+              <dd class="font-medium">{Calendar.strftime(@user.inserted_at, "%d/%m/%Y à %H:%M")}</dd>
             </div>
             <div>
               <dt class="text-sm text-base-content/60">Email confirmé</dt>
               <dd class="font-medium">
                 <%= if @user.confirmed_at do %>
                   <span class="text-success">Oui</span>
-                  (<%= Calendar.strftime(@user.confirmed_at, "%d/%m/%Y") %>)
+                  ({Calendar.strftime(@user.confirmed_at, "%d/%m/%Y")})
                 <% else %>
                   <span class="text-error">Non</span>
                 <% end %>
@@ -201,9 +201,13 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
               <button
                 class={"btn btn-sm #{if @user.is_admin, do: "btn-ghost text-error", else: "btn-secondary"}"}
                 phx-click="toggle_admin"
-                data-confirm={if @user.is_admin, do: "Retirer les droits admin ?", else: "Accorder les droits admin ?"}
+                data-confirm={
+                  if @user.is_admin,
+                    do: "Retirer les droits admin ?",
+                    else: "Accorder les droits admin ?"
+                }
               >
-                <%= if @user.is_admin, do: "Retirer", else: "Accorder" %>
+                {if @user.is_admin, do: "Retirer", else: "Accorder"}
               </button>
             </div>
           </div>
@@ -217,8 +221,11 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
 
           <%= if @raft do %>
             <div class="mt-2">
-              <.link navigate={~p"/radeaux/#{@raft.slug}"} class="link link-primary text-lg font-medium">
-                <%= @raft.name %>
+              <.link
+                navigate={~p"/radeaux/#{@raft.slug}"}
+                class="link link-primary text-lg font-medium"
+              >
+                {@raft.name}
               </.link>
 
               <div class="flex flex-wrap gap-2 mt-2">
@@ -229,12 +236,15 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
                   <span class="badge badge-secondary">Gestionnaire</span>
                 <% end %>
                 <%= for role <- (@crew_membership && @crew_membership.roles) || [] do %>
-                  <span class="badge badge-ghost"><%= role %></span>
+                  <span class="badge badge-ghost">{role}</span>
                 <% end %>
               </div>
 
               <p class="text-sm text-base-content/60 mt-2">
-                Membre depuis le <%= Calendar.strftime(@crew_membership.joined_at || @crew_membership.inserted_at, "%d/%m/%Y") %>
+                Membre depuis le {Calendar.strftime(
+                  @crew_membership.joined_at || @crew_membership.inserted_at,
+                  "%d/%m/%Y"
+                )}
               </p>
             </div>
           <% else %>
@@ -253,31 +263,36 @@ defmodule HoMonRadeauWeb.Admin.UserLive.Show do
               <%= case @form_status do %>
                 <% :missing -> %>
                   <span class="badge badge-ghost">Non déposée</span>
-
                 <% :pending -> %>
                   <span class="badge badge-warning">En attente de validation</span>
                   <%= if @current_form do %>
-                    <.link navigate={~p"/admin/fiches/#{@current_form.id}"} class="btn btn-sm btn-primary mt-2">
+                    <.link
+                      navigate={~p"/admin/fiches/#{@current_form.id}"}
+                      class="btn btn-sm btn-primary mt-2"
+                    >
                       Voir la fiche
                     </.link>
                   <% end %>
-
                 <% :approved -> %>
                   <span class="badge badge-success">Approuvée</span>
                   <%= if @current_form do %>
-                    <.link navigate={~p"/admin/fiches/#{@current_form.id}"} class="btn btn-sm btn-ghost mt-2">
+                    <.link
+                      navigate={~p"/admin/fiches/#{@current_form.id}"}
+                      class="btn btn-sm btn-ghost mt-2"
+                    >
                       Voir la fiche
                     </.link>
                   <% end %>
-
                 <% :rejected -> %>
                   <span class="badge badge-error">Refusée</span>
                   <%= if @current_form do %>
-                    <.link navigate={~p"/admin/fiches/#{@current_form.id}"} class="btn btn-sm btn-ghost mt-2">
+                    <.link
+                      navigate={~p"/admin/fiches/#{@current_form.id}"}
+                      class="btn btn-sm btn-ghost mt-2"
+                    >
                       Voir la fiche
                     </.link>
                   <% end %>
-
                 <% _ -> %>
                   <span class="text-base-content/60">—</span>
               <% end %>

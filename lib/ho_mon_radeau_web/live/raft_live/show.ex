@@ -75,7 +75,7 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
   def render(assigns) do
     ~H"""
     <.header>
-      <%= @raft.name %>
+      {@raft.name}
       <:subtitle>
         <%= if @raft.validated do %>
           <span class="badge badge-success">Radeau validé</span>
@@ -95,7 +95,7 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
         <%= if @raft.description do %>
           <div class="prose max-w-none">
             <h3>Description</h3>
-            <p class="whitespace-pre-wrap"><%= @raft.description %></p>
+            <p class="whitespace-pre-wrap">{@raft.description}</p>
           </div>
         <% end %>
 
@@ -103,7 +103,7 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
           <div>
             <h3 class="font-semibold mb-2">Lien forum</h3>
             <a href={@raft.forum_url} target="_blank" class="link link-primary">
-              <%= @raft.forum_url %>
+              {@raft.forum_url}
             </a>
           </div>
         <% end %>
@@ -114,8 +114,10 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
           <div class="card-body">
             <h3 class="card-title">Équipage</h3>
             <p class="text-3xl font-bold">
-              <%= length(@raft.crew.crew_members) %>
-              <span class="text-base font-normal text-base-content/60">membre<%= if length(@raft.crew.crew_members) > 1, do: "s" %></span>
+              {length(@raft.crew.crew_members)}
+              <span class="text-base font-normal text-base-content/60">
+                membre{if length(@raft.crew.crew_members) > 1, do: "s"}
+              </span>
             </p>
 
             <div class="divider"></div>
@@ -123,7 +125,7 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
             <ul class="space-y-2">
               <%= for member <- @raft.crew.crew_members do %>
                 <li class="flex items-center gap-2">
-                  <span class="font-medium"><%= Accounts.display_name(member.user) %></span>
+                  <span class="font-medium">{Accounts.display_name(member.user)}</span>
                   <%= if member.is_captain do %>
                     <span class="badge badge-primary badge-sm">Capitaine</span>
                   <% end %>
@@ -147,22 +149,18 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
                   <.link navigate={~p"/mon-radeau"} class="btn btn-primary btn-sm mt-2">
                     Voir la page équipage
                   </.link>
-
                 <% @user_crew != nil -> %>
                   <p class="text-base-content/60">
                     Vous êtes déjà membre d'un autre équipage.
                   </p>
-
                 <% @has_pending_request -> %>
                   <p class="text-info">
                     ⏳ Votre demande est en attente de validation.
                   </p>
-
                 <% !@current_scope.user.validated -> %>
                   <p class="text-warning text-sm">
                     Votre compte doit être validé par l'équipe d'accueil avant de pouvoir rejoindre un équipage.
                   </p>
-
                 <% true -> %>
                   <h3 class="card-title text-base">Rejoindre cet équipage</h3>
                   <form phx-submit="request_join" class="space-y-3">

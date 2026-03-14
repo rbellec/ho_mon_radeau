@@ -39,7 +39,7 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
         </.link>
         Fiche d'inscription
         <:subtitle>
-          <%= @form.user.nickname || @form.user.email %>
+          {@form.user.nickname || @form.user.email}
         </:subtitle>
         <:actions>
           <.status_badge status={@form.status} />
@@ -70,18 +70,17 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
     <div class="card bg-base-200">
       <div class="card-body">
         <h2 class="card-title">
-          <.icon name="hero-user" class="size-5" />
-          Informations
+          <.icon name="hero-user" class="size-5" /> Informations
         </h2>
 
         <dl class="space-y-2 mt-4">
           <div class="flex justify-between">
             <dt class="text-base-content/70">Participant</dt>
-            <dd class="font-medium"><%= @form.user.nickname || "Sans pseudo" %></dd>
+            <dd class="font-medium">{@form.user.nickname || "Sans pseudo"}</dd>
           </div>
           <div class="flex justify-between">
             <dt class="text-base-content/70">Email</dt>
-            <dd><%= @form.user.email %></dd>
+            <dd>{@form.user.email}</dd>
           </div>
           <div class="flex justify-between">
             <dt class="text-base-content/70">Type de fiche</dt>
@@ -91,31 +90,31 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
                 @form.form_type == "captain" && "badge-warning",
                 @form.form_type == "participant" && "badge-info"
               ]}>
-                <%= if @form.form_type == "captain", do: "Capitaine", else: "Participant" %>
+                {if @form.form_type == "captain", do: "Capitaine", else: "Participant"}
               </span>
             </dd>
           </div>
           <div class="flex justify-between">
             <dt class="text-base-content/70">Fichier</dt>
-            <dd><%= @form.file_name %></dd>
+            <dd>{@form.file_name}</dd>
           </div>
           <div class="flex justify-between">
             <dt class="text-base-content/70">Taille</dt>
-            <dd><%= format_file_size(@form.file_size) %></dd>
+            <dd>{format_file_size(@form.file_size)}</dd>
           </div>
           <div class="flex justify-between">
             <dt class="text-base-content/70">Envoyée le</dt>
-            <dd><%= Calendar.strftime(@form.uploaded_at, "%d/%m/%Y à %H:%M") %></dd>
+            <dd>{Calendar.strftime(@form.uploaded_at, "%d/%m/%Y à %H:%M")}</dd>
           </div>
           <%= if @form.reviewed_at do %>
             <div class="flex justify-between">
               <dt class="text-base-content/70">Revue le</dt>
-              <dd><%= Calendar.strftime(@form.reviewed_at, "%d/%m/%Y à %H:%M") %></dd>
+              <dd>{Calendar.strftime(@form.reviewed_at, "%d/%m/%Y à %H:%M")}</dd>
             </div>
             <%= if @form.reviewed_by do %>
               <div class="flex justify-between">
                 <dt class="text-base-content/70">Par</dt>
-                <dd><%= @form.reviewed_by.nickname || @form.reviewed_by.email %></dd>
+                <dd>{@form.reviewed_by.nickname || @form.reviewed_by.email}</dd>
               </div>
             <% end %>
           <% end %>
@@ -126,7 +125,7 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
             <.icon name="hero-exclamation-circle" class="size-5" />
             <div>
               <strong>Motif du rejet :</strong>
-              <p><%= @form.rejection_reason %></p>
+              <p>{@form.rejection_reason}</p>
             </div>
           </div>
         <% end %>
@@ -140,19 +139,16 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
     <div class="card bg-base-200">
       <div class="card-body">
         <h2 class="card-title">
-          <.icon name="hero-cog-6-tooth" class="size-5" />
-          Actions
+          <.icon name="hero-cog-6-tooth" class="size-5" /> Actions
         </h2>
 
         <%= if @form.status == "pending" do %>
           <div class="flex gap-2 mt-4">
             <button phx-click="approve" class="btn btn-success flex-1">
-              <.icon name="hero-check" class="size-5" />
-              Valider
+              <.icon name="hero-check" class="size-5" /> Valider
             </button>
             <button phx-click="show-reject-modal" class="btn btn-error flex-1">
-              <.icon name="hero-x-mark" class="size-5" />
-              Rejeter
+              <.icon name="hero-x-mark" class="size-5" /> Rejeter
             </button>
           </div>
         <% else %>
@@ -194,8 +190,7 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
     <div class="card bg-base-200">
       <div class="card-body">
         <h2 class="card-title">
-          <.icon name="hero-clock" class="size-5" />
-          Historique
+          <.icon name="hero-clock" class="size-5" /> Historique
         </h2>
 
         <%= if length(@forms) > 1 do %>
@@ -206,13 +201,13 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
                   <hr />
                 <% end %>
                 <div class="timeline-start text-xs text-base-content/70">
-                  <%= Calendar.strftime(form.uploaded_at, "%d/%m") %>
+                  {Calendar.strftime(form.uploaded_at, "%d/%m")}
                 </div>
                 <div class="timeline-middle">
                   <.status_icon status={form.status} />
                 </div>
                 <div class="timeline-end timeline-box">
-                  <%= form.file_name %>
+                  {form.file_name}
                 </div>
                 <%= if idx < length(@forms) - 1 do %>
                   <hr />
@@ -233,8 +228,7 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
     <div class="card bg-base-200 h-full">
       <div class="card-body">
         <h2 class="card-title">
-          <.icon name="hero-document" class="size-5" />
-          Aperçu
+          <.icon name="hero-document" class="size-5" /> Aperçu
         </h2>
 
         <%= if @file_url do %>
@@ -271,11 +265,11 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Show do
       @status == "approved" && "badge-success",
       @status == "rejected" && "badge-error"
     ]}>
-      <%= case @status do
+      {case @status do
         "pending" -> "En attente"
         "approved" -> "Validée"
         "rejected" -> "Rejetée"
-      end %>
+      end}
     </span>
     """
   end

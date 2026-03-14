@@ -49,7 +49,7 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
       <.header>
         Fiches d'inscription
         <:subtitle>
-          Édition <%= @edition.year %> - <%= @pending_count %> fiche(s) en attente
+          Édition {@edition.year} - {@pending_count} fiche(s) en attente
         </:subtitle>
         <:actions>
           <div class="flex gap-2">
@@ -58,16 +58,14 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
               phx-value-mode="list"
               class={["btn btn-sm", @view_mode == :list && "btn-primary"]}
             >
-              <.icon name="hero-list-bullet" class="size-4" />
-              Liste
+              <.icon name="hero-list-bullet" class="size-4" /> Liste
             </button>
             <button
               phx-click="set-view"
               phx-value-mode="raft"
               class={["btn btn-sm", @view_mode == :raft && "btn-primary"]}
             >
-              <.icon name="hero-squares-2x2" class="size-4" />
-              Par radeau
+              <.icon name="hero-squares-2x2" class="size-4" /> Par radeau
             </button>
           </div>
         </:actions>
@@ -128,13 +126,13 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
               <div class="avatar placeholder">
                 <div class="bg-base-300 text-base-content rounded-full w-8">
                   <span class="text-xs">
-                    <%= String.first(form.user.nickname || form.user.email) |> String.upcase() %>
+                    {String.first(form.user.nickname || form.user.email) |> String.upcase()}
                   </span>
                 </div>
               </div>
               <div>
-                <div class="font-medium"><%= form.user.nickname || "Sans pseudo" %></div>
-                <div class="text-xs text-base-content/70"><%= form.user.email %></div>
+                <div class="font-medium">{form.user.nickname || "Sans pseudo"}</div>
+                <div class="text-xs text-base-content/70">{form.user.email}</div>
               </div>
             </div>
           </:col>
@@ -144,14 +142,14 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
               form.form_type == "captain" && "badge-warning",
               form.form_type == "participant" && "badge-info"
             ]}>
-              <%= if form.form_type == "captain", do: "Capitaine", else: "Participant" %>
+              {if form.form_type == "captain", do: "Capitaine", else: "Participant"}
             </span>
           </:col>
           <:col :let={form} label="Statut">
             <.status_badge status={form.status} />
           </:col>
           <:col :let={form} label="Envoyée le">
-            <%= Calendar.strftime(form.uploaded_at, "%d/%m/%Y %H:%M") %>
+            {Calendar.strftime(form.uploaded_at, "%d/%m/%Y %H:%M")}
           </:col>
           <:action :let={form}>
             <.link navigate={~p"/admin/fiches/#{form.id}"} class="btn btn-ghost btn-sm">
@@ -189,24 +187,24 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
             <tbody>
               <%= for stat <- @stats do %>
                 <tr>
-                  <td class="font-medium"><%= stat.raft_name %></td>
-                  <td class="text-center"><%= stat.total_members %></td>
+                  <td class="font-medium">{stat.raft_name}</td>
+                  <td class="text-center">{stat.total_members}</td>
                   <td class="text-center">
-                    <span class="badge badge-success"><%= stat.approved %></span>
+                    <span class="badge badge-success">{stat.approved}</span>
                   </td>
                   <td class="text-center">
                     <span class={["badge", stat.pending > 0 && "badge-info"]}>
-                      <%= stat.pending %>
+                      {stat.pending}
                     </span>
                   </td>
                   <td class="text-center">
                     <span class={["badge", stat.rejected > 0 && "badge-error"]}>
-                      <%= stat.rejected %>
+                      {stat.rejected}
                     </span>
                   </td>
                   <td class="text-center">
                     <span class={["badge", stat.missing > 0 && "badge-warning"]}>
-                      <%= stat.missing %>
+                      {stat.missing}
                     </span>
                   </td>
                   <td>
@@ -239,11 +237,11 @@ defmodule HoMonRadeauWeb.Admin.RegistrationFormLive.Index do
       @status == "approved" && "badge-success",
       @status == "rejected" && "badge-error"
     ]}>
-      <%= case @status do
+      {case @status do
         "pending" -> "En attente"
         "approved" -> "Validée"
         "rejected" -> "Rejetée"
-      end %>
+      end}
     </span>
     """
   end

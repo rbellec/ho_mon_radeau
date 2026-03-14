@@ -44,7 +44,12 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
          |> reload_data()}
 
       {:error, :user_not_validated} ->
-        {:noreply, put_flash(socket, :error, "Cet utilisateur doit d'abord être validé par l'équipe d'accueil.")}
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Cet utilisateur doit d'abord être validé par l'équipe d'accueil."
+         )}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Erreur lors de l'acceptation.")}
@@ -71,7 +76,9 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   defp reload_data(socket) do
     crew = socket.assigns.crew
     raft = Events.get_raft!(crew.raft_id) |> Events.preload_raft_details()
-    pending_requests = if socket.assigns.is_manager, do: Events.list_pending_join_requests(crew), else: []
+
+    pending_requests =
+      if socket.assigns.is_manager, do: Events.list_pending_join_requests(crew), else: []
 
     socket
     |> assign(:raft, raft)
@@ -82,7 +89,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   def render(assigns) do
     ~H"""
     <.header>
-      <%= @raft.name %>
+      {@raft.name}
       <:subtitle>Page équipage</:subtitle>
       <:actions>
         <.link navigate={~p"/radeaux/#{@raft.slug}"} class="btn btn-ghost btn-sm">
@@ -98,13 +105,13 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           <div class="card bg-warning/10 border border-warning">
             <div class="card-body">
               <h3 class="card-title text-warning">
-                Demandes d'adhésion (<%= length(@pending_requests) %>)
+                Demandes d'adhésion ({length(@pending_requests)})
               </h3>
               <div class="space-y-4 mt-2">
                 <%= for request <- @pending_requests do %>
                   <div class="flex items-start justify-between gap-4 p-3 bg-base-100 rounded-lg">
                     <div>
-                      <p class="font-medium"><%= Accounts.display_name(request.user) %></p>
+                      <p class="font-medium">{Accounts.display_name(request.user)}</p>
                       <%= if request.user.validated do %>
                         <span class="badge badge-success badge-sm">Validé·e</span>
                       <% else %>
@@ -112,11 +119,11 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                       <% end %>
                       <%= if request.message do %>
                         <p class="text-sm text-base-content/70 mt-1 italic">
-                          "<%= request.message %>"
+                          "{request.message}"
                         </p>
                       <% end %>
                       <p class="text-xs text-base-content/50 mt-1">
-                        Demande envoyée le <%= Calendar.strftime(request.inserted_at, "%d/%m/%Y à %H:%M") %>
+                        Demande envoyée le {Calendar.strftime(request.inserted_at, "%d/%m/%Y à %H:%M")}
                       </p>
                     </div>
                     <div class="flex gap-2">
@@ -153,7 +160,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
             <%= if @raft.description do %>
               <div class="mt-2">
                 <p class="text-sm font-medium text-base-content/60">Description</p>
-                <p class="whitespace-pre-wrap"><%= @raft.description %></p>
+                <p class="whitespace-pre-wrap">{@raft.description}</p>
               </div>
             <% end %>
 
@@ -161,7 +168,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
               <div class="mt-4">
                 <p class="text-sm font-medium text-base-content/60">Lien forum</p>
                 <a href={@raft.forum_url} target="_blank" class="link link-primary">
-                  <%= @raft.forum_url %>
+                  {@raft.forum_url}
                 </a>
               </div>
             <% end %>
@@ -200,15 +207,14 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
         <div class="card bg-base-200">
           <div class="card-body">
             <h3 class="card-title">
-              Équipage
-              <span class="badge badge-ghost"><%= length(@raft.crew.crew_members) %></span>
+              Équipage <span class="badge badge-ghost">{length(@raft.crew.crew_members)}</span>
             </h3>
 
             <ul class="space-y-3 mt-2">
               <%= for member <- @raft.crew.crew_members do %>
                 <li class="flex items-center justify-between">
                   <div>
-                    <p class="font-medium"><%= Accounts.display_name(member.user) %></p>
+                    <p class="font-medium">{Accounts.display_name(member.user)}</p>
                     <div class="flex flex-wrap gap-1 mt-1">
                       <%= if member.is_captain do %>
                         <span class="badge badge-primary badge-xs">Capitaine</span>
@@ -217,7 +223,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                         <span class="badge badge-secondary badge-xs">Gestionnaire</span>
                       <% end %>
                       <%= for role <- member.roles || [] do %>
-                        <span class="badge badge-ghost badge-xs"><%= role %></span>
+                        <span class="badge badge-ghost badge-xs">{role}</span>
                       <% end %>
                     </div>
                   </div>

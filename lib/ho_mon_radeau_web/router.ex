@@ -1,6 +1,9 @@
 defmodule HoMonRadeauWeb.Router do
   use HoMonRadeauWeb, :router
-  use Kaffy.Routes, scope: "/kaffy", pipe_through: [:browser, :require_authenticated_user, :require_admin_user]
+
+  use Kaffy.Routes,
+    scope: "/kaffy",
+    pipe_through: [:browser, :require_authenticated_user, :require_admin_user]
 
   import HoMonRadeauWeb.UserAuth
 

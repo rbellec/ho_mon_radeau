@@ -207,9 +207,7 @@ defmodule HoMonRadeau.Storage do
     expires_in = opts[:expires_in] || 3600
 
     {:ok, url} =
-      ExAws.S3.presigned_url(ExAws.Config.new(:s3), :get, bucket, path,
-        expires_in: expires_in
-      )
+      ExAws.S3.presigned_url(ExAws.Config.new(:s3), :get, bucket, path, expires_in: expires_in)
 
     {:ok, url}
   end

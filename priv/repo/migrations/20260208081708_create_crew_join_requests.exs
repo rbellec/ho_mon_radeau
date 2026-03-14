@@ -14,9 +14,9 @@ defmodule HoMonRadeau.Repo.Migrations.CreateCrewJoinRequests do
     end
 
     create unique_index(:crew_join_requests, [:crew_id, :user_id],
-      where: "status = 'pending'",
-      name: :crew_join_requests_pending_unique
-    )
+             where: "status = 'pending'",
+             name: :crew_join_requests_pending_unique
+           )
 
     create index(:crew_join_requests, [:user_id])
     create index(:crew_join_requests, [:status])

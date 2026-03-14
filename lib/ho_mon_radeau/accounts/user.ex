@@ -95,7 +95,8 @@ defmodule HoMonRadeau.Accounts.User do
   defp validate_password(changeset, opts) do
     changeset
     |> validate_required([:password])
-    |> validate_length(:password, min: 6,
+    |> validate_length(:password,
+      min: 6,
       message: "le mot de passe doit faire 6 caractères minimum et un peu de folie. Un peu plus."
     )
     |> validate_length(:password, max: 72)

@@ -46,7 +46,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
         Fiche d'inscription
         <:subtitle>
           <%= if @form_type do %>
-            Fiche <%= if @form_type == :captain, do: "capitaine", else: "participant" %>
+            Fiche {if @form_type == :captain, do: "capitaine", else: "participant"}
           <% else %>
             Vous devez d'abord rejoindre un équipage
           <% end %>
@@ -62,7 +62,9 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
       <% else %>
         <div class="alert alert-warning mt-6">
           <.icon name="hero-exclamation-triangle" class="size-6" />
-          <span>Vous devez d'abord rejoindre un équipage avant de pouvoir soumettre votre fiche d'inscription.</span>
+          <span>
+            Vous devez d'abord rejoindre un équipage avant de pouvoir soumettre votre fiche d'inscription.
+          </span>
         </div>
       <% end %>
     </div>
@@ -74,8 +76,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
     <div class="card bg-base-200">
       <div class="card-body">
         <h2 class="card-title">
-          <.icon name="hero-document-text" class="size-6" />
-          Instructions
+          <.icon name="hero-document-text" class="size-6" /> Instructions
         </h2>
 
         <p class="text-base-content/80">
@@ -87,7 +88,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
             <.icon name="hero-calendar" class="size-5" />
             <span>
               <strong>Date limite :</strong>
-              <%= Calendar.strftime(@edition.registration_deadline, "%d/%m/%Y") %>
+              {Calendar.strftime(@edition.registration_deadline, "%d/%m/%Y")}
             </span>
           </div>
         <% end %>
@@ -126,8 +127,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
     <div class="card bg-base-200">
       <div class="card-body">
         <h2 class="card-title">
-          <.icon name="hero-clipboard-document-check" class="size-6" />
-          Statut actuel
+          <.icon name="hero-clipboard-document-check" class="size-6" /> Statut actuel
         </h2>
 
         <div class={[
@@ -135,7 +135,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
           status_alert_class(@status)
         ]}>
           <.icon name={status_icon(@status)} class="size-5" />
-          <span><%= status_text(@status) %></span>
+          <span>{status_text(@status)}</span>
         </div>
 
         <%= if @form && @status == :rejected && @form.rejection_reason do %>
@@ -143,7 +143,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
             <.icon name="hero-exclamation-circle" class="size-5" />
             <div>
               <strong>Motif du rejet :</strong>
-              <p><%= @form.rejection_reason %></p>
+              <p>{@form.rejection_reason}</p>
             </div>
           </div>
         <% end %>
@@ -152,11 +152,11 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
           <div class="mt-4 text-sm text-base-content/70">
             <p>
               <strong>Dernier envoi :</strong>
-              <%= Calendar.strftime(@form.uploaded_at, "%d/%m/%Y à %H:%M") %>
+              {Calendar.strftime(@form.uploaded_at, "%d/%m/%Y à %H:%M")}
             </p>
             <p>
               <strong>Fichier :</strong>
-              <%= @form.file_name %>
+              {@form.file_name}
             </p>
           </div>
         <% end %>
@@ -170,8 +170,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
     <div class="card bg-base-200">
       <div class="card-body">
         <h2 class="card-title">
-          <.icon name="hero-arrow-up-tray" class="size-6" />
-          Envoyer votre fiche
+          <.icon name="hero-arrow-up-tray" class="size-6" /> Envoyer votre fiche
         </h2>
 
         <form phx-submit="save" phx-change="validate" class="mt-4">
@@ -186,9 +185,9 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
                 <div class="flex items-center gap-3">
                   <.icon name="hero-document" class="size-8 text-primary" />
                   <div class="text-left">
-                    <p class="font-medium"><%= entry.client_name %></p>
+                    <p class="font-medium">{entry.client_name}</p>
                     <p class="text-sm text-base-content/70">
-                      <%= format_file_size(entry.client_size) %>
+                      {format_file_size(entry.client_size)}
                     </p>
                   </div>
                 </div>
@@ -207,7 +206,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
               </div>
 
               <%= for err <- upload_errors(@uploads.form_file, entry) do %>
-                <p class="text-error text-sm"><%= error_to_string(err) %></p>
+                <p class="text-error text-sm">{error_to_string(err)}</p>
               <% end %>
             <% end %>
 
@@ -226,7 +225,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
           </div>
 
           <%= for err <- upload_errors(@uploads.form_file) do %>
-            <p class="text-error text-sm mt-2"><%= error_to_string(err) %></p>
+            <p class="text-error text-sm mt-2">{error_to_string(err)}</p>
           <% end %>
 
           <div class="mt-4">
@@ -235,8 +234,7 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
               class="btn btn-primary w-full"
               disabled={@uploads.form_file.entries == []}
             >
-              <.icon name="hero-arrow-up-tray" class="size-5" />
-              Envoyer ma fiche
+              <.icon name="hero-arrow-up-tray" class="size-5" /> Envoyer ma fiche
             </button>
           </div>
         </form>
@@ -286,7 +284,8 @@ defmodule HoMonRadeauWeb.RegistrationFormLive.Index do
             {:noreply, put_flash(socket, :error, "Vous devez rejoindre un équipage")}
 
           {:error, changeset} ->
-            {:noreply, put_flash(socket, :error, "Erreur lors de l'envoi: #{inspect(changeset.errors)}")}
+            {:noreply,
+             put_flash(socket, :error, "Erreur lors de l'envoi: #{inspect(changeset.errors)}")}
         end
 
       [] ->
