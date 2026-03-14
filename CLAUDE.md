@@ -53,7 +53,7 @@ ho_mon_radeau/
 
 ```bash
 # Start all services
-docker-compose up
+docker compose up
 
 # Access application
 http://localhost:4000
