@@ -266,7 +266,19 @@ defmodule HoMonRadeauWeb.UserAuth do
     end
   end
 
-  defp signed_in_path(_conn), do: ~p"/"
+  defp signed_in_path(conn) do
+    case conn.assigns[:current_scope] do
+      %{user: user} ->
+        if HoMonRadeau.Events.get_user_crew(user) do
+          ~p"/mon-radeau"
+        else
+          ~p"/radeaux"
+        end
+
+      _ ->
+        ~p"/"
+    end
+  end
 
   @doc """
   Plug for routes that require the user to be authenticated.

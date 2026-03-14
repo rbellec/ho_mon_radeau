@@ -229,7 +229,8 @@ defmodule HoMonRadeauWeb.UserAuthTest do
         |> UserAuth.redirect_if_user_is_authenticated([])
 
       assert conn.halted
-      assert redirected_to(conn) == ~p"/"
+      # User without a crew gets redirected to raft list
+      assert redirected_to(conn) == ~p"/radeaux"
     end
 
     test "does not redirect if user is not authenticated", %{conn: conn} do
