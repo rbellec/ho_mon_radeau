@@ -17,12 +17,14 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
 
       raft ->
         raft = Events.preload_raft_details(raft)
+        public_links = Events.list_public_raft_links(raft.id)
 
         {:ok,
          socket
          |> assign(:page_title, raft.name)
          |> assign(:raft, raft)
          |> assign(:edition, edition)
+         |> assign(:public_links, public_links)
          |> assign_user_context()}
     end
   end
@@ -108,17 +110,35 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
             </div>
           <% end %>
 
-          <%= if @raft.forum_url do %>
+          <%= if @raft.forum_url || @public_links != [] do %>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h3 class="text-base font-semibold text-slate-900 mb-2">Lien forum</h3>
-              <a
-                href={@raft.forum_url}
-                target="_blank"
-                class="text-indigo-600 hover:underline inline-flex items-center gap-1 text-sm"
-              >
-                <.icon name="hero-arrow-top-right-on-square-mini" class="size-4" />
-                {@raft.forum_url}
-              </a>
+              <h3 class="text-base font-semibold text-slate-900 mb-3">Liens</h3>
+              <ul class="space-y-2">
+                <%= if @raft.forum_url do %>
+                  <li>
+                    <a
+                      href={@raft.forum_url}
+                      target="_blank"
+                      class="text-indigo-600 hover:underline inline-flex items-center gap-1.5 text-sm"
+                    >
+                      <.icon name="hero-chat-bubble-left-right-mini" class="size-4" />
+                      Discussion forum
+                    </a>
+                  </li>
+                <% end %>
+                <%= for link <- @public_links do %>
+                  <li>
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      class="text-indigo-600 hover:underline inline-flex items-center gap-1.5 text-sm"
+                    >
+                      <.icon name="hero-arrow-top-right-on-square-mini" class="size-4" />
+                      {link.title}
+                    </a>
+                  </li>
+                <% end %>
+              </ul>
             </div>
           <% end %>
         </div>

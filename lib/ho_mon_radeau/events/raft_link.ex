@@ -12,6 +12,7 @@ defmodule HoMonRadeau.Events.RaftLink do
     field :title, :string
     field :url, :string
     field :position, :integer, default: 0
+    field :is_public, :boolean, default: true
 
     belongs_to :raft, Raft
 
@@ -23,7 +24,7 @@ defmodule HoMonRadeau.Events.RaftLink do
   """
   def changeset(raft_link, attrs) do
     raft_link
-    |> cast(attrs, [:raft_id, :title, :url, :position])
+    |> cast(attrs, [:raft_id, :title, :url, :position, :is_public])
     |> validate_required([:raft_id, :title, :url])
     |> validate_length(:title, max: 200)
     |> validate_url(:url)

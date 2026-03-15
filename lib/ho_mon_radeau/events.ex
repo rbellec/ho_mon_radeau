@@ -828,6 +828,23 @@ defmodule HoMonRadeau.Events do
     Repo.delete(link)
   end
 
+  @doc """
+  Lists only public links for a raft.
+  """
+  def list_public_raft_links(raft_id) do
+    RaftLink
+    |> where([rl], rl.raft_id == ^raft_id and rl.is_public == true)
+    |> order_by([rl], asc: rl.position)
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns a changeset for a raft link.
+  """
+  def change_raft_link(%RaftLink{} = link, attrs \\ %{}) do
+    RaftLink.changeset(link, attrs)
+  end
+
   ## Registration Forms
 
   @doc """

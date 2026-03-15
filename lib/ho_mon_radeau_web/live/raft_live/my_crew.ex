@@ -2,7 +2,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   use HoMonRadeauWeb, :live_view
 
   alias HoMonRadeau.Events
-  alias HoMonRadeau.Events.CrewMember
+  alias HoMonRadeau.Events.{CrewMember, RaftLink}
   alias HoMonRadeau.Accounts
   alias HoMonRadeau.Drums
   alias HoMonRadeau.CUF
@@ -323,6 +323,62 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     end
   end
 
+  # -- Links --
+
+  @impl true
+  def handle_event("add_link", _params, socket) do
+    changeset = Events.change_raft_link(%RaftLink{raft_id: socket.assigns.raft.id})
+    {:noreply, assign(socket, :link_form, to_form(changeset))}
+  end
+
+  @impl true
+  def handle_event("cancel_link", _params, socket) do
+    {:noreply, assign(socket, :link_form, nil)}
+  end
+
+  @impl true
+  def handle_event("validate_link", %{"raft_link" => params}, socket) do
+    changeset =
+      %RaftLink{raft_id: socket.assigns.raft.id}
+      |> Events.change_raft_link(params)
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, :link_form, to_form(changeset))}
+  end
+
+  @impl true
+  def handle_event("save_link", %{"raft_link" => params}, socket) do
+    params = Map.put(params, "raft_id", socket.assigns.raft.id)
+
+    case Events.create_raft_link(params) do
+      {:ok, _link} ->
+        {:noreply,
+         socket
+         |> assign(:link_form, nil)
+         |> put_flash(:info, "Lien ajouté.")
+         |> load_crew_data()}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :link_form, to_form(changeset))}
+    end
+  end
+
+  @impl true
+  def handle_event("delete_link", %{"id" => id}, socket) do
+    link = Enum.find(socket.assigns.raft_links, &(&1.id == String.to_integer(id)))
+
+    if link do
+      Events.delete_raft_link(link)
+
+      {:noreply,
+       socket
+       |> put_flash(:info, "Lien supprimé.")
+       |> load_crew_data()}
+    else
+      {:noreply, socket}
+    end
+  end
+
   # -- Data loading --
 
   defp load_crew_data(socket) do
@@ -357,6 +413,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     |> assign(:cuf_settings, cuf_settings)
     |> assign(:my_member, my_member)
     |> assign(:is_captain, is_captain)
+    |> assign(:raft_links, Events.list_raft_links(raft.id))
+    |> assign_new(:link_form, fn -> nil end)
   end
 
   defp role_label(role), do: Map.get(@role_labels, role, role)
@@ -532,6 +590,119 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                     </a>
                   </div>
                 <% end %>
+              <% end %>
+            </div>
+          </div>
+
+          <%!-- ===== LIENS ===== --%>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="p-6">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-lg font-semibold text-slate-900">Liens</h3>
+                <%= if @is_manager && is_nil(@link_form) do %>
+                  <button
+                    phx-click="add_link"
+                    class="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
+                  >
+                    <.icon name="hero-plus-mini" class="size-4" /> Ajouter
+                  </button>
+                <% end %>
+              </div>
+
+              <%!-- Existing links --%>
+              <%= if @raft_links == [] && is_nil(@link_form) do %>
+                <p class="text-sm text-slate-400 italic">Aucun lien.</p>
+              <% end %>
+              <%= for link <- @raft_links do %>
+                <div class="flex items-center justify-between py-2 group/link">
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    class="text-sm text-indigo-600 hover:underline inline-flex items-center gap-1.5 min-w-0"
+                  >
+                    <.icon name="hero-arrow-top-right-on-square-mini" class="size-4 shrink-0" />
+                    <span class="truncate">{link.title}</span>
+                  </a>
+                  <div class="flex items-center gap-2 shrink-0 ml-2">
+                    <span class={[
+                      "text-xs px-1.5 py-0.5 rounded-full",
+                      if(link.is_public,
+                        do: "bg-green-100 text-green-700",
+                        else: "bg-slate-100 text-slate-500"
+                      )
+                    ]}>
+                      {if link.is_public, do: "public", else: "privé"}
+                    </span>
+                    <%= if @is_manager do %>
+                      <button
+                        phx-click="delete_link"
+                        phx-value-id={link.id}
+                        data-confirm={"Supprimer le lien \"#{link.title}\" ?"}
+                        class="text-slate-400 hover:text-red-600 opacity-0 group-hover/link:opacity-100 transition"
+                      >
+                        <.icon name="hero-x-mark-mini" class="size-4" />
+                      </button>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+
+              <%!-- Add link form --%>
+              <%= if @link_form do %>
+                <div class="border-t border-slate-100 pt-3 mt-3">
+                  <.form
+                    for={@link_form}
+                    id="add-link-form"
+                    phx-change="validate_link"
+                    phx-submit="save_link"
+                    class="space-y-3"
+                  >
+                    <div class="grid grid-cols-2 gap-3">
+                      <.input
+                        field={@link_form[:title]}
+                        type="text"
+                        label="Titre"
+                        placeholder="Forum, Drive..."
+                      />
+                      <.input
+                        field={@link_form[:url]}
+                        type="url"
+                        label="URL"
+                        placeholder="https://..."
+                      />
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="raft_link[is_public]"
+                        value="true"
+                        checked={
+                          Phoenix.HTML.Form.normalize_value("checkbox", @link_form[:is_public].value)
+                        }
+                        class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span class="text-sm text-slate-700">
+                        Visible sur la page publique du radeau
+                      </span>
+                    </label>
+                    <div class="flex gap-2">
+                      <button
+                        type="submit"
+                        class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition"
+                        phx-disable-with="Ajout..."
+                      >
+                        Ajouter
+                      </button>
+                      <button
+                        type="button"
+                        phx-click="cancel_link"
+                        class="text-slate-600 hover:bg-slate-50 rounded-lg px-4 py-2 text-sm font-medium transition"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </.form>
+                </div>
               <% end %>
             </div>
           </div>
