@@ -8,7 +8,7 @@ Permettre à un admin d'utiliser Claude (ou tout client MCP) pour gérer l'évé
 
 ## 2. Stack technique
 
-- **Librairie** : `hermes_mcp ~> 0.14.1` ([hex.pm](https://hex.pm/packages/hermes_mcp))
+- **Librairie** : `ex_mcp ~> 0.8` ([hex.pm](https://hex.pm/packages/ex_mcp)) — hermes_mcp nécessite Elixir 1.18+ (module JSON), incompatible avec notre 1.17
 - **Transport** : STDIO (usage local, pas de serveur HTTP)
 - **Entrypoint** : `mix mcp.server` (mix task)
 - **Sécurité** : STDIO = accès local implicitement admin. Un helper `get_system_admin/0` récupère le premier admin en base pour les opérations nécessitant un `%User{}`.
