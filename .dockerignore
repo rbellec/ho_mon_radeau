@@ -1,0 +1,34 @@
+# Version control
+.git
+
+# Dev/test files
+.elixir_ls
+.formatter.exs
+Dockerfile.dev
+docker-compose.yml
+docker-compose.*.yml
+
+# Build artifacts
+_build
+deps
+node_modules
+
+# Generated on crash by the VM
+erl_crash.dump
+
+# Static artifacts
+priv/static/assets
+priv/static/cache_manifest.json
+
+# Dev logs
+logs/
+
+# Personal notes
+todo_personnel.md
+
+# Test files
+test/
+.credo.exs
+
+# Fly.io
+fly.toml

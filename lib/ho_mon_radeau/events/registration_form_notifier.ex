@@ -10,7 +10,7 @@ defmodule HoMonRadeau.Events.RegistrationFormNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Tutto Blu", "contact@example.com"})
+      |> from({"Tutto Blu", Application.get_env(:ho_mon_radeau, :mailer_from_email, "noreply@ho-mon-radeau.fly.dev")})
       |> subject(subject)
       |> text_body(body)
 
