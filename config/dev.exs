@@ -74,6 +74,15 @@ config :ho_mon_radeau, dev_routes: true
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
 
+# Also log to a file for easier inspection
+config :logger, backends: [:console, {LoggerFileBackend, :dev_log}]
+
+config :logger, :dev_log,
+  path: "logs/dev.log",
+  level: :debug,
+  format: "$date $time $metadata[$level] $message\n",
+  metadata: [:request_id]
+
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.
 config :phoenix, :stacktrace_depth, 20

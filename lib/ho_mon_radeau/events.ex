@@ -224,7 +224,7 @@ defmodule HoMonRadeau.Events do
     Multi.new()
     |> Multi.insert(:raft, fn _ ->
       %Raft{}
-      |> Raft.changeset(Map.put(attrs, :edition_id, edition_id))
+      |> Raft.changeset(Map.put(attrs, "edition_id", edition_id))
     end)
     |> Multi.insert(:crew, fn %{raft: raft} ->
       %Crew{}

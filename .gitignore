@@ -1,6 +1,9 @@
 # Personal notes (git-ignored)
 todo_personnel.md
 
+# Development log files
+/logs/
+
 # The directory Mix will write compiled artifacts to.
 /_build/
 

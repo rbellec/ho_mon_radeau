@@ -68,6 +68,7 @@ defmodule HoMonRadeau.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:gen_smtp, "~> 1.2"},
+      {:logger_file_backend, "~> 0.0.14", only: :dev},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:ex_machina, "~> 2.8", only: :test},
       {:faker, "~> 0.18", only: :test},
