@@ -101,7 +101,11 @@ defmodule HoMonRadeau.MixProject do
         "esbuild ho_mon_radeau --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "format",
+        "deps.unlock --unused",
+        "cmd MIX_ENV=test mix do compile --warnings-as-errors, test"
+      ]
     ]
   end
 end
