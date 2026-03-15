@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "ho-mon-radeau": {
+      "command": "docker",
+      "args": ["compose", "run", "--rm", "-T", "app", "mix", "mcp.server"],
+      "cwd": "/chemin/vers/ho_mon_radeau"
+    }
+  }
+}

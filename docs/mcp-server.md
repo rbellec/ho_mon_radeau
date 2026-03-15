@@ -2,19 +2,19 @@
 
 Serveur [Model Context Protocol](https://modelcontextprotocol.io/) permettant d'administrer l'événement Tutto Blu via un outil IA (Claude Code, Claude Desktop, ou tout client MCP compatible).
 
-## Deux modes de transport
-
-### Mode HTTP (production — recommandé)
+## Mode HTTP (production)
 
 Le serveur MCP est accessible via l'endpoint HTTP de l'app Phoenix, authentifié par token API personnel.
 
 **URL** : `https://ho-mon-radeau.fly.dev/api/mcp`
 
-#### 1. Créer un token API
+### 1. Créer un token API
 
 Allez sur votre profil (`/mon-profil`), section "Tokens API (MCP)" en bas de page (visible uniquement pour les admins). Créez un token avec un label descriptif. **Copiez-le immédiatement** — il ne sera plus visible ensuite.
 
-#### 2. Configurer Claude Desktop (HTTP)
+### 2. Configurer votre outil IA
+
+#### Claude Desktop
 
 ```json
 {
@@ -22,26 +22,46 @@ Allez sur votre profil (`/mon-profil`), section "Tokens API (MCP)" en bas de pag
     "ho-mon-radeau": {
       "url": "https://ho-mon-radeau.fly.dev/api/mcp",
       "headers": {
-        "Authorization": "Bearer VOTRE_TOKEN_ICI"
+        "Authorization": "Bearer VOTRE_TOKEN"
       }
     }
   }
 }
 ```
 
-### Mode STDIO (développement local)
+#### ChatGPT (Custom GPT / Actions)
 
-Pour le développement, le serveur peut tourner en local via stdin/stdout.
+Dans la configuration d'un Custom GPT, ajoutez une Action :
+
+- **URL** : `https://ho-mon-radeau.fly.dev/api/mcp`
+- **Authentification** : API Key
+- **Header** : `Authorization: Bearer VOTRE_TOKEN`
+
+#### Autre outil MCP
+
+Tout client compatible MCP peut se connecter via HTTP avec l'URL et le header `Authorization: Bearer VOTRE_TOKEN`.
+
+## Mode STDIO (développement local)
+
+Pour le développement, le serveur peut tourner en local via stdin/stdout. Un fichier d'exemple `exemple.mcp.json` est fourni à la racine du projet.
 
 ```bash
+# Démarrer le serveur MCP en local
 docker compose run --rm -T app mix mcp.server
 ```
 
 > Le flag `-T` est indispensable avec Docker pour que stdin/stdout soient correctement connectés.
 
-## Configuration Claude Code (local)
+### Configuration Claude Code (local)
 
-Ajouter dans `.claude/settings.json` ou le fichier de configuration MCP :
+Copier `exemple.mcp.json` et adapter le chemin :
+
+```bash
+cp exemple.mcp.json .mcp.json
+# Éditer .mcp.json pour ajuster le chemin "cwd"
+```
+
+Ou ajouter manuellement dans `.claude/settings.json` :
 
 ```json
 {
@@ -55,7 +75,7 @@ Ajouter dans `.claude/settings.json` ou le fichier de configuration MCP :
 }
 ```
 
-## Configuration Claude Desktop (local)
+### Configuration Claude Desktop (local)
 
 Ajouter dans `claude_desktop_config.json` :
 
