@@ -1,8 +1,8 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
   <div class="text-center">
     <.header>
-      Account Settings
-      <:subtitle>Manage your account email address and password settings</:subtitle>
+      Paramètres du compte
+      <:subtitle>Gérez votre adresse email et votre mot de passe</:subtitle>
     </.header>
   </div>
 
@@ -11,7 +11,7 @@
 
     <.input field={f[:email]} type="email" label="Email" autocomplete="email" required />
 
-    <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
+    <.button variant="primary" phx-disable-with="Modification...">Modifier l'email</.button>
   </.form>
 
   <div class="flex items-center gap-4 my-6">
@@ -24,19 +24,19 @@
     <.input
       field={f[:password]}
       type="password"
-      label="New password"
+      label="Nouveau mot de passe"
       autocomplete="new-password"
       required
     />
     <.input
       field={f[:password_confirmation]}
       type="password"
-      label="Confirm new password"
+      label="Confirmer le nouveau mot de passe"
       autocomplete="new-password"
       required
     />
-    <.button variant="primary" phx-disable-with="Changing...">
-      Save Password
+    <.button variant="primary" phx-disable-with="Modification...">
+      Enregistrer le mot de passe
     </.button>
   </.form>
 </Layouts.app>

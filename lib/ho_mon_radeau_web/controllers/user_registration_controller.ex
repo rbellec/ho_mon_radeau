@@ -21,7 +21,7 @@ defmodule HoMonRadeauWeb.UserRegistrationController do
         conn
         |> put_flash(
           :info,
-          "An email was sent to #{user.email}, please access it to confirm your account."
+          "Un email a été envoyé à #{user.email}. Cliquez sur le lien pour confirmer votre compte."
         )
         |> redirect(to: ~p"/users/log-in")
 

@@ -2,16 +2,16 @@
   <div class="mx-auto max-w-sm space-y-4">
     <div class="text-center">
       <.header>
-        <p>Log in</p>
+        <p>Connexion</p>
         <:subtitle>
           <%= if @current_scope do %>
-            You need to reauthenticate to perform sensitive actions on your account.
+            Veuillez vous reconnecter pour effectuer cette action.
           <% else %>
-            Don't have an account? <.link
+            Pas encore de compte ? <.link
               navigate={~p"/users/register"}
               class="font-semibold text-indigo-600 hover:underline"
               phx-no-format
-            >Sign up</.link> for an account now.
+            >Inscrivez-vous</.link> pour rejoindre l'aventure.
           <% end %>
         </:subtitle>
       </.header>
@@ -23,11 +23,19 @@
     >
       <.icon name="hero-information-circle" class="size-6 shrink-0 mt-0.5" />
       <div>
-        <p>You are running the local mail adapter.</p>
+        <p>Vous utilisez l'adaptateur mail local.</p>
         <p>
-          To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
+          Pour voir les emails envoyés, consultez <.link href="/dev/mailbox" class="underline">la boîte mail</.link>.
         </p>
       </div>
+    </div>
+
+    <div class="bg-slate-50 border border-slate-200 text-slate-600 rounded-xl p-4 text-sm">
+      <p>
+        <strong>Comment ça marche ?</strong>
+        Entrez votre email et recevez un lien de connexion magique.
+        Pas besoin de retenir un mot de passe !
+      </p>
     </div>
 
     <.form :let={f} for={@form} as={:user} id="login_form_magic" action={~p"/users/log-in"}>
@@ -41,13 +49,13 @@
         phx-mounted={JS.focus()}
       />
       <.button class="w-full bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center justify-center">
-        Log in with email <span aria-hidden="true" class="ml-1">&rarr;</span>
+        Recevoir un lien de connexion <span aria-hidden="true" class="ml-1">&rarr;</span>
       </.button>
     </.form>
 
     <div class="flex items-center gap-4 my-4">
       <div class="flex-1 border-t border-slate-200"></div>
-      <span class="text-sm text-slate-400">or</span>
+      <span class="text-sm text-slate-400">ou avec un mot de passe</span>
       <div class="flex-1 border-t border-slate-200"></div>
     </div>
 
@@ -63,7 +71,7 @@
       <.input
         field={f[:password]}
         type="password"
-        label="Password"
+        label="Mot de passe"
         autocomplete="current-password"
       />
       <.button
@@ -71,10 +79,10 @@
         name={@form[:remember_me].name}
         value="true"
       >
-        Log in and stay logged in <span aria-hidden="true" class="ml-1">&rarr;</span>
+        Se connecter et rester connecté·e <span aria-hidden="true" class="ml-1">&rarr;</span>
       </.button>
       <.button class="w-full text-indigo-600 hover:bg-indigo-50 rounded-lg px-5 py-2.5 font-medium transition inline-flex items-center justify-center mt-2">
-        Log in only this time
+        Se connecter cette fois uniquement
       </.button>
     </.form>
   </div>

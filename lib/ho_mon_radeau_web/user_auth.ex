@@ -24,7 +24,10 @@ defmodule HoMonRadeauWeb.UserAuth do
     else
       socket =
         socket
-        |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+        |> Phoenix.LiveView.put_flash(
+          :error,
+          "Vous devez vous connecter pour accéder à cette page."
+        )
         |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
 
       {:halt, socket}
@@ -246,7 +249,7 @@ defmodule HoMonRadeauWeb.UserAuth do
       conn
     else
       conn
-      |> put_flash(:error, "You must re-authenticate to access this page.")
+      |> put_flash(:error, "Veuillez vous reconnecter pour effectuer cette action.")
       |> maybe_store_return_to()
       |> redirect(to: ~p"/users/log-in")
       |> halt()
@@ -288,7 +291,7 @@ defmodule HoMonRadeauWeb.UserAuth do
       conn
     else
       conn
-      |> put_flash(:error, "You must log in to access this page.")
+      |> put_flash(:error, "Vous devez vous connecter pour accéder à cette page.")
       |> maybe_store_return_to()
       |> redirect(to: ~p"/users/log-in")
       |> halt()

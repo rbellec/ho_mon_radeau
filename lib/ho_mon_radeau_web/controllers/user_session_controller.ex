@@ -15,7 +15,7 @@ defmodule HoMonRadeauWeb.UserSessionController do
   def create(conn, %{"user" => %{"token" => token} = user_params} = params) do
     info =
       case params do
-        %{"_action" => "confirmed"} -> "Email confirmé avec succès."
+        %{"_action" => "confirmed"} -> "Email confirmé avec succès. Bienvenue !"
         _ -> "Content de vous revoir !"
       end
 
@@ -36,7 +36,7 @@ defmodule HoMonRadeauWeb.UserSessionController do
 
       {:error, :not_found} ->
         conn
-        |> put_flash(:error, "Le lien est invalide ou a expiré.")
+        |> put_flash(:error, "Ce lien est invalide ou a expiré.")
         |> render(:new, form: Phoenix.Component.to_form(%{}, as: "user"))
     end
   end
@@ -53,13 +53,13 @@ defmodule HoMonRadeauWeb.UserSessionController do
         conn
         |> put_flash(
           :error,
-          "Please confirm your email before logging in. Check your inbox for the confirmation link."
+          "Veuillez confirmer votre email avant de vous connecter. Vérifiez votre boîte de réception."
         )
         |> render(:new, form: form)
 
       user ->
         conn
-        |> put_flash(:info, "Welcome back!")
+        |> put_flash(:info, "Content de vous revoir !")
         |> UserAuth.log_in_user(user, user_params)
 
       true ->
@@ -67,7 +67,7 @@ defmodule HoMonRadeauWeb.UserSessionController do
 
         # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
         conn
-        |> put_flash(:error, "Invalid email or password")
+        |> put_flash(:error, "Email ou mot de passe incorrect")
         |> render(:new, form: form)
     end
   end
@@ -82,7 +82,7 @@ defmodule HoMonRadeauWeb.UserSessionController do
     end
 
     info =
-      "If your email is in our system, you will receive instructions for logging in shortly."
+      "Si votre email est dans notre système, vous recevrez un lien de connexion dans quelques instants."
 
     conn
     |> put_flash(:info, info)
@@ -99,14 +99,14 @@ defmodule HoMonRadeauWeb.UserSessionController do
       |> render(:confirm)
     else
       conn
-      |> put_flash(:error, "Magic link is invalid or it has expired.")
+      |> put_flash(:error, "Ce lien de connexion est invalide ou a expiré.")
       |> redirect(to: ~p"/users/log-in")
     end
   end
 
   def delete(conn, _params) do
     conn
-    |> put_flash(:info, "Logged out successfully.")
+    |> put_flash(:info, "Déconnexion réussie. À bientôt !")
     |> UserAuth.log_out_user()
   end
 end

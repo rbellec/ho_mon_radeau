@@ -7,7 +7,7 @@ defmodule HoMonRadeauWeb.UserRegistrationControllerTest do
     test "renders registration page", %{conn: conn} do
       conn = get(conn, ~p"/users/register")
       response = html_response(conn, 200)
-      assert response =~ "Register"
+      assert response =~ "Embarquez"
       assert response =~ ~p"/users/log-in"
       assert response =~ ~p"/users/register"
     end
@@ -33,7 +33,7 @@ defmodule HoMonRadeauWeb.UserRegistrationControllerTest do
       assert redirected_to(conn) == ~p"/users/log-in"
 
       assert conn.assigns.flash["info"] =~
-               ~r/An email was sent to .*, please access it to confirm your account/
+               ~r/Un email a été envoyé/
     end
 
     test "render errors for invalid data", %{conn: conn} do
@@ -43,7 +43,7 @@ defmodule HoMonRadeauWeb.UserRegistrationControllerTest do
         })
 
       response = html_response(conn, 200)
-      assert response =~ "Register"
+      assert response =~ "Embarquez"
       assert response =~ "must have the @ sign and no spaces"
     end
   end

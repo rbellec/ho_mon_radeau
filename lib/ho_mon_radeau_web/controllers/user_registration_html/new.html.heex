@@ -2,16 +2,15 @@
   <div class="mx-auto max-w-sm">
     <div class="text-center">
       <.header>
-        Register for an account
+        Embarquez avec nous !
         <:subtitle>
-          Already registered?
+          Créez votre compte pour rejoindre l'aventure Tutto Blu. <br /> Déjà inscrit·e ?
           <.link
             navigate={~p"/users/log-in"}
             class="font-semibold text-indigo-600 hover:underline"
           >
-            Log in
+            Connectez-vous
           </.link>
-          to your account now.
         </:subtitle>
       </.header>
     </div>
@@ -28,22 +27,22 @@
       <.input
         field={f[:nickname]}
         type="text"
-        label="Nickname (optional)"
+        label="Surnom (optionnel)"
         autocomplete="nickname"
       />
       <.input
         field={f[:password]}
         type="password"
-        label="Password"
+        label="Mot de passe"
         autocomplete="new-password"
         required
       />
 
       <.button
-        phx-disable-with="Creating account..."
+        phx-disable-with="Création du compte..."
         class="w-full bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center justify-center"
       >
-        Create an account
+        Créer mon compte
       </.button>
     </.form>
   </div>

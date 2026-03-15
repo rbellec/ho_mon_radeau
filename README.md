@@ -65,7 +65,7 @@ Les spécifications dans `docs/features/` servent de source de vérité pour l'I
 
 ### Authentification
 - **phx.gen.auth** - Authentification email/password avec validation
-- Pas de SSO (choix anti-GAFAM)
+- Pas de SSO externe (indépendance vis-à-vis des grandes plateformes)
 
 ### Infrastructure
 - **Développement :** Docker Compose local
@@ -153,7 +153,7 @@ ho_mon_radeau/
 - **Simplicité d'abord** - Solutions directes plutôt que sur-ingénierie
 - **Auto-gestion** - Favoriser l'autonomie des participant·es
 - **Open Source** - Transparence et contributions bienvenues
-- **Anti-GAFAM** - Indépendance vis-à-vis des grandes plateformes
+- **Indépendance** - Pas de dépendance aux grandes plateformes, liberté de choix des outils
 - **Documentation exhaustive** - Pour faciliter les contributions
 
 ## 📝 Licence

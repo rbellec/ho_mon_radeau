@@ -12,9 +12,9 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
     test "renders login page", %{conn: conn} do
       conn = get(conn, ~p"/users/log-in")
       response = html_response(conn, 200)
-      assert response =~ "Log in"
+      assert response =~ "Connexion"
       assert response =~ ~p"/users/register"
-      assert response =~ "Log in with email"
+      assert response =~ "lien de connexion"
     end
 
     test "renders login page with email filled in (sudo mode)", %{conn: conn, user: user} do
@@ -24,9 +24,9 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
         |> get(~p"/users/log-in")
         |> html_response(200)
 
-      assert html =~ "You need to reauthenticate"
-      refute html =~ "Register"
-      assert html =~ "Log in with email"
+      assert html =~ "reconnecter"
+      refute html =~ "Embarquez"
+      assert html =~ "lien de connexion"
 
       assert html =~
                ~s(<input type="email" name="user[email]" id="login_form_magic_email" value="#{user.email}")
@@ -35,9 +35,9 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
     test "renders login page (email + password)", %{conn: conn} do
       conn = get(conn, ~p"/users/log-in?mode=password")
       response = html_response(conn, 200)
-      assert response =~ "Log in"
+      assert response =~ "Connexion"
       assert response =~ ~p"/users/register"
-      assert response =~ "Log in with email"
+      assert response =~ "lien de connexion"
     end
   end
 
@@ -49,7 +49,7 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
         end)
 
       conn = get(conn, ~p"/users/log-in/#{token}")
-      assert html_response(conn, 200) =~ "Confirm and stay logged in"
+      assert html_response(conn, 200) =~ "Confirmer et rester"
     end
 
     test "renders login page for confirmed user", %{conn: conn, user: user} do
@@ -61,7 +61,7 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
       conn = get(conn, ~p"/users/log-in/#{token}")
       html = html_response(conn, 200)
       refute html =~ "Confirm my account"
-      assert html =~ "Log me in"
+      assert html =~ "Connexion unique"
     end
 
     test "raises error for invalid token", %{conn: conn} do
@@ -69,7 +69,7 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
       assert redirected_to(conn) == ~p"/users/log-in"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "Magic link is invalid or it has expired."
+               "Ce lien de connexion est invalide ou a expiré."
     end
   end
 
@@ -123,7 +123,7 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
         })
 
       assert redirected_to(conn) == "/foo/bar"
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Welcome back!"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Content de vous revoir"
     end
 
     test "emits error message with invalid credentials", %{conn: conn, user: user} do
@@ -133,8 +133,8 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
         })
 
       response = html_response(conn, 200)
-      assert response =~ "Log in"
-      assert response =~ "Invalid email or password"
+      assert response =~ "Connexion"
+      assert response =~ "Email ou mot de passe incorrect"
     end
   end
 
@@ -145,7 +145,7 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
           "user" => %{"email" => user.email}
         })
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "If your email is in our system"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Si votre email est dans notre"
       assert HoMonRadeau.Repo.get_by!(Accounts.UserToken, user_id: user.id).context == "login"
     end
 
@@ -168,18 +168,13 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
       assert response =~ ~p"/users/log-out"
     end
 
-    # Note: Since we use password-based registration, unconfirmed users always have
-    # a password set, so magic link login will raise for them. Users should confirm
-    # their email by clicking the magic link when they DON'T have a password set,
-    # but our system requires passwords, so this flow is not applicable.
-
     test "emits error message when magic link is invalid", %{conn: conn} do
       conn =
         post(conn, ~p"/users/log-in", %{
           "user" => %{"token" => "invalid"}
         })
 
-      assert html_response(conn, 200) =~ "Le lien est invalide ou a expiré."
+      assert html_response(conn, 200) =~ "Ce lien est invalide ou a expiré."
     end
   end
 
@@ -188,14 +183,14 @@ defmodule HoMonRadeauWeb.UserSessionControllerTest do
       conn = conn |> log_in_user(user) |> delete(~p"/users/log-out")
       assert redirected_to(conn) == ~p"/"
       refute get_session(conn, :user_token)
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Logged out successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Déconnexion réussie"
     end
 
     test "succeeds even if the user is not logged in", %{conn: conn} do
       conn = delete(conn, ~p"/users/log-out")
       assert redirected_to(conn) == ~p"/"
       refute get_session(conn, :user_token)
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Logged out successfully"
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Déconnexion réussie"
     end
   end
 end
