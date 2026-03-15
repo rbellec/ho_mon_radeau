@@ -305,13 +305,13 @@ defmodule HoMonRadeauWeb.ProfileLive do
               <form phx-submit="create_token" class="flex items-end gap-3 mb-4">
                 <div class="flex-1">
                   <label class="block text-sm font-medium text-slate-700 mb-1">
-                    Nouveau token
+                    Nom du token
                   </label>
                   <input
                     type="text"
                     name="label"
                     value={@token_label}
-                    placeholder="Ex: Claude Desktop, Mon laptop..."
+                    placeholder="Donnez un nom pour identifier ce token (ex: Claude Desktop, Mon laptop...)"
                     required
                     class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
