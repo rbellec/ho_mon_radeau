@@ -150,8 +150,20 @@ defmodule HoMonRadeau.MCP.Helpers do
   end
 
   @doc """
+  Get the current authenticated user for MCP operations.
+  In HTTP mode, the user is stored in process dictionary by the MCP controller.
+  In STDIO mode, falls back to the first admin user in the database.
+  """
+  def get_current_admin do
+    case Process.get(:mcp_current_user) do
+      %{} = user -> user
+      nil -> get_system_admin()
+    end
+  end
+
+  @doc """
   Get the first admin user from the database.
-  Used as the acting user for admin operations via MCP.
+  Fallback for STDIO transport where no HTTP auth is available.
   """
   def get_system_admin do
     HoMonRadeau.Repo.one(

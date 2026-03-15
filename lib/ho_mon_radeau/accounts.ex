@@ -6,7 +6,7 @@ defmodule HoMonRadeau.Accounts do
   import Ecto.Query, warn: false
   alias HoMonRadeau.Repo
 
-  alias HoMonRadeau.Accounts.{User, UserToken, UserNotifier}
+  alias HoMonRadeau.Accounts.{User, UserToken, UserNotifier, ApiToken}
 
   ## Database getters
 
@@ -422,5 +422,89 @@ defmodule HoMonRadeau.Accounts do
         {:ok, {user, tokens_to_expire}}
       end
     end)
+  end
+
+  ## API Tokens
+
+  @doc """
+  Creates an API token for a user.
+  Returns {:ok, raw_token, api_token} or {:error, changeset}.
+  The raw_token must be shown to the user once — it cannot be retrieved later.
+  """
+  def create_api_token(user, label) do
+    {raw_token, changeset} = ApiToken.build_token(user, label)
+
+    case Repo.insert(changeset) do
+      {:ok, api_token} -> {:ok, raw_token, api_token}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
+  @doc """
+  Authenticates a user by API token.
+  Returns the user if the token is valid and not revoked, nil otherwise.
+  Also updates the last_used_at timestamp.
+  """
+  def authenticate_by_api_token(raw_token) do
+    hashed = ApiToken.hash_token(raw_token)
+
+    api_token =
+      from(t in ApiToken,
+        where: t.token_hash == ^hashed and is_nil(t.revoked_at),
+        preload: [:user]
+      )
+      |> Repo.one()
+
+    if api_token do
+      # Update last_used_at asynchronously (don't block the request)
+      Task.start(fn ->
+        api_token
+        |> Ecto.Changeset.change(%{last_used_at: DateTime.utc_now(:second)})
+        |> Repo.update()
+      end)
+
+      api_token.user
+    end
+  end
+
+  @doc """
+  Lists all API tokens for a user (active and revoked).
+  """
+  def list_api_tokens(user) do
+    from(t in ApiToken,
+      where: t.user_id == ^user.id,
+      order_by: [desc: :inserted_at]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists only active (non-revoked) API tokens for a user.
+  """
+  def list_active_api_tokens(user) do
+    from(t in ApiToken,
+      where: t.user_id == ^user.id and is_nil(t.revoked_at),
+      order_by: [desc: :inserted_at]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Revokes an API token.
+  """
+  def revoke_api_token(%ApiToken{} = token) do
+    token
+    |> Ecto.Changeset.change(%{revoked_at: DateTime.utc_now(:second)})
+    |> Repo.update()
+  end
+
+  @doc """
+  Revokes an API token by ID, scoped to a user.
+  """
+  def revoke_api_token_by_id(user, token_id) do
+    case Repo.get_by(ApiToken, id: token_id, user_id: user.id) do
+      nil -> {:error, :not_found}
+      token -> revoke_api_token(token)
+    end
   end
 end

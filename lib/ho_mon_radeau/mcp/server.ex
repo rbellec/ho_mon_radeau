@@ -573,7 +573,7 @@ defmodule HoMonRadeau.MCP.Server do
 
   @impl true
   def handle_tool_call("validate_raft", %{"raft_id" => id}, _state) do
-    admin = Helpers.get_system_admin()
+    admin = Helpers.get_current_admin()
     raft = Events.get_raft!(id)
 
     case Events.validate_raft(raft, admin) do
@@ -638,7 +638,7 @@ defmodule HoMonRadeau.MCP.Server do
         %{"crew_id" => crew_id, "user_id" => user_id},
         _state
       ) do
-    admin = Helpers.get_system_admin()
+    admin = Helpers.get_current_admin()
 
     case Events.leave_crew(user_id, crew_id, removed_by_id: admin.id) do
       {:ok, _} -> Helpers.ok_result(%{message: "Membre retiré de l'équipage."})
@@ -659,7 +659,7 @@ defmodule HoMonRadeau.MCP.Server do
 
   @impl true
   def handle_tool_call("accept_join_request", %{"request_id" => id}, _state) do
-    admin = Helpers.get_system_admin()
+    admin = Helpers.get_current_admin()
     request = Events.get_join_request!(id)
 
     case Events.accept_join_request(request, admin) do
@@ -671,7 +671,7 @@ defmodule HoMonRadeau.MCP.Server do
 
   @impl true
   def handle_tool_call("reject_join_request", %{"request_id" => id}, _state) do
-    admin = Helpers.get_system_admin()
+    admin = Helpers.get_current_admin()
     request = Events.get_join_request!(id)
 
     case Events.reject_join_request(request, admin) do
@@ -707,7 +707,7 @@ defmodule HoMonRadeau.MCP.Server do
 
   @impl true
   def handle_tool_call("approve_registration_form", %{"form_id" => id}, _state) do
-    admin = Helpers.get_system_admin()
+    admin = Helpers.get_current_admin()
     form = Events.get_registration_form!(id)
 
     case Events.approve_registration_form(form, admin) do
@@ -722,7 +722,7 @@ defmodule HoMonRadeau.MCP.Server do
         %{"form_id" => id, "reason" => reason},
         _state
       ) do
-    admin = Helpers.get_system_admin()
+    admin = Helpers.get_current_admin()
     form = Events.get_registration_form!(id)
 
     case Events.reject_registration_form(form, admin, reason) do
@@ -749,7 +749,7 @@ defmodule HoMonRadeau.MCP.Server do
 
   @impl true
   def handle_tool_call("validate_drum_payment", %{"request_id" => id}, _state) do
-    admin = Helpers.get_system_admin()
+    admin = Helpers.get_current_admin()
     request = Drums.get_request!(id)
 
     case Drums.validate_payment(request, admin.id) do
@@ -796,7 +796,7 @@ defmodule HoMonRadeau.MCP.Server do
 
   @impl true
   def handle_tool_call("validate_cuf_declaration", %{"declaration_id" => id}, _state) do
-    admin = Helpers.get_system_admin()
+    admin = Helpers.get_current_admin()
     declaration = CUF.get_declaration!(id)
 
     case CUF.validate_declaration(declaration, admin.id) do

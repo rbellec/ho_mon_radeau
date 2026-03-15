@@ -36,10 +36,12 @@ defmodule HoMonRadeauWeb.Router do
     end
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", HoMonRadeauWeb do
-  #   pipe_through :api
-  # end
+  # MCP API endpoint (authenticated via Bearer token)
+  scope "/api", HoMonRadeauWeb do
+    pipe_through :api
+
+    match :*, "/mcp", MCPController, :handle
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:ho_mon_radeau, :dev_routes) do
