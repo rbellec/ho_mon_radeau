@@ -36,9 +36,54 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
          socket
          |> assign(:my_member, my_member)
          |> assign(:crew, crew)
+         |> assign(:editing_info, false)
          |> load_crew_data()}
     end
   end
+
+  # -- Edit raft info --
+
+  @impl true
+  def handle_event("edit_info", _params, socket) do
+    changeset = Events.change_raft(socket.assigns.raft)
+
+    {:noreply,
+     socket
+     |> assign(:editing_info, true)
+     |> assign(:edit_form, to_form(changeset))}
+  end
+
+  @impl true
+  def handle_event("cancel_edit_info", _params, socket) do
+    {:noreply, assign(socket, :editing_info, false)}
+  end
+
+  @impl true
+  def handle_event("validate_info", %{"raft" => params}, socket) do
+    changeset =
+      socket.assigns.raft
+      |> Events.change_raft(params)
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, :edit_form, to_form(changeset))}
+  end
+
+  @impl true
+  def handle_event("save_info", %{"raft" => params}, socket) do
+    case Events.update_raft(socket.assigns.raft, params) do
+      {:ok, _raft} ->
+        {:noreply,
+         socket
+         |> assign(:editing_info, false)
+         |> put_flash(:info, "Informations mises à jour.")
+         |> load_crew_data()}
+
+      {:error, changeset} ->
+        {:noreply, assign(socket, :edit_form, to_form(changeset))}
+    end
+  end
+
+  # -- Join requests --
 
   @impl true
   def handle_event("accept_request", %{"id" => id}, socket) do
@@ -82,6 +127,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     end
   end
 
+  # -- Roles --
+
   @impl true
   def handle_event("save_my_roles", %{"roles" => roles}, socket) do
     selected_roles = for {role, "true"} <- roles, do: role
@@ -101,7 +148,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
   @impl true
   def handle_event("save_my_roles", _params, socket) do
-    # No roles selected at all
     case Events.update_member_roles(socket.assigns.my_member, []) do
       {:ok, updated_member} ->
         {:noreply,
@@ -114,6 +160,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
         {:noreply, put_flash(socket, :error, "Erreur lors de la mise à jour des rôles.")}
     end
   end
+
+  # -- Captain & manager --
 
   @impl true
   def handle_event("set_captain", %{"user-id" => user_id}, socket) do
@@ -174,6 +222,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     end
   end
 
+  # -- Leave / remove --
+
   @impl true
   def handle_event("leave_crew", _params, socket) do
     user = socket.assigns.current_scope.user
@@ -208,6 +258,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     end
   end
 
+  # -- CUF --
+
   @impl true
   def handle_event("submit_cuf", %{"participants" => participants}, socket) do
     crew = socket.assigns.crew
@@ -229,6 +281,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   def handle_event("submit_cuf", _params, socket) do
     {:noreply, put_flash(socket, :error, "Veuillez sélectionner au moins un participant.")}
   end
+
+  # -- Drums --
 
   @impl true
   def handle_event("validate_drums", %{"drum_request" => params}, socket) do
@@ -269,6 +323,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     end
   end
 
+  # -- Data loading --
+
   defp load_crew_data(socket) do
     crew = socket.assigns.crew
     user = socket.assigns.current_scope.user
@@ -305,6 +361,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
   defp role_label(role), do: Map.get(@role_labels, role, role)
 
+  # -- Render --
+
   @impl true
   def render(assigns) do
     assigns =
@@ -315,52 +373,41 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <.header>
-        {@raft.name}
-        <:subtitle>Page équipage</:subtitle>
-        <:actions>
-          <.link
-            navigate={~p"/radeaux/#{@raft.slug}"}
-            class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
+      <%!-- ===== HEADER ===== --%>
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">{@raft.name}</h1>
+          <%= if @raft.description_short do %>
+            <p class="text-slate-500 mt-1">{@raft.description_short}</p>
+          <% end %>
+          <div class="flex items-center gap-2 mt-2">
+            <%= if @raft.validated do %>
+              <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                <.icon name="hero-check-circle-mini" class="size-3.5" /> Validé
+              </span>
+            <% else %>
+              <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                En attente de validation
+              </span>
+            <% end %>
+            <span class="text-xs text-slate-400">
+              {length(@raft.crew.crew_members)} membre{if length(@raft.crew.crew_members) > 1, do: "s"}
+            </span>
+          </div>
+        </div>
+        <%= if @is_manager do %>
+          <button
+            phx-click="edit_info"
+            class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition inline-flex items-center gap-1"
           >
-            Voir la page publique
-          </.link>
-        </:actions>
-      </.header>
+            <.icon name="hero-pencil-square-mini" class="size-4" /> Modifier
+          </button>
+        <% end %>
+      </div>
 
       <div class="mt-8 grid gap-8 lg:grid-cols-3">
-        <div class="lg:col-span-2 space-y-8">
-          <%!-- Quick actions (top of page) --%>
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
-            <div class="p-6">
-              <h3 class="text-lg font-semibold text-slate-900">Actions</h3>
-              <div class="flex flex-wrap gap-2 mt-3">
-                <.link
-                  navigate={~p"/fiche-inscription"}
-                  class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition inline-flex items-center gap-2"
-                >
-                  <.icon name="hero-document-text-mini" class="size-4" /> Ma fiche d'inscription
-                </.link>
-                <.link
-                  navigate={~p"/radeaux/#{@raft.slug}"}
-                  class="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg px-4 py-2 text-sm font-medium transition inline-flex items-center gap-2"
-                >
-                  <.icon name="hero-eye-mini" class="size-4" /> Page publique
-                </.link>
-                <%= if @raft.forum_url do %>
-                  <a
-                    href={@raft.forum_url}
-                    target="_blank"
-                    class="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg px-4 py-2 text-sm font-medium transition inline-flex items-center gap-2"
-                  >
-                    <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> Forum
-                  </a>
-                <% end %>
-              </div>
-            </div>
-          </div>
-
-          <%!-- Pending join requests (managers only) --%>
+        <div class="lg:col-span-2 space-y-6">
+          <%!-- ===== PENDING JOIN REQUESTS ===== --%>
           <%= if @is_manager && length(@pending_requests) > 0 do %>
             <div class="bg-amber-50 border border-amber-200 rounded-xl">
               <div class="p-6">
@@ -419,212 +466,244 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
             </div>
           <% end %>
 
-          <%!-- Roles summary --%>
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="roles-summary">
+          <%!-- ===== INFOS & DESCRIPTION ===== --%>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
             <div class="p-6">
-              <h3 class="text-lg font-semibold text-slate-900">État des rôles</h3>
-
-              <%!-- À pourvoir (required roles that are unfilled) --%>
-              <% unfilled_required = Enum.filter(@required_roles, fn r -> @roles_summary[r] == [] end)
-
-              unfilled_required =
-                if(is_nil(@captain), do: ["captain" | unfilled_required], else: unfilled_required) %>
-              <%= if unfilled_required != [] do %>
-                <div class="mt-3">
-                  <h4 class="text-sm font-semibold text-amber-600 mb-1">À pourvoir</h4>
-                  <div class="space-y-1">
-                    <%= for role <- unfilled_required do %>
-                      <div class="flex items-center gap-2 text-amber-600">
-                        <.icon name="hero-exclamation-triangle-mini" class="size-4" />
-                        <span class="font-medium">{role_label(role)}</span>
-                      </div>
-                    <% end %>
+              <%= if @editing_info do %>
+                <h3 class="text-lg font-semibold text-slate-900 mb-4">Modifier les informations</h3>
+                <.form
+                  for={@edit_form}
+                  id="edit-raft-form"
+                  phx-change="validate_info"
+                  phx-submit="save_info"
+                  class="space-y-4"
+                >
+                  <.input
+                    field={@edit_form[:description_short]}
+                    type="text"
+                    label="Description courte"
+                    placeholder="Une phrase pour décrire votre équipage..."
+                    maxlength="150"
+                  />
+                  <.input
+                    field={@edit_form[:description]}
+                    type="textarea"
+                    label="Description complète"
+                    rows="4"
+                  />
+                  <.input
+                    field={@edit_form[:forum_url]}
+                    type="url"
+                    label="Lien forum"
+                    placeholder="https://..."
+                  />
+                  <div class="flex gap-3 pt-2">
+                    <button
+                      type="submit"
+                      class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition"
+                      phx-disable-with="Enregistrement..."
+                    >
+                      Enregistrer
+                    </button>
+                    <button
+                      type="button"
+                      phx-click="cancel_edit_info"
+                      class="text-slate-600 hover:bg-slate-50 rounded-lg px-4 py-2 text-sm font-medium transition"
+                    >
+                      Annuler
+                    </button>
                   </div>
-                </div>
+                </.form>
+              <% else %>
+                <%= if @raft.description do %>
+                  <p class="whitespace-pre-wrap text-slate-700">{@raft.description}</p>
+                <% else %>
+                  <p class="text-slate-400 italic">Aucune description.</p>
+                <% end %>
+                <%= if @raft.forum_url do %>
+                  <div class="mt-3">
+                    <a
+                      href={@raft.forum_url}
+                      target="_blank"
+                      class="text-sm text-indigo-600 hover:underline inline-flex items-center gap-1"
+                    >
+                      <.icon name="hero-chat-bubble-left-right-mini" class="size-4" />
+                      Discussion forum
+                    </a>
+                  </div>
+                <% end %>
               <% end %>
+            </div>
+          </div>
 
-              <%!-- Rôles actuels (filled roles) --%>
-              <% filled = Enum.filter(@available_roles, fn r -> @roles_summary[r] != [] end)
-              filled = if(@captain, do: ["captain" | filled], else: filled) %>
-              <%= if filled != [] do %>
-                <div class="mt-3">
-                  <h4 class="text-sm font-semibold text-green-600 mb-1">Rôles actuels</h4>
-                  <div class="space-y-1">
-                    <%= for role <- filled do %>
-                      <div class="flex items-center gap-2">
+          <%!-- ===== RÔLES (collapsible) ===== --%>
+          <details class="bg-white rounded-xl shadow-sm border border-slate-200 group" id="roles-section">
+            <summary class="p-6 cursor-pointer select-none flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <h3 class="text-lg font-semibold text-slate-900">Rôles</h3>
+                <% unfilled_count =
+                  Enum.count(@required_roles, fn r -> @roles_summary[r] == [] end) +
+                    if(is_nil(@captain), do: 1, else: 0) %>
+                <%= if unfilled_count > 0 do %>
+                  <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {unfilled_count} à pourvoir
+                  </span>
+                <% else %>
+                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                    Complet
+                  </span>
+                <% end %>
+              </div>
+              <.icon
+                name="hero-chevron-down-mini"
+                class="size-5 text-slate-400 transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <div class="px-6 pb-6 border-t border-slate-100 pt-4 space-y-6">
+              <%!-- Roles summary --%>
+              <div>
+                <h4 class="text-sm font-semibold text-slate-500 mb-2">État des rôles</h4>
+                <div class="space-y-1">
+                  <%!-- Captain --%>
+                  <%= if @captain do %>
+                    <div class="flex items-center gap-2 text-sm">
+                      <.icon name="hero-check-circle-mini" class="size-4 text-green-600" />
+                      <span class="font-medium">Capitaine :</span>
+                      <span>{Accounts.display_name(@captain.user)}</span>
+                    </div>
+                  <% else %>
+                    <div class="flex items-center gap-2 text-sm text-amber-600">
+                      <.icon name="hero-exclamation-triangle-mini" class="size-4" />
+                      <span class="font-medium">Capitaine</span>
+                    </div>
+                  <% end %>
+                  <%!-- Other roles --%>
+                  <%= for role <- @available_roles do %>
+                    <%= if @roles_summary[role] != [] do %>
+                      <div class="flex items-center gap-2 text-sm">
                         <.icon name="hero-check-circle-mini" class="size-4 text-green-600" />
                         <span class="font-medium">{role_label(role)} :</span>
+                        <span>{Enum.join(@roles_summary[role], ", ")}</span>
+                      </div>
+                    <% else %>
+                      <div class="flex items-center gap-2 text-sm text-slate-400">
+                        <.icon name="hero-minus-circle-mini" class="size-4" />
                         <span>
-                          <%= if role == "captain" do %>
-                            {Accounts.display_name(@captain.user)}
-                          <% else %>
-                            {Enum.join(@roles_summary[role], ", ")}
+                          {role_label(role)}
+                          <%= if role in @required_roles do %>
+                            <span class="text-amber-500 text-xs">(requis)</span>
                           <% end %>
                         </span>
                       </div>
                     <% end %>
-                  </div>
+                  <% end %>
                 </div>
-              <% end %>
+              </div>
 
-              <%!-- Optionnels (optional roles that are unfilled) --%>
-              <% unfilled_optional = Enum.filter(@optional_roles, fn r -> @roles_summary[r] == [] end) %>
-              <%= if unfilled_optional != [] do %>
-                <div class="mt-3">
-                  <h4 class="text-sm font-semibold text-slate-400 mb-1">Optionnels</h4>
-                  <div class="space-y-1">
-                    <%= for role <- unfilled_optional do %>
-                      <div class="flex items-center gap-2 text-slate-300">
-                        <.icon name="hero-minus-circle-mini" class="size-4" />
-                        <span>{role_label(role)}</span>
+              <%!-- My roles --%>
+              <div class="border-t border-slate-100 pt-4">
+                <h4 class="text-sm font-semibold text-slate-500 mb-2">Mes rôles</h4>
+                <form phx-submit="save_my_roles" id="my-roles-form">
+                  <div class="flex flex-wrap gap-x-4 gap-y-2">
+                    <%= for role <- @available_roles do %>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          name={"roles[#{role}]"}
+                          value="true"
+                          checked={role in (@my_member.roles || [])}
+                          class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span class="text-sm text-slate-700">{role_label(role)}</span>
+                      </label>
+                    <% end %>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-2">
+                    Le rôle de capitaine est attribué par les gestionnaires.
+                  </p>
+                  <div class="mt-3">
+                    <button
+                      type="submit"
+                      class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition"
+                      phx-disable-with="Enregistrement..."
+                    >
+                      Enregistrer mes rôles
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </details>
+
+          <%!-- ===== FINANCES (collapsible) ===== --%>
+          <details class="bg-white rounded-xl shadow-sm border border-slate-200 group" id="finances-section">
+            <summary class="p-6 cursor-pointer select-none flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <h3 class="text-lg font-semibold text-slate-900">Finances</h3>
+                <div class="flex gap-2">
+                  <span class="text-xs text-slate-500">
+                    Bidons : {if @drums_summary.total_paid_quantity > 0, do: "#{@drums_summary.total_paid_quantity} payés", else: "—"}
+                  </span>
+                  <span class="text-xs text-slate-300">·</span>
+                  <span class="text-xs text-slate-500">
+                    CUF : {if @cuf_summary.total_validated_amount > 0, do: "#{@cuf_summary.total_validated_amount} €", else: "—"}
+                  </span>
+                </div>
+              </div>
+              <.icon
+                name="hero-chevron-down-mini"
+                class="size-5 text-slate-400 transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <div class="px-6 pb-6 border-t border-slate-100 pt-4 space-y-6">
+              <%!-- Drums --%>
+              <div>
+                <h4 class="text-sm font-semibold text-slate-500 mb-2">Bidons</h4>
+                <%= if @drums_summary.requests != [] do %>
+                  <div class="space-y-1 mb-3">
+                    <%= for req <- @drums_summary.requests do %>
+                      <div class="flex items-center justify-between text-sm">
+                        <span>
+                          {req.quantity} bidons — {req.total_amount} €
+                        </span>
+                        <%= if req.status == "paid" do %>
+                          <span class="bg-green-100 text-green-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                            Payé
+                          </span>
+                        <% else %>
+                          <span class="bg-amber-100 text-amber-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                            En attente
+                          </span>
+                        <% end %>
                       </div>
                     <% end %>
                   </div>
-                </div>
-              <% end %>
-            </div>
-          </div>
-
-          <%!-- My roles (self-declaration) --%>
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="my-roles">
-            <div class="p-6">
-              <h3 class="text-lg font-semibold text-slate-900">Mon profil dans l'équipage</h3>
-              <form phx-submit="save_my_roles" id="my-roles-form">
-                <div class="space-y-2 mt-2">
-                  <%= for role <- @available_roles do %>
-                    <label class="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name={"roles[#{role}]"}
-                        value="true"
-                        checked={role in (@my_member.roles || [])}
-                        class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                      />
-                      <span class="text-sm text-slate-700">{role_label(role)}</span>
-                    </label>
-                  <% end %>
-                </div>
-                <p class="text-xs text-slate-400 mt-2">
-                  Le rôle de capitaine est attribué par les gestionnaires.
-                </p>
-                <div class="mt-4">
-                  <.button variant="primary" phx-disable-with="Enregistrement...">
-                    Enregistrer mes rôles
-                  </.button>
-                </div>
-              </form>
-              <div class="mt-6 pt-4 border-t border-slate-200">
-                <button
-                  class="text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition"
-                  phx-click="leave_crew"
-                  data-confirm={
-                    if(@is_captain,
-                      do:
-                        "Vous êtes le capitaine. En quittant, le rôle sera retiré. Quitter quand même ?",
-                      else: "Voulez-vous vraiment quitter l'équipage ?"
-                    )
-                  }
-                  id="leave-crew-btn"
-                >
-                  Quitter cet équipage
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <%!-- Raft info --%>
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
-            <div class="p-6">
-              <h3 class="text-lg font-semibold text-slate-900">Informations</h3>
-
-              <%= if @raft.description do %>
-                <div class="mt-2">
-                  <p class="text-sm font-medium text-slate-400">Description</p>
-                  <p class="whitespace-pre-wrap">{@raft.description}</p>
-                </div>
-              <% end %>
-
-              <%= if @raft.forum_url do %>
-                <div class="mt-4">
-                  <p class="text-sm font-medium text-slate-400">Lien forum</p>
-                  <a href={@raft.forum_url} target="_blank" class="text-indigo-600 hover:underline">
-                    {@raft.forum_url}
-                  </a>
-                </div>
-              <% end %>
-
-              <div class="mt-4">
-                <p class="text-sm font-medium text-slate-400">Statut</p>
-                <%= if @raft.validated do %>
-                  <span class="bg-green-100 text-green-700 text-xs font-medium px-2.5 py-0.5 rounded-full inline-flex items-center">
-                    Radeau validé
-                  </span>
-                <% else %>
-                  <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                    En attente de validation admin
-                  </span>
                 <% end %>
-              </div>
-            </div>
-          </div>
-
-          <%!-- Drums section --%>
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="drums-section">
-            <div class="p-6">
-              <h3 class="text-lg font-semibold text-slate-900">Bidons</h3>
-
-              <%!-- Summary --%>
-              <%= if @drums_summary.requests != [] do %>
-                <div class="space-y-2 mt-2">
-                  <%= for req <- @drums_summary.requests do %>
-                    <div class="flex items-center justify-between text-sm">
-                      <span>
-                        {req.quantity} bidons — {req.total_amount} €
-                        ({req.unit_price} €/bidon)
-                      </span>
-                      <%= if req.status == "paid" do %>
-                        <span class="bg-green-100 text-green-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
-                          Payé
-                        </span>
-                      <% else %>
-                        <span class="bg-amber-100 text-amber-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
-                          En attente
-                        </span>
-                      <% end %>
-                    </div>
-                  <% end %>
-                  <div class="text-sm font-medium pt-2 border-t border-slate-200">
-                    Total payé : {@drums_summary.total_paid_quantity} bidons — {@drums_summary.total_paid_amount} €
-                  </div>
-                </div>
-              <% end %>
-
-              <%!-- Request form --%>
-              <div class="mt-4">
-                <h4 class="text-sm font-medium mb-2">
-                  {if @pending_drum_request, do: "Modifier la demande", else: "Nouvelle demande"}
-                </h4>
                 <.form
                   for={@drum_form}
                   id="drum-request-form"
                   phx-change="validate_drums"
                   phx-submit="submit_drums"
                 >
-                  <div class="flex items-end gap-4">
+                  <div class="flex items-end gap-3">
                     <div class="flex-1">
                       <.input
                         field={@drum_form[:quantity]}
                         type="number"
-                        label="Nombre de bidons"
+                        label={if @pending_drum_request, do: "Modifier la demande", else: "Nombre de bidons"}
                         min="0"
                       />
                     </div>
-                    <.button variant="primary" phx-disable-with="Envoi...">
+                    <button
+                      type="submit"
+                      class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition mb-0.5"
+                      phx-disable-with="Envoi..."
+                    >
                       {if @pending_drum_request, do: "Modifier", else: "Demander"}
-                    </.button>
+                    </button>
                   </div>
                   <.input field={@drum_form[:note]} type="text" label="Note (optionnel)" />
-                  <p class="text-xs text-slate-400 mt-2">
+                  <p class="text-xs text-slate-400 mt-1">
                     Tarif : {@drum_settings.unit_price} € / bidon
                     <%= if @drum_settings.rib_iban do %>
                       — IBAN : {@drum_settings.rib_iban}
@@ -632,81 +711,122 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                   </p>
                 </.form>
               </div>
-            </div>
-          </div>
 
-          <%!-- CUF section --%>
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="cuf-section">
-            <div class="p-6">
-              <h3 class="text-lg font-semibold text-slate-900">CUF (Cotisation Urbaine Flottante)</h3>
-
-              <div class="space-y-2 mt-2 text-sm">
-                <p>
-                  Participants validés :
-                  <span class="font-medium">{@cuf_summary.total_validated_participants}</span>
-                </p>
-                <p>
-                  Montant total validé :
-                  <span class="font-medium">{@cuf_summary.total_validated_amount} €</span>
-                </p>
-
-                <%= if @cuf_summary.pending do %>
-                  <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 flex items-start gap-3 text-sm mt-2">
-                    <.icon name="hero-clock-mini" class="size-4" />
-                    <span>
-                      Déclaration en attente : {@cuf_summary.pending.participant_count} participants
-                      ({@cuf_summary.pending.total_amount} €)
-                    </span>
+              <%!-- CUF --%>
+              <div class="border-t border-slate-100 pt-4">
+                <h4 class="text-sm font-semibold text-slate-500 mb-2">
+                  CUF (Cotisation Urbaine Flottante)
+                </h4>
+                <div class="space-y-1 text-sm">
+                  <p>
+                    Participants validés :
+                    <span class="font-medium">{@cuf_summary.total_validated_participants}</span>
+                    — Montant :
+                    <span class="font-medium">{@cuf_summary.total_validated_amount} €</span>
+                  </p>
+                  <%= if @cuf_summary.pending do %>
+                    <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3 flex items-start gap-2 text-sm mt-2">
+                      <.icon name="hero-clock-mini" class="size-4 mt-0.5" />
+                      <span>
+                        Déclaration en attente : {@cuf_summary.pending.participant_count} participants
+                        ({@cuf_summary.pending.total_amount} €)
+                      </span>
+                    </div>
+                  <% end %>
+                </div>
+                <%= if @is_captain do %>
+                  <div class="mt-3">
+                    <form phx-submit="submit_cuf" id="cuf-declaration-form">
+                      <h5 class="text-sm font-medium mb-2">Déclarer les participants</h5>
+                      <div class="flex flex-wrap gap-x-4 gap-y-1">
+                        <%= for member <- @raft.crew.crew_members do %>
+                          <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              name={"participants[#{member.user_id}]"}
+                              value="true"
+                              checked={
+                                member.user_id in ((@cuf_summary.pending &&
+                                                      @cuf_summary.pending.participant_user_ids) || [])
+                              }
+                              class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <span class="text-sm text-slate-700">
+                              {Accounts.display_name(member.user)}
+                              <%= unless member.user.validated do %>
+                                <span class="text-amber-600 text-xs">(non validé)</span>
+                              <% end %>
+                            </span>
+                          </label>
+                        <% end %>
+                      </div>
+                      <p class="text-xs text-slate-400 mt-2">
+                        Montant : {@cuf_settings.unit_price} € / personne
+                        <%= if @cuf_settings.rib_iban do %>
+                          — IBAN : {@cuf_settings.rib_iban}
+                        <% end %>
+                      </p>
+                      <div class="mt-3">
+                        <button
+                          type="submit"
+                          class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition"
+                          phx-disable-with="Envoi..."
+                        >
+                          Soumettre la déclaration
+                        </button>
+                      </div>
+                    </form>
                   </div>
                 <% end %>
               </div>
+            </div>
+          </details>
 
-              <%!-- Captain can declare participants --%>
-              <%= if @is_captain do %>
-                <div class="mt-4">
-                  <h4 class="text-sm font-medium mb-2">Déclarer les participants</h4>
-                  <form phx-submit="submit_cuf" id="cuf-declaration-form">
-                    <div class="space-y-1">
-                      <%= for member <- @raft.crew.crew_members do %>
-                        <label class="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            name={"participants[#{member.user_id}]"}
-                            value="true"
-                            checked={
-                              member.user_id in ((@cuf_summary.pending &&
-                                                    @cuf_summary.pending.participant_user_ids) || [])
-                            }
-                            class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                          />
-                          <span class="text-sm text-slate-700">
-                            {Accounts.display_name(member.user)}
-                            <%= unless member.user.validated do %>
-                              <span class="text-amber-600 text-xs">(non validé)</span>
-                            <% end %>
-                          </span>
-                        </label>
-                      <% end %>
-                    </div>
-                    <p class="text-xs text-slate-400 mt-2">
-                      Montant : {@cuf_settings.unit_price} € / personne
-                      <%= if @cuf_settings.rib_iban do %>
-                        — IBAN : {@cuf_settings.rib_iban}
-                      <% end %>
-                    </p>
-                    <div class="mt-4">
-                      <.button variant="primary" phx-disable-with="Envoi...">
-                        Soumettre la déclaration
-                      </.button>
-                    </div>
-                  </form>
-                </div>
+          <%!-- ===== BOTTOM LINKS ===== --%>
+          <div class="flex flex-wrap items-center justify-between gap-4 pt-2">
+            <div class="flex flex-wrap gap-3 text-sm">
+              <.link
+                navigate={~p"/radeaux/#{@raft.slug}"}
+                class="text-slate-500 hover:text-indigo-600 transition inline-flex items-center gap-1"
+              >
+                <.icon name="hero-eye-mini" class="size-4" /> Page publique
+              </.link>
+              <span class="text-slate-300">·</span>
+              <.link
+                navigate={~p"/fiche-inscription"}
+                class="text-slate-500 hover:text-indigo-600 transition inline-flex items-center gap-1"
+              >
+                <.icon name="hero-document-text-mini" class="size-4" /> Ma fiche d'inscription
+              </.link>
+              <%= if @raft.forum_url do %>
+                <span class="text-slate-300">·</span>
+                <a
+                  href={@raft.forum_url}
+                  target="_blank"
+                  class="text-slate-500 hover:text-indigo-600 transition inline-flex items-center gap-1"
+                >
+                  <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> Forum
+                </a>
               <% end %>
             </div>
+            <button
+              class="text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition"
+              phx-click="leave_crew"
+              data-confirm={
+                if(@is_captain,
+                  do:
+                    "Vous êtes le capitaine. En quittant, le rôle sera retiré. Quitter quand même ?",
+                  else: "Voulez-vous vraiment quitter l'équipage ?"
+                )
+              }
+              id="leave-crew-btn"
+            >
+              Quitter l'équipage
+            </button>
           </div>
         </div>
 
-        <%!-- Crew members sidebar --%>
+        <%!-- ===== CREW MEMBERS SIDEBAR ===== --%>
         <div>
           <div class="bg-white rounded-xl shadow-sm border border-slate-200">
             <div class="p-6">
