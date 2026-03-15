@@ -78,7 +78,9 @@ defmodule HoMonRadeau.MixProject do
       {:hackney, "~> 1.20"},
       {:sweet_xml, "~> 0.7"},
       # Admin interface
-      {:kaffy, "~> 0.10"}
+      {:kaffy, "~> 0.10"},
+      # MCP server for AI admin
+      {:ex_mcp, "~> 0.8"}
     ]
   end
 
