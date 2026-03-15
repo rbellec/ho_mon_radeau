@@ -17,6 +17,8 @@ defmodule HoMonRadeauWeb.ProfileLive do
 
     transverse_teams = Events.get_user_transverse_teams(user)
 
+    api_tokens = if user.is_admin, do: Accounts.list_active_api_tokens(user), else: []
+
     {:ok,
      socket
      |> assign(:page_title, "Mon profil")
@@ -24,7 +26,10 @@ defmodule HoMonRadeauWeb.ProfileLive do
      |> assign(:user_crew, user_crew)
      |> assign(:raft, raft)
      |> assign(:transverse_teams, transverse_teams)
-     |> assign(:form, to_form(changeset))}
+     |> assign(:form, to_form(changeset))
+     |> assign(:api_tokens, api_tokens)
+     |> assign(:new_token, nil)
+     |> assign(:token_label, "")}
   end
 
   @impl true
@@ -51,6 +56,44 @@ defmodule HoMonRadeauWeb.ProfileLive do
 
       {:error, changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
+    end
+  end
+
+  @impl true
+  def handle_event("create_token", %{"label" => label}, socket) do
+    user = socket.assigns.user
+
+    case Accounts.create_api_token(user, label) do
+      {:ok, raw_token, _api_token} ->
+        {:noreply,
+         socket
+         |> assign(:new_token, raw_token)
+         |> assign(:token_label, "")
+         |> assign(:api_tokens, Accounts.list_active_api_tokens(user))}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Erreur lors de la création du token.")}
+    end
+  end
+
+  @impl true
+  def handle_event("dismiss_token", _params, socket) do
+    {:noreply, assign(socket, :new_token, nil)}
+  end
+
+  @impl true
+  def handle_event("revoke_token", %{"id" => id}, socket) do
+    user = socket.assigns.user
+
+    case Accounts.revoke_api_token_by_id(user, String.to_integer(id)) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> assign(:api_tokens, Accounts.list_active_api_tokens(user))
+         |> put_flash(:info, "Token révoqué.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Erreur lors de la révocation.")}
     end
   end
 
@@ -226,6 +269,92 @@ defmodule HoMonRadeauWeb.ProfileLive do
             </div>
           </div>
         </div>
+        <%!-- API Tokens (admin only) --%>
+        <%= if @user.is_admin do %>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="api-tokens">
+            <div class="p-6">
+              <h2 class="text-lg font-semibold text-slate-900 mb-1">Tokens API (MCP)</h2>
+              <p class="text-sm text-slate-500 mb-4">
+                Créez des tokens pour utiliser le serveur MCP avec Claude ou d'autres outils IA.
+              </p>
+
+              <%!-- New token alert --%>
+              <%= if @new_token do %>
+                <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                  <p class="text-sm font-medium text-green-800 mb-2">
+                    Token créé ! Copiez-le maintenant, il ne sera plus visible ensuite.
+                  </p>
+                  <div class="flex items-center gap-2">
+                    <code
+                      class="flex-1 bg-white border border-green-300 rounded-lg px-3 py-2 text-sm font-mono select-all break-all"
+                      id="new-token-value"
+                    >
+                      {@new_token}
+                    </code>
+                    <button
+                      phx-click="dismiss_token"
+                      class="text-slate-400 hover:text-slate-600 shrink-0"
+                    >
+                      <.icon name="hero-x-mark-mini" class="size-5" />
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+
+              <%!-- Create token form --%>
+              <form phx-submit="create_token" class="flex items-end gap-3 mb-4">
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-slate-700 mb-1">
+                    Nouveau token
+                  </label>
+                  <input
+                    type="text"
+                    name="label"
+                    value={@token_label}
+                    placeholder="Ex: Claude Desktop, Mon laptop..."
+                    required
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition shrink-0"
+                >
+                  Créer
+                </button>
+              </form>
+
+              <%!-- Active tokens list --%>
+              <%= if @api_tokens != [] do %>
+                <div class="space-y-2">
+                  <%= for token <- @api_tokens do %>
+                    <div class="flex items-center justify-between py-2 px-3 bg-slate-50 rounded-lg">
+                      <div>
+                        <span class="text-sm font-medium text-slate-900">{token.label}</span>
+                        <span class="text-xs text-slate-400 ml-2">
+                          Créé le {Calendar.strftime(token.inserted_at, "%d/%m/%Y")}
+                          <%= if token.last_used_at do %>
+                            · Utilisé le {Calendar.strftime(token.last_used_at, "%d/%m/%Y à %H:%M")}
+                          <% end %>
+                        </span>
+                      </div>
+                      <button
+                        phx-click="revoke_token"
+                        phx-value-id={token.id}
+                        data-confirm="Révoquer ce token ? Il ne fonctionnera plus."
+                        class="text-xs text-red-600 hover:bg-red-50 rounded-md px-2 py-1 font-medium transition"
+                      >
+                        Révoquer
+                      </button>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <p class="text-sm text-slate-400 italic">Aucun token actif.</p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
     </Layouts.app>
     """

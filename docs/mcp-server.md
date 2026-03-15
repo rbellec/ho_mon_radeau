@@ -2,23 +2,44 @@
 
 Serveur [Model Context Protocol](https://modelcontextprotocol.io/) permettant d'administrer l'événement Tutto Blu via un outil IA (Claude Code, Claude Desktop, ou tout client MCP compatible).
 
-## Démarrage rapide
+## Deux modes de transport
 
-### En local avec Docker
+### Mode HTTP (production — recommandé)
+
+Le serveur MCP est accessible via l'endpoint HTTP de l'app Phoenix, authentifié par token API personnel.
+
+**URL** : `https://ho-mon-radeau.fly.dev/api/mcp`
+
+#### 1. Créer un token API
+
+Allez sur votre profil (`/mon-profil`), section "Tokens API (MCP)" en bas de page (visible uniquement pour les admins). Créez un token avec un label descriptif. **Copiez-le immédiatement** — il ne sera plus visible ensuite.
+
+#### 2. Configurer Claude Desktop (HTTP)
+
+```json
+{
+  "mcpServers": {
+    "ho-mon-radeau": {
+      "url": "https://ho-mon-radeau.fly.dev/api/mcp",
+      "headers": {
+        "Authorization": "Bearer VOTRE_TOKEN_ICI"
+      }
+    }
+  }
+}
+```
+
+### Mode STDIO (développement local)
+
+Pour le développement, le serveur peut tourner en local via stdin/stdout.
 
 ```bash
 docker compose run --rm -T app mix mcp.server
 ```
 
-### Sans Docker
+> Le flag `-T` est indispensable avec Docker pour que stdin/stdout soient correctement connectés.
 
-```bash
-MIX_ENV=dev mix mcp.server
-```
-
-> Le flag `-T` est indispensable avec Docker pour que stdin/stdout soient correctement connectés (transport STDIO).
-
-## Configuration Claude Code
+## Configuration Claude Code (local)
 
 Ajouter dans `.claude/settings.json` ou le fichier de configuration MCP :
 
@@ -34,7 +55,7 @@ Ajouter dans `.claude/settings.json` ou le fichier de configuration MCP :
 }
 ```
 
-## Configuration Claude Desktop
+## Configuration Claude Desktop (local)
 
 Ajouter dans `claude_desktop_config.json` :
 
@@ -52,8 +73,18 @@ Ajouter dans `claude_desktop_config.json` :
 
 ## Prérequis
 
-- La base de données doit être accessible (Docker Compose démarré)
-- Au moins un utilisateur admin doit exister en base (sinon les opérations d'écriture échoueront)
+- **Mode HTTP (prod)** : un compte admin avec un token API créé depuis le profil
+- **Mode STDIO (local)** : Docker Compose démarré, au moins un admin en base
+
+## Authentification
+
+Chaque admin génère ses propres tokens API depuis sa page profil (`/mon-profil`). Les tokens sont :
+
+- **Personnels** : chaque token est lié à un utilisateur
+- **Hashés en base** : le token brut n'est montré qu'une fois à la création
+- **Révocables** : un token peut être révoqué depuis le profil
+- **Tracés** : `last_used_at` est mis à jour à chaque utilisation
+- **Restreints aux admins** : seuls les utilisateurs `is_admin` peuvent accéder au MCP via HTTP
 
 ## Tools disponibles (29)
 
@@ -180,17 +211,25 @@ Les resources fournissent des vues d'ensemble en lecture seule, utiles pour le c
 
 ```
 lib/ho_mon_radeau/mcp/
-  server.ex     # Module principal : 29 deftool + 6 defresource + handlers
-  helpers.ex    # Sérialisation JSON + get_system_admin/0
+  server.ex                    # 29 deftool + 6 defresource + handlers
+  helpers.ex                   # Sérialisation + get_current_admin/0
+
+lib/ho_mon_radeau/accounts/
+  api_token.ex                 # Schema tokens API (hashés, révocables)
+
+lib/ho_mon_radeau_web/
+  controllers/mcp_controller.ex  # Endpoint HTTP avec auth Bearer
+  plugs/api_auth.ex              # Plug d'authentification API (réutilisable)
 
 lib/mix/tasks/
-  mcp.server.ex # Entrypoint : mix mcp.server
+  mcp.server.ex                # Entrypoint STDIO : mix mcp.server
 ```
 
 - **Librairie** : `ex_mcp ~> 0.8`
-- **Transport** : STDIO (JSON-RPC sur stdin/stdout)
-- **Authentification** : implicite (accès local via STDIO = admin)
-- **Admin système** : le premier `%User{is_admin: true}` en base est utilisé pour les opérations d'écriture
+- **Transport HTTP** : `POST /api/mcp` via Phoenix + ExMCP.HttpPlug
+- **Transport STDIO** : `mix mcp.server` pour usage local
+- **Auth HTTP** : Bearer token personnel, vérifié + user chargé + check admin
+- **Auth STDIO** : implicite (accès local = premier admin en base)
 
 ## Scénarios d'administration type
 
