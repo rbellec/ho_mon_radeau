@@ -223,8 +223,13 @@ defmodule HoMonRadeau.Events do
   def create_raft_with_crew(%User{} = user, attrs, edition_id) do
     Multi.new()
     |> Multi.insert(:raft, fn _ ->
+      attrs =
+        if is_map(attrs) and Enum.any?(attrs, fn {k, _} -> is_binary(k) end),
+          do: Map.put(attrs, "edition_id", edition_id),
+          else: Map.put(attrs, :edition_id, edition_id)
+
       %Raft{}
-      |> Raft.changeset(Map.put(attrs, "edition_id", edition_id))
+      |> Raft.changeset(attrs)
     end)
     |> Multi.insert(:crew, fn %{raft: raft} ->
       %Crew{}

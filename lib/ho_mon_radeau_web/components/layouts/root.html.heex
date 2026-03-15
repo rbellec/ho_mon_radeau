@@ -69,57 +69,57 @@
                     Admin
                   </button>
                   <div class="hidden group-hover:block absolute right-0 top-full pt-1 w-52 z-50">
-                  <div class="bg-white shadow-lg rounded-xl border border-slate-200 py-2">
-                    <.link
-                      href={~p"/admin/utilisateurs"}
-                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      Utilisateurs
-                    </.link>
-                    <.link
-                      href={~p"/admin/fiches"}
-                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      Fiches d'inscription
-                    </.link>
-                    <.link
-                      href={~p"/admin/radeaux"}
-                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      Radeaux
-                    </.link>
-                    <.link
-                      href={~p"/admin/equipes-transverses"}
-                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      Équipes transverses
-                    </.link>
-                    <.link
-                      href={~p"/admin/bidons"}
-                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      Bidons
-                    </.link>
-                    <.link
-                      href={~p"/admin/cuf"}
-                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      CUF
-                    </.link>
-                    <.link
-                      href={~p"/admin/departs"}
-                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      Départs
-                    </.link>
-                    <div class="border-t border-slate-100 my-1"></div>
-                    <.link
-                      href={~p"/kaffy"}
-                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                    >
-                      Kaffy Admin
-                    </.link>
-                  </div>
+                    <div class="bg-white shadow-lg rounded-xl border border-slate-200 py-2">
+                      <.link
+                        href={~p"/admin/utilisateurs"}
+                        class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        Utilisateurs
+                      </.link>
+                      <.link
+                        href={~p"/admin/fiches"}
+                        class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        Fiches d'inscription
+                      </.link>
+                      <.link
+                        href={~p"/admin/radeaux"}
+                        class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        Radeaux
+                      </.link>
+                      <.link
+                        href={~p"/admin/equipes-transverses"}
+                        class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        Équipes transverses
+                      </.link>
+                      <.link
+                        href={~p"/admin/bidons"}
+                        class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        Bidons
+                      </.link>
+                      <.link
+                        href={~p"/admin/cuf"}
+                        class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        CUF
+                      </.link>
+                      <.link
+                        href={~p"/admin/departs"}
+                        class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        Départs
+                      </.link>
+                      <div class="border-t border-slate-100 my-1"></div>
+                      <.link
+                        href={~p"/kaffy"}
+                        class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                      >
+                        Kaffy Admin
+                      </.link>
+                    </div>
                   </div>
                 </div>
               <% end %>
@@ -130,40 +130,40 @@
                   {@current_scope.user.nickname || @current_scope.user.email}
                 </button>
                 <div class="hidden group-hover:block absolute right-0 top-full pt-1 w-52 z-50">
-                <div class="bg-white shadow-lg rounded-xl border border-slate-200 py-2">
-                  <.link
-                    navigate={~p"/mon-profil"}
-                    class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                  >
-                    Mon profil
-                  </.link>
-                  <.link
-                    navigate={~p"/"}
-                    class="block md:hidden px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                  >
-                    Accueil
-                  </.link>
-                  <.link
-                    navigate={~p"/radeaux"}
-                    class="block md:hidden px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                  >
-                    Les radeaux
-                  </.link>
-                  <.link
-                    navigate={~p"/mon-radeau"}
-                    class="block md:hidden px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                  >
-                    Mon radeau
-                  </.link>
-                  <div class="border-t border-slate-100 my-1"></div>
-                  <.link
-                    href={~p"/users/log-out"}
-                    method="delete"
-                    class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                  >
-                    Déconnexion
-                  </.link>
-                </div>
+                  <div class="bg-white shadow-lg rounded-xl border border-slate-200 py-2">
+                    <.link
+                      navigate={~p"/mon-profil"}
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Mon profil
+                    </.link>
+                    <.link
+                      navigate={~p"/"}
+                      class="block md:hidden px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Accueil
+                    </.link>
+                    <.link
+                      navigate={~p"/radeaux"}
+                      class="block md:hidden px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Les radeaux
+                    </.link>
+                    <.link
+                      navigate={~p"/mon-radeau"}
+                      class="block md:hidden px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Mon radeau
+                    </.link>
+                    <div class="border-t border-slate-100 my-1"></div>
+                    <.link
+                      href={~p"/users/log-out"}
+                      method="delete"
+                      class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    >
+                      Déconnexion
+                    </.link>
+                  </div>
                 </div>
               </div>
             <% else %>

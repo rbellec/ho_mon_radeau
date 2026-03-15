@@ -100,8 +100,9 @@ if config_env() == :prod do
   # Configuring the mailer with Resend
   config :ho_mon_radeau, HoMonRadeau.Mailer,
     adapter: Swoosh.Adapters.Resend,
-    api_key: System.get_env("RESEND_API_KEY") ||
-      raise("environment variable RESEND_API_KEY is missing.")
+    api_key:
+      System.get_env("RESEND_API_KEY") ||
+        raise("environment variable RESEND_API_KEY is missing.")
 
   config :ho_mon_radeau,
     mailer_from_email: System.get_env("MAILER_FROM_EMAIL", "onboarding@resend.dev")

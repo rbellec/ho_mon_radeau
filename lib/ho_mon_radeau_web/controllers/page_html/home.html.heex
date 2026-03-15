@@ -98,10 +98,23 @@
       <% !@current_scope.user.validated -> %>
         <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 mb-6 flex items-start gap-3">
           <.icon name="hero-exclamation-triangle" class="size-6 shrink-0 mt-0.5" />
-          <span>
-            Votre compte est en attente de validation par l'équipe d'accueil.
-            Une fois validé, vous pourrez rejoindre ou créer un équipage.
-          </span>
+          <div>
+            <p>
+              Votre compte est en attente de validation par l'équipe d'accueil.
+              Une fois validé, vous pourrez rejoindre ou créer un équipage.
+            </p>
+            <p class="mt-2 text-sm">
+              Une question ? Rendez-vous sur le
+              <a
+                href="https://tuttoblu.discourse.group/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-indigo-600 hover:underline font-medium"
+              >
+                forum Tutto Blu
+              </a>
+            </p>
+          </div>
         </div>
       <% @raft -> %>
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
@@ -174,6 +187,31 @@
       >
         Paramètres
       </.link>
+    </div>
+
+    <%!-- Footer --%>
+    <div class="mt-16 pt-6 border-t border-slate-200">
+      <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-slate-400">
+        <span>&copy; {Date.utc_today().year} Tutto Blu</span>
+        <span class="hidden sm:inline">·</span>
+        <a
+          href="https://tuttoblu.framer.website/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-indigo-600 transition"
+        >
+          Site Tutto Blu
+        </a>
+        <span>·</span>
+        <a
+          href="https://tuttoblu.discourse.group/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:text-indigo-600 transition"
+        >
+          Forum
+        </a>
+      </div>
     </div>
   </div>
 <% else %>

@@ -9,7 +9,10 @@ defmodule HoMonRadeau.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Ho Mon Radeau", Application.get_env(:ho_mon_radeau, :mailer_from_email, "noreply@ho-mon-radeau.fly.dev")})
+      |> from(
+        {"Ho Mon Radeau",
+         Application.get_env(:ho_mon_radeau, :mailer_from_email, "noreply@ho-mon-radeau.fly.dev")}
+      )
       |> subject(subject)
       |> text_body(body)
 

@@ -537,7 +537,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           </div>
 
           <%!-- ===== RÔLES (collapsible) ===== --%>
-          <details class="bg-white rounded-xl shadow-sm border border-slate-200 group" id="roles-section">
+          <details
+            class="bg-white rounded-xl shadow-sm border border-slate-200 group"
+            id="roles-section"
+          >
             <summary class="p-6 cursor-pointer select-none flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <h3 class="text-lg font-semibold text-slate-900">Rôles</h3>
@@ -636,17 +639,24 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           </details>
 
           <%!-- ===== FINANCES (collapsible) ===== --%>
-          <details class="bg-white rounded-xl shadow-sm border border-slate-200 group" id="finances-section">
+          <details
+            class="bg-white rounded-xl shadow-sm border border-slate-200 group"
+            id="finances-section"
+          >
             <summary class="p-6 cursor-pointer select-none flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <h3 class="text-lg font-semibold text-slate-900">Finances</h3>
                 <div class="flex gap-2">
                   <span class="text-xs text-slate-500">
-                    Bidons : {if @drums_summary.total_paid_quantity > 0, do: "#{@drums_summary.total_paid_quantity} payés", else: "—"}
+                    Bidons : {if @drums_summary.total_paid_quantity > 0,
+                      do: "#{@drums_summary.total_paid_quantity} payés",
+                      else: "—"}
                   </span>
                   <span class="text-xs text-slate-300">·</span>
                   <span class="text-xs text-slate-500">
-                    CUF : {if @cuf_summary.total_validated_amount > 0, do: "#{@cuf_summary.total_validated_amount} €", else: "—"}
+                    CUF : {if @cuf_summary.total_validated_amount > 0,
+                      do: "#{@cuf_summary.total_validated_amount} €",
+                      else: "—"}
                   </span>
                 </div>
               </div>
@@ -690,7 +700,11 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                       <.input
                         field={@drum_form[:quantity]}
                         type="number"
-                        label={if @pending_drum_request, do: "Modifier la demande", else: "Nombre de bidons"}
+                        label={
+                          if @pending_drum_request,
+                            do: "Modifier la demande",
+                            else: "Nombre de bidons"
+                        }
                         min="0"
                       />
                     </div>
