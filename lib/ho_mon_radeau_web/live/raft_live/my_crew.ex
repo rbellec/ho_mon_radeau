@@ -743,7 +743,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                       </div>
                     </div>
                     <%!-- Manager actions --%>
-                    <%= if @is_manager && member.user_id != @current_scope.user.id do %>
+                    <%= if @is_manager do %>
                       <div class="flex flex-wrap gap-1 mt-2 pt-2 border-t border-slate-100">
                         <%= if member.is_captain do %>
                           <button
@@ -769,32 +769,34 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                             Nommer capitaine
                           </button>
                         <% end %>
-                        <%= if member.is_manager do %>
+                        <%= if member.user_id != @current_scope.user.id do %>
+                          <%= if member.is_manager do %>
+                            <button
+                              class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
+                              phx-click="demote_manager"
+                              phx-value-user-id={member.user_id}
+                              data-confirm="Retirer le rôle de gestionnaire ?"
+                            >
+                              Retirer gestionnaire
+                            </button>
+                          <% else %>
+                            <button
+                              class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
+                              phx-click="promote_manager"
+                              phx-value-user-id={member.user_id}
+                            >
+                              Nommer gestionnaire
+                            </button>
+                          <% end %>
                           <button
-                            class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
-                            phx-click="demote_manager"
+                            class="text-xs text-red-600 hover:bg-red-50 rounded-md px-2 py-1 font-medium transition"
+                            phx-click="remove_member"
                             phx-value-user-id={member.user_id}
-                            data-confirm="Retirer le rôle de gestionnaire ?"
+                            data-confirm={"Retirer #{Accounts.display_name(member.user)} de l'équipage ?"}
                           >
-                            Retirer gestionnaire
-                          </button>
-                        <% else %>
-                          <button
-                            class="text-xs text-slate-600 hover:bg-slate-50 rounded-md px-2 py-1 font-medium transition"
-                            phx-click="promote_manager"
-                            phx-value-user-id={member.user_id}
-                          >
-                            Nommer gestionnaire
+                            Retirer
                           </button>
                         <% end %>
-                        <button
-                          class="text-xs text-red-600 hover:bg-red-50 rounded-md px-2 py-1 font-medium transition"
-                          phx-click="remove_member"
-                          phx-value-user-id={member.user_id}
-                          data-confirm={"Retirer #{Accounts.display_name(member.user)} de l'équipage ?"}
-                        >
-                          Retirer
-                        </button>
                       </div>
                     <% end %>
                   </li>
