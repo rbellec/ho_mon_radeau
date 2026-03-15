@@ -43,9 +43,27 @@ defmodule HoMonRadeauWeb.Layouts do
 
     <footer class="border-t border-slate-200 mt-auto">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <p class="text-sm text-slate-400 text-center">
-          &copy; {Date.utc_today().year} Tutto Blu — Ho Mon Radeau
-        </p>
+        <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm text-slate-400">
+          <span>&copy; {Date.utc_today().year} Tutto Blu</span>
+          <span class="hidden sm:inline">·</span>
+          <a
+            href="https://tuttoblu.framer.website/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-indigo-600 transition"
+          >
+            Site Tutto Blu
+          </a>
+          <span>·</span>
+          <a
+            href="https://tuttoblu.discourse.group/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-indigo-600 transition"
+          >
+            Forum
+          </a>
+        </div>
       </div>
     </footer>
 

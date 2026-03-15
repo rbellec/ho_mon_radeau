@@ -1,178 +1,205 @@
 <Layouts.flash_group flash={@flash} />
 
-<div class="min-h-[80vh] flex flex-col justify-center">
-  <div class="max-w-3xl mx-auto px-4 py-16 text-center">
-    <h1 class="text-5xl font-bold text-indigo-600 mb-4">
-      Tutto Blu
-    </h1>
-    <p class="text-2xl text-slate-600 mb-8">
-      Le village flottant
-    </p>
-
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-10 text-left">
-      <p class="text-lg leading-relaxed">
-        <strong>Tutto Blu</strong>, c'est un événement unique où les participant·es construisent
-        leurs propres radeaux puis les mettent à l'eau pour créer ensemble un
-        <strong>village flottant éphémère</strong>
-        sur un lac.
-      </p>
-      <p class="mt-4 text-slate-600">
-        Cette application permet aux équipages de s'organiser : former des équipes,
-        gérer les inscriptions, et coordonner la préparation de l'événement.
-      </p>
+<%= if @current_scope && @current_scope.user do %>
+  <%!-- Authenticated home: straight to the point --%>
+  <div class="max-w-3xl mx-auto px-4 py-10">
+    <div class="flex items-center justify-between mb-8">
+      <h1 class="text-2xl font-bold text-slate-900">
+        Bonjour {@current_scope.user.nickname || @current_scope.user.email}
+      </h1>
+      <.link
+        navigate={~p"/mon-profil"}
+        class="text-sm text-slate-500 hover:text-indigo-600 transition"
+      >
+        Mon profil
+      </.link>
     </div>
 
-    <%= if @current_scope && @current_scope.user do %>
-      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
-        <h3 class="text-lg font-semibold text-slate-900 text-center mb-6">
-          Mes prochaines étapes
-        </h3>
+    <%!-- Steps progress --%>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8">
+      <h2 class="text-lg font-semibold text-slate-900 mb-6">Mes prochaines étapes</h2>
 
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 w-full">
-          <%!-- Step 1 --%>
-          <div class="flex items-center gap-3 lg:flex-col lg:items-center lg:text-center flex-1">
-            <div class={[
-              "w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0",
-              if(@current_scope.user.validated, do: "bg-green-500", else: "bg-slate-300")
-            ]}>
+      <div class="grid grid-cols-4 gap-2">
+        <%!-- Step circles row --%>
+        <div class="flex flex-col items-center">
+          <div class={[
+            "w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold",
+            if(@current_scope.user.validated, do: "bg-green-500", else: "bg-slate-300")
+          ]}>
+            <%= if @current_scope.user.validated do %>
+              <.icon name="hero-check-mini" class="size-4" />
+            <% else %>
               1
-            </div>
-            <div>
-              <p class="font-medium text-slate-900">Validation</p>
-              <%= if @current_scope.user.validated do %>
-                <p class="text-xs text-green-600">Compte validé</p>
-              <% else %>
-                <p class="text-xs text-amber-600">En attente</p>
-              <% end %>
-            </div>
+            <% end %>
           </div>
+          <p class="text-xs font-medium text-slate-900 mt-2 text-center">Validation</p>
+          <%= if @current_scope.user.validated do %>
+            <p class="text-xs text-green-600 text-center">Validé</p>
+          <% else %>
+            <p class="text-xs text-amber-600 text-center">En attente</p>
+          <% end %>
+        </div>
 
-          <div class="hidden lg:block w-8 h-0.5 bg-slate-200"></div>
-
-          <%!-- Step 2 --%>
-          <div class="flex items-center gap-3 lg:flex-col lg:items-center lg:text-center flex-1">
-            <div class={[
-              "w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0",
-              if(@raft, do: "bg-green-500", else: "bg-slate-300")
-            ]}>
+        <div class="flex flex-col items-center">
+          <div class={[
+            "w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold",
+            if(@raft, do: "bg-green-500", else: "bg-slate-300")
+          ]}>
+            <%= if @raft do %>
+              <.icon name="hero-check-mini" class="size-4" />
+            <% else %>
               2
-            </div>
-            <div>
-              <p class="font-medium text-slate-900">Équipage</p>
-              <%= if @raft do %>
-                <p class="text-xs text-green-600">{@raft.name}</p>
-              <% else %>
-                <p class="text-xs text-slate-400">À rejoindre</p>
-              <% end %>
-            </div>
+            <% end %>
           </div>
+          <p class="text-xs font-medium text-slate-900 mt-2 text-center">Équipage</p>
+          <%= if @raft do %>
+            <p class="text-xs text-green-600 text-center truncate max-w-full">{@raft.name}</p>
+          <% else %>
+            <p class="text-xs text-slate-400 text-center">À rejoindre</p>
+          <% end %>
+        </div>
 
-          <div class="hidden lg:block w-8 h-0.5 bg-slate-200"></div>
-
-          <%!-- Step 3 --%>
-          <div class="flex items-center gap-3 lg:flex-col lg:items-center lg:text-center flex-1">
-            <div class={[
-              "w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0",
-              if(@form_status == :approved, do: "bg-green-500", else: "bg-slate-300")
-            ]}>
+        <div class="flex flex-col items-center">
+          <div class={[
+            "w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold",
+            if(@form_status == :approved, do: "bg-green-500", else: "bg-slate-300")
+          ]}>
+            <%= if @form_status == :approved do %>
+              <.icon name="hero-check-mini" class="size-4" />
+            <% else %>
               3
-            </div>
-            <div>
-              <p class="font-medium text-slate-900">Fiche d'inscription</p>
-              <%= case @form_status do %>
-                <% :approved -> %>
-                  <p class="text-xs text-green-600">Approuvée</p>
-                <% :pending -> %>
-                  <p class="text-xs text-indigo-500">En attente</p>
-                <% :rejected -> %>
-                  <p class="text-xs text-red-600">À corriger</p>
-                <% _ -> %>
-                  <p class="text-xs text-slate-400">À déposer</p>
-              <% end %>
-            </div>
+            <% end %>
           </div>
+          <p class="text-xs font-medium text-slate-900 mt-2 text-center">Fiche</p>
+          <%= case @form_status do %>
+            <% :approved -> %>
+              <p class="text-xs text-green-600 text-center">Approuvée</p>
+            <% :pending -> %>
+              <p class="text-xs text-indigo-500 text-center">En attente</p>
+            <% :rejected -> %>
+              <p class="text-xs text-red-600 text-center">À corriger</p>
+            <% _ -> %>
+              <p class="text-xs text-slate-400 text-center">À déposer</p>
+          <% end %>
+        </div>
 
-          <div class="hidden lg:block w-8 h-0.5 bg-slate-200"></div>
-
-          <%!-- Step 4 --%>
-          <div class="flex items-center gap-3 lg:flex-col lg:items-center lg:text-center flex-1">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shrink-0 bg-slate-300">
-              4
-            </div>
-            <div>
-              <p class="font-medium text-slate-900">Paiement CUF</p>
-              <p class="text-xs text-slate-400">À venir</p>
-            </div>
+        <div class="flex flex-col items-center">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold bg-slate-300">
+            4
           </div>
+          <p class="text-xs font-medium text-slate-900 mt-2 text-center">CUF</p>
+          <p class="text-xs text-slate-400 text-center">À venir</p>
         </div>
       </div>
+    </div>
 
-      <%!-- Quick action based on current state --%>
-      <%= cond do %>
-        <% !@current_scope.user.validated -> %>
-          <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 mb-6 text-left flex items-start gap-3">
-            <.icon name="hero-exclamation-triangle" class="size-6 shrink-0 mt-0.5" />
-            <span>
-              Votre compte est en attente de validation par l'équipe d'accueil.
-              Une fois validé, vous pourrez rejoindre ou créer un équipage.
-            </span>
-          </div>
-        <% @raft -> %>
-          <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-6 mb-6">
-            <h3 class="text-lg font-semibold text-indigo-700">Mon équipage : {@raft.name}</h3>
-            <div class="flex flex-wrap gap-3 justify-center mt-4">
-              <.link
-                navigate={~p"/mon-radeau"}
-                class="bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center"
-              >
-                Accéder à mon radeau
-              </.link>
-              <.link
-                navigate={~p"/fiche-inscription"}
-                class="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg px-5 py-2.5 font-medium transition inline-flex items-center"
-              >
-                Ma fiche d'inscription
-              </.link>
+    <%!-- Main action card --%>
+    <%= cond do %>
+      <% !@current_scope.user.validated -> %>
+        <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 mb-6 flex items-start gap-3">
+          <.icon name="hero-exclamation-triangle" class="size-6 shrink-0 mt-0.5" />
+          <span>
+            Votre compte est en attente de validation par l'équipe d'accueil.
+            Une fois validé, vous pourrez rejoindre ou créer un équipage.
+          </span>
+        </div>
+      <% @raft -> %>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+              <.icon name="hero-flag" class="size-5 text-indigo-600" />
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold text-slate-900">{@raft.name}</h2>
+              <p class="text-sm text-slate-500">Mon équipage</p>
             </div>
           </div>
-        <% true -> %>
-          <div class="bg-slate-50 rounded-xl border border-slate-200 p-6 mb-6">
-            <h3 class="text-lg font-semibold text-slate-900">Rejoindre un équipage</h3>
-            <p class="text-slate-600 mt-2">
-              Vous n'êtes pas encore membre d'un équipage. Parcourez les radeaux existants ou créez le vôtre !
-            </p>
-            <div class="flex flex-wrap gap-3 justify-center mt-4">
-              <.link
-                navigate={~p"/radeaux"}
-                class="bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center"
-              >
-                Voir les radeaux
-              </.link>
-              <.link
-                navigate={~p"/radeaux/nouveau"}
-                class="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg px-5 py-2.5 font-medium transition inline-flex items-center"
-              >
-                Créer un radeau
-              </.link>
+          <div class="flex flex-wrap gap-3">
+            <.link
+              navigate={~p"/mon-radeau"}
+              class="bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center gap-2"
+            >
+              <.icon name="hero-arrow-right-mini" class="size-4" /> Accéder à mon radeau
+            </.link>
+            <.link
+              navigate={~p"/fiche-inscription"}
+              class="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg px-5 py-2.5 font-medium transition inline-flex items-center gap-2"
+            >
+              <.icon name="hero-document-text-mini" class="size-4" /> Ma fiche d'inscription
+            </.link>
+          </div>
+        </div>
+      <% true -> %>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+              <.icon name="hero-magnifying-glass" class="size-5 text-slate-500" />
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold text-slate-900">Rejoindre un équipage</h2>
+              <p class="text-sm text-slate-500">
+                Parcourez les radeaux existants ou créez le vôtre
+              </p>
             </div>
           </div>
-      <% end %>
+          <div class="flex flex-wrap gap-3">
+            <.link
+              navigate={~p"/radeaux"}
+              class="bg-indigo-600 text-white rounded-lg px-5 py-2.5 font-medium hover:bg-indigo-700 transition inline-flex items-center gap-2"
+            >
+              <.icon name="hero-arrow-right-mini" class="size-4" /> Voir les radeaux
+            </.link>
+            <.link
+              navigate={~p"/radeaux/nouveau"}
+              class="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg px-5 py-2.5 font-medium transition inline-flex items-center gap-2"
+            >
+              <.icon name="hero-plus-mini" class="size-4" /> Créer un radeau
+            </.link>
+          </div>
+        </div>
+    <% end %>
 
-      <div class="flex flex-col sm:flex-row gap-4 justify-center mb-10">
-        <.link
-          navigate={~p"/radeaux"}
-          class="text-slate-600 hover:bg-slate-50 rounded-lg px-5 py-2.5 font-medium transition"
-        >
-          Tous les radeaux
-        </.link>
-        <.link
-          navigate={~p"/users/settings"}
-          class="text-slate-600 hover:bg-slate-50 rounded-lg px-5 py-2.5 font-medium transition"
-        >
-          Mon profil
-        </.link>
+    <%!-- Quick links --%>
+    <div class="flex flex-wrap gap-3 justify-center">
+      <.link
+        navigate={~p"/radeaux"}
+        class="text-sm text-slate-500 hover:text-indigo-600 transition"
+      >
+        Tous les radeaux
+      </.link>
+      <span class="text-slate-300">·</span>
+      <.link
+        navigate={~p"/users/settings"}
+        class="text-sm text-slate-500 hover:text-indigo-600 transition"
+      >
+        Paramètres
+      </.link>
+    </div>
+  </div>
+<% else %>
+  <%!-- Public home: landing page --%>
+  <div class="min-h-[80vh] flex flex-col justify-center">
+    <div class="max-w-3xl mx-auto px-4 py-16 text-center">
+      <h1 class="text-5xl font-bold text-indigo-600 mb-4">
+        Tutto Blu
+      </h1>
+      <p class="text-2xl text-slate-600 mb-8">
+        Le village flottant
+      </p>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-10 text-left">
+        <p class="text-lg leading-relaxed">
+          <strong>Tutto Blu</strong>, c'est un événement unique où les participant·es construisent
+          leurs propres radeaux puis les mettent à l'eau pour créer ensemble un
+          <strong>village flottant éphémère</strong>
+          sur un lac.
+        </p>
+        <p class="mt-4 text-slate-600">
+          Cette application permet aux équipages de s'organiser : former des équipes,
+          gérer les inscriptions, et coordonner la préparation de l'événement.
+        </p>
       </div>
-    <% else %>
+
       <div class="flex flex-col sm:flex-row gap-4 justify-center mb-10">
         <.link
           navigate={~p"/users/register"}
@@ -187,54 +214,54 @@
           Se connecter
         </.link>
       </div>
-    <% end %>
 
-    <div class="flex items-center gap-4 my-8">
-      <div class="flex-1 border-t border-slate-200"></div>
-      <span class="text-sm text-slate-400 font-medium">En savoir plus</span>
-      <div class="flex-1 border-t border-slate-200"></div>
-    </div>
+      <div class="flex items-center gap-4 my-8">
+        <div class="flex-1 border-t border-slate-200"></div>
+        <span class="text-sm text-slate-400 font-medium">En savoir plus</span>
+        <div class="flex-1 border-t border-slate-200"></div>
+      </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-      <a
-        href="https://tuttoblu.framer.website/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow p-6 flex flex-col items-center text-center"
-      >
-        <.icon name="hero-globe-alt" class="size-10 text-indigo-600 mb-3" />
-        <h2 class="text-lg font-semibold text-slate-900">Site Tutto Blu</h2>
-        <p class="text-slate-500 mt-1">
-          Découvrez l'événement, son histoire et sa philosophie
-        </p>
-      </a>
-
-      <a
-        href="https://tuttoblu.discourse.group/t/repost-des-newsletters-posez-vos-questions-reagissez/32"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow p-6 flex flex-col items-center text-center"
-      >
-        <.icon name="hero-user-group" class="size-10 text-green-600 mb-3" />
-        <h2 class="text-lg font-semibold text-slate-900">Inscription 2026</h2>
-        <p class="text-slate-500 mt-1">
-          WhatsApp, mailing list et infos pratiques pour rejoindre l'aventure
-        </p>
-      </a>
-    </div>
-
-    <div class="mt-16 text-slate-400 text-sm">
-      <p>
-        Une question ? Rejoignez le
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
         <a
-          href="https://tuttoblu.discourse.group/"
+          href="https://tuttoblu.framer.website/"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-indigo-600 hover:underline"
+          class="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow p-6 flex flex-col items-center text-center"
         >
-          forum Tutto Blu
+          <.icon name="hero-globe-alt" class="size-10 text-indigo-600 mb-3" />
+          <h2 class="text-lg font-semibold text-slate-900">Site Tutto Blu</h2>
+          <p class="text-slate-500 mt-1">
+            Découvrez l'événement, son histoire et sa philosophie
+          </p>
         </a>
-      </p>
+
+        <a
+          href="https://tuttoblu.discourse.group/t/repost-des-newsletters-posez-vos-questions-reagissez/32"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow p-6 flex flex-col items-center text-center"
+        >
+          <.icon name="hero-user-group" class="size-10 text-green-600 mb-3" />
+          <h2 class="text-lg font-semibold text-slate-900">Inscription 2026</h2>
+          <p class="text-slate-500 mt-1">
+            WhatsApp, mailing list et infos pratiques pour rejoindre l'aventure
+          </p>
+        </a>
+      </div>
+
+      <div class="mt-16 text-slate-400 text-sm">
+        <p>
+          Une question ? Rejoignez le
+          <a
+            href="https://tuttoblu.discourse.group/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-indigo-600 hover:underline"
+          >
+            forum Tutto Blu
+          </a>
+        </p>
+      </div>
     </div>
   </div>
-</div>
+<% end %>

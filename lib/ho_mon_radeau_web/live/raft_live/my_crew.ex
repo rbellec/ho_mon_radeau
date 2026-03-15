@@ -330,6 +330,36 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
       <div class="mt-8 grid gap-8 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-8">
+          <%!-- Quick actions (top of page) --%>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-slate-900">Actions</h3>
+              <div class="flex flex-wrap gap-2 mt-3">
+                <.link
+                  navigate={~p"/fiche-inscription"}
+                  class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition inline-flex items-center gap-2"
+                >
+                  <.icon name="hero-document-text-mini" class="size-4" /> Ma fiche d'inscription
+                </.link>
+                <.link
+                  navigate={~p"/radeaux/#{@raft.slug}"}
+                  class="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg px-4 py-2 text-sm font-medium transition inline-flex items-center gap-2"
+                >
+                  <.icon name="hero-eye-mini" class="size-4" /> Page publique
+                </.link>
+                <%= if @raft.forum_url do %>
+                  <a
+                    href={@raft.forum_url}
+                    target="_blank"
+                    class="border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg px-4 py-2 text-sm font-medium transition inline-flex items-center gap-2"
+                  >
+                    <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> Forum
+                  </a>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
           <%!-- Pending join requests (managers only) --%>
           <%= if @is_manager && length(@pending_requests) > 0 do %>
             <div class="bg-amber-50 border border-amber-200 rounded-xl">
@@ -672,30 +702,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                   </form>
                 </div>
               <% end %>
-            </div>
-          </div>
-
-          <%!-- Quick links --%>
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200">
-            <div class="p-6">
-              <h3 class="text-lg font-semibold text-slate-900">Actions</h3>
-              <div class="flex flex-wrap gap-2 mt-2">
-                <.link
-                  navigate={~p"/fiche-inscription"}
-                  class="bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-sm font-medium hover:bg-indigo-700 transition inline-flex items-center"
-                >
-                  Ma fiche d'inscription
-                </.link>
-                <%= if @raft.forum_url do %>
-                  <a
-                    href={@raft.forum_url}
-                    target="_blank"
-                    class="text-sm text-slate-600 hover:bg-slate-50 rounded-lg px-3 py-1.5 font-medium transition"
-                  >
-                    Discussion forum
-                  </a>
-                <% end %>
-              </div>
             </div>
           </div>
         </div>
