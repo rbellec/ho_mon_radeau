@@ -389,4 +389,188 @@ defmodule HoMonRadeau.AccountsTest do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""
     end
   end
+
+  describe "get_user/1" do
+    test "returns nil when user does not exist" do
+      assert Accounts.get_user(-1) == nil
+    end
+
+    test "returns the user when it exists" do
+      %{id: id} = user_fixture()
+      assert %User{id: ^id} = Accounts.get_user(id)
+    end
+  end
+
+  describe "display_name/1" do
+    test "returns nickname when present" do
+      assert Accounts.display_name(%User{nickname: "Captain Hook"}) == "Captain Hook"
+    end
+
+    test "returns default when nickname is nil" do
+      assert Accounts.display_name(%User{nickname: nil}) == "matelot sans pseudonyme"
+    end
+
+    test "returns default when nickname is empty string" do
+      assert Accounts.display_name(%User{nickname: ""}) == "matelot sans pseudonyme"
+    end
+  end
+
+  describe "validate_user/1" do
+    test "marks a user as validated" do
+      user = user_fixture()
+      assert {:ok, validated_user} = Accounts.validate_user(user)
+      assert validated_user.validated == true
+    end
+  end
+
+  describe "invalidate_user/1" do
+    test "revokes user validation" do
+      user = user_fixture()
+      {:ok, validated_user} = Accounts.validate_user(user)
+      assert validated_user.validated == true
+
+      assert {:ok, invalidated_user} = Accounts.invalidate_user(validated_user)
+      assert invalidated_user.validated == false
+    end
+  end
+
+  describe "list_pending_validation_users/0" do
+    test "returns confirmed but not validated users" do
+      confirmed_user = user_fixture()
+      # confirmed_user is confirmed but not validated by default
+      results = Accounts.list_pending_validation_users()
+      assert Enum.any?(results, fn u -> u.id == confirmed_user.id end)
+    end
+
+    test "excludes unconfirmed users" do
+      _unconfirmed = unconfirmed_user_fixture()
+      confirmed_user = user_fixture()
+
+      results = Accounts.list_pending_validation_users()
+      assert Enum.any?(results, fn u -> u.id == confirmed_user.id end)
+      refute Enum.any?(results, fn u -> u.confirmed_at == nil end)
+    end
+
+    test "excludes validated users" do
+      user = user_fixture()
+      {:ok, _validated} = Accounts.validate_user(user)
+
+      results = Accounts.list_pending_validation_users()
+      refute Enum.any?(results, fn u -> u.id == user.id end)
+    end
+  end
+
+  describe "list_validated_users/0" do
+    test "returns only validated users" do
+      user = user_fixture()
+      {:ok, validated_user} = Accounts.validate_user(user)
+      _non_validated = user_fixture()
+
+      results = Accounts.list_validated_users()
+      assert Enum.any?(results, fn u -> u.id == validated_user.id end)
+      assert Enum.all?(results, fn u -> u.validated == true end)
+    end
+  end
+
+  describe "list_all_users/0" do
+    test "returns all confirmed users" do
+      confirmed = user_fixture()
+      _unconfirmed = unconfirmed_user_fixture()
+
+      results = Accounts.list_all_users()
+      assert Enum.any?(results, fn u -> u.id == confirmed.id end)
+      refute Enum.any?(results, fn u -> u.confirmed_at == nil end)
+    end
+  end
+
+  describe "search_users/1" do
+    test "matches users by email" do
+      user = user_fixture()
+      # Extract a portion of the email to search
+      [local_part, _] = String.split(user.email, "@")
+      results = Accounts.search_users(local_part)
+      assert Enum.any?(results, fn u -> u.id == user.id end)
+    end
+
+    test "matches users by nickname" do
+      user = user_fixture()
+      {:ok, user} = Accounts.update_user_profile(user, %{nickname: "SailorMoon"})
+
+      results = Accounts.search_users("SailorMoon")
+      assert Enum.any?(results, fn u -> u.id == user.id end)
+    end
+
+    test "excludes unconfirmed users" do
+      unconfirmed = unconfirmed_user_fixture()
+      [local_part, _] = String.split(unconfirmed.email, "@")
+
+      results = Accounts.search_users(local_part)
+      refute Enum.any?(results, fn u -> u.id == unconfirmed.id end)
+    end
+
+    test "limits results to 10" do
+      for _ <- 1..12,
+          do: user_fixture(%{email: "searchlimit_#{System.unique_integer()}@test.com"})
+
+      results = Accounts.search_users("searchlimit_")
+      assert length(results) <= 10
+    end
+  end
+
+  describe "can_participate?/1" do
+    test "returns false if user is not validated" do
+      refute Accounts.can_participate?(%User{validated: false, first_name: "A", last_name: "B"})
+    end
+
+    test "returns false if first_name is nil" do
+      refute Accounts.can_participate?(%User{validated: true, first_name: nil, last_name: "B"})
+    end
+
+    test "returns false if last_name is nil" do
+      refute Accounts.can_participate?(%User{validated: true, first_name: "A", last_name: nil})
+    end
+
+    test "returns false if first_name is empty" do
+      refute Accounts.can_participate?(%User{validated: true, first_name: "", last_name: "B"})
+    end
+
+    test "returns false if last_name is empty" do
+      refute Accounts.can_participate?(%User{validated: true, first_name: "A", last_name: ""})
+    end
+
+    test "returns true if validated with both names" do
+      assert Accounts.can_participate?(%User{validated: true, first_name: "A", last_name: "B"})
+    end
+  end
+
+  describe "update_user_profile/2" do
+    test "updates profile with valid data" do
+      user = user_fixture()
+
+      assert {:ok, updated} =
+               Accounts.update_user_profile(user, %{
+                 nickname: "NewNick",
+                 first_name: "Jean",
+                 last_name: "Dupont"
+               })
+
+      assert updated.nickname == "NewNick"
+      assert updated.first_name == "Jean"
+      assert updated.last_name == "Dupont"
+    end
+
+    test "returns error with invalid data" do
+      user = user_fixture()
+      # nickname too short (min 2 chars)
+      assert {:error, changeset} = Accounts.update_user_profile(user, %{nickname: "A"})
+      assert errors_on(changeset).nickname != []
+    end
+  end
+
+  describe "change_user_profile/2" do
+    test "returns a changeset" do
+      user = user_fixture()
+      assert %Ecto.Changeset{} = Accounts.change_user_profile(user, %{nickname: "Test"})
+    end
+  end
 end

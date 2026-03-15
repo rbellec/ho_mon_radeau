@@ -336,4 +336,759 @@ defmodule HoMonRadeau.EventsTest do
       assert Events.member_of_team_type?(user, "welcome_team")
     end
   end
+
+  ## ---------------------------------------------------------------
+  ## Rafts
+  ## ---------------------------------------------------------------
+
+  describe "list_rafts/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns rafts for an edition" do
+      edition = edition_fixture(%{is_current: true})
+      _raft1 = raft_fixture(%{edition: edition, name: "Alpha"})
+      _raft2 = raft_fixture(%{edition: edition, name: "Beta"})
+
+      rafts = Events.list_rafts(edition.id)
+      assert length(rafts) == 2
+    end
+
+    test "returns empty list for edition without rafts" do
+      edition = edition_fixture(%{is_current: false})
+      assert Events.list_rafts(edition.id) == []
+    end
+  end
+
+  describe "list_current_edition_rafts/0" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns rafts of the current edition" do
+      edition = edition_fixture(%{is_current: true})
+      _raft = raft_fixture(%{edition: edition, name: "Current Raft"})
+
+      rafts = Events.list_current_edition_rafts()
+      assert length(rafts) == 1
+      assert hd(rafts).name == "Current Raft"
+    end
+
+    test "returns empty list when no current edition" do
+      assert Events.list_current_edition_rafts() == []
+    end
+  end
+
+  describe "get_raft!/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns raft with preloads" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition, name: "Loaded Raft"})
+
+      fetched = Events.get_raft!(raft.id)
+      assert fetched.name == "Loaded Raft"
+      assert Ecto.assoc_loaded?(fetched.crew)
+      assert Ecto.assoc_loaded?(fetched.edition)
+      assert Ecto.assoc_loaded?(fetched.links)
+    end
+
+    test "raises on invalid id" do
+      assert_raise Ecto.NoResultsError, fn ->
+        Events.get_raft!(0)
+      end
+    end
+  end
+
+  describe "get_raft_by_slug/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns raft by slug and edition" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition, name: "My Cool Raft"})
+
+      found = Events.get_raft_by_slug(raft.slug, edition.id)
+      assert found.id == raft.id
+    end
+
+    test "returns nil for non-existent slug" do
+      edition = edition_fixture(%{is_current: false})
+      assert Events.get_raft_by_slug("no-such-slug", edition.id) == nil
+    end
+  end
+
+  describe "create_raft_with_crew/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "creates raft, crew, and adds user as manager" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+
+      assert {:ok, %{crew: crew} = raft} =
+               Events.create_raft_with_crew(user, %{name: "New Raft"}, edition.id)
+
+      assert raft.name == "New Raft"
+      assert crew != nil
+
+      # The creator should be a manager
+      assert Events.is_manager?(crew.id, user.id)
+    end
+
+    test "returns :no_current_edition without a current edition" do
+      user = user_fixture()
+      assert {:error, :no_current_edition} = Events.create_raft_with_crew(user, %{name: "Raft"})
+    end
+
+    test "fails with invalid attrs" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+
+      assert {:error, %Ecto.Changeset{}} =
+               Events.create_raft_with_crew(user, %{name: nil}, edition.id)
+    end
+  end
+
+  describe "update_raft/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "updates raft description" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition, name: "Update Me"})
+
+      assert {:ok, updated} =
+               Events.update_raft(raft, %{description: "A brand new description"})
+
+      assert updated.description == "A brand new description"
+    end
+  end
+
+  describe "validate_raft/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "marks raft as validated" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition, name: "Validate Me"})
+      admin = user_fixture()
+
+      assert {:ok, validated} = Events.validate_raft(raft, admin)
+      assert validated.validated == true
+      assert validated.validated_by_id == admin.id
+      assert validated.validated_at != nil
+    end
+  end
+
+  describe "invalidate_raft/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "revokes validation" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition, name: "Invalidate Me"})
+      admin = user_fixture()
+
+      {:ok, validated} = Events.validate_raft(raft, admin)
+      assert {:ok, invalidated} = Events.invalidate_raft(validated)
+      assert invalidated.validated == false
+      assert invalidated.validated_at == nil
+      assert invalidated.validated_by_id == nil
+    end
+  end
+
+  describe "is_crew_manager?/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns true for a manager" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      %{crew: crew} = raft_with_crew_fixture(%{user: user, edition: edition})
+
+      crew = HoMonRadeau.Repo.preload(crew, :crew_members)
+      assert Events.is_crew_manager?(crew, user)
+    end
+
+    test "returns false for a non-manager" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      other = user_fixture()
+      %{crew: crew} = raft_with_crew_fixture(%{user: user, edition: edition})
+
+      crew_member_fixture(%{crew: crew, user: other, is_manager: false})
+      crew = HoMonRadeau.Repo.preload(crew, :crew_members)
+      refute Events.is_crew_manager?(crew, other)
+    end
+  end
+
+  ## ---------------------------------------------------------------
+  ## Crews
+  ## ---------------------------------------------------------------
+
+  describe "get_crew_by_raft/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns crew with members" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      %{crew: crew} = raft_with_crew_fixture(%{user: user, edition: edition})
+
+      fetched = Events.get_crew_by_raft(crew.raft_id)
+      assert fetched.id == crew.id
+      assert Ecto.assoc_loaded?(fetched.crew_members)
+      assert length(fetched.crew_members) >= 1
+    end
+
+    test "returns nil without crew" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition})
+      assert Events.get_crew_by_raft(raft.id) == nil
+    end
+  end
+
+  describe "get_user_crew/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns user's crew for current edition" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      %{crew: crew} = raft_with_crew_fixture(%{user: user, edition: edition})
+
+      found = Events.get_user_crew(user)
+      assert found.id == crew.id
+    end
+
+    test "returns nil if user has no crew" do
+      _edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+
+      assert Events.get_user_crew(user) == nil
+    end
+
+    test "returns nil if no current edition" do
+      user = user_fixture()
+      assert Events.get_user_crew(user) == nil
+    end
+  end
+
+  describe "user_has_crew?/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns true when user has a crew" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      _raft = raft_with_crew_fixture(%{user: user, edition: edition})
+
+      assert Events.user_has_crew?(user)
+    end
+
+    test "returns false when user has no crew" do
+      _edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+
+      refute Events.user_has_crew?(user)
+    end
+  end
+
+  ## ---------------------------------------------------------------
+  ## Crew Members
+  ## ---------------------------------------------------------------
+
+  describe "list_crew_members/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns sorted members" do
+      edition = edition_fixture(%{is_current: true})
+      manager = user_fixture()
+      %{crew: crew} = raft_with_crew_fixture(%{user: manager, edition: edition})
+
+      member = user_fixture()
+      crew_member_fixture(%{crew: crew, user: member, is_manager: false})
+
+      members = Events.list_crew_members(crew.id)
+      # Manager should come first
+      assert length(members) == 2
+      assert hd(members).is_manager == true
+    end
+  end
+
+  describe "add_crew_member/3" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "adds member to crew" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+
+      assert {:ok, member} = Events.add_crew_member(crew.id, user.id)
+      assert member.crew_id == crew.id
+      assert member.user_id == user.id
+    end
+  end
+
+  describe "remove_crew_member/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "removes member from crew" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+      crew_member_fixture(%{crew: crew, user: user})
+
+      assert {1, _} = Events.remove_crew_member(crew.id, user.id)
+      assert Events.get_crew_member(crew.id, user.id) == nil
+    end
+  end
+
+  describe "get_crew_member/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns the member" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+      crew_member_fixture(%{crew: crew, user: user})
+
+      member = Events.get_crew_member(crew.id, user.id)
+      assert member != nil
+      assert member.user_id == user.id
+    end
+
+    test "returns nil for non-member" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+
+      assert Events.get_crew_member(crew.id, user.id) == nil
+    end
+  end
+
+  describe "promote_to_manager/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "promotes a member to manager" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+      crew_member_fixture(%{crew: crew, user: user, is_manager: false})
+
+      assert {:ok, promoted} = Events.promote_to_manager(crew.id, user.id)
+      assert promoted.is_manager == true
+    end
+
+    test "returns :not_found for invalid member" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+
+      assert {:error, :not_found} = Events.promote_to_manager(crew.id, user.id)
+    end
+  end
+
+  describe "demote_from_manager/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "demotes a manager" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+      crew_member_fixture(%{crew: crew, user: user, is_manager: true})
+
+      assert {:ok, demoted} = Events.demote_from_manager(crew.id, user.id)
+      assert demoted.is_manager == false
+    end
+
+    test "returns :not_found for invalid member" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+
+      assert {:error, :not_found} = Events.demote_from_manager(crew.id, user.id)
+    end
+  end
+
+  describe "is_manager?/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns true for a manager" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+      crew_member_fixture(%{crew: crew, user: user, is_manager: true})
+
+      assert Events.is_manager?(crew.id, user.id)
+    end
+
+    test "returns false for a non-manager" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+      crew_member_fixture(%{crew: crew, user: user, is_manager: false})
+
+      refute Events.is_manager?(crew.id, user.id)
+    end
+  end
+
+  ## ---------------------------------------------------------------
+  ## Join Requests
+  ## ---------------------------------------------------------------
+
+  describe "create_join_request/3" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "creates a join request" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+
+      assert {:ok, request} = Events.create_join_request(crew, user, "Please let me in")
+      assert request.crew_id == crew.id
+      assert request.user_id == user.id
+      assert request.message == "Please let me in"
+      assert request.status == "pending"
+    end
+
+    test "returns :already_in_crew when user has a crew" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      _raft = raft_with_crew_fixture(%{user: user, edition: edition})
+
+      other_crew = crew_fixture(%{edition: edition})
+
+      assert {:error, :already_in_crew} = Events.create_join_request(other_crew, user)
+    end
+  end
+
+  describe "list_pending_join_requests/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns pending requests for crew" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user1 = user_fixture()
+      user2 = user_fixture()
+
+      _req1 = join_request_fixture(%{crew: crew, user: user1})
+      _req2 = join_request_fixture(%{crew: crew, user: user2})
+
+      pending = Events.list_pending_join_requests(crew)
+      assert length(pending) == 2
+      assert Enum.all?(pending, &(&1.status == "pending"))
+    end
+  end
+
+  describe "accept_join_request/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "adds member and cancels other pending requests" do
+      edition = edition_fixture(%{is_current: true})
+      crew1 = crew_fixture(%{edition: edition})
+      crew2 = crew_fixture(%{edition: edition})
+      user = user_fixture()
+      user = user |> Ecto.Changeset.change(validated: true) |> HoMonRadeau.Repo.update!()
+      responder = user_fixture()
+
+      req1 = join_request_fixture(%{crew: crew1, user: user})
+      req2 = join_request_fixture(%{crew: crew2, user: user})
+
+      assert {:ok, %{request: accepted, crew_member: member}} =
+               Events.accept_join_request(req1, responder)
+
+      assert accepted.status == "accepted"
+      assert member.crew_id == crew1.id
+      assert member.user_id == user.id
+
+      # Other pending request should be cancelled
+      other = HoMonRadeau.Repo.get!(HoMonRadeau.Events.CrewJoinRequest, req2.id)
+      assert other.status == "cancelled"
+    end
+  end
+
+  describe "reject_join_request/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "rejects with responded_at" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+      responder = user_fixture()
+      request = join_request_fixture(%{crew: crew, user: user})
+
+      assert {:ok, rejected} = Events.reject_join_request(request, responder)
+      assert rejected.status == "rejected"
+      assert rejected.responded_at != nil
+      assert rejected.responded_by_id == responder.id
+    end
+  end
+
+  describe "has_pending_join_request?/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns true when a pending request exists" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+      _request = join_request_fixture(%{crew: crew, user: user})
+
+      assert Events.has_pending_join_request?(user, crew)
+    end
+
+    test "returns false when no pending request exists" do
+      edition = edition_fixture(%{is_current: true})
+      crew = crew_fixture(%{edition: edition})
+      user = user_fixture()
+
+      refute Events.has_pending_join_request?(user, crew)
+    end
+  end
+
+  ## ---------------------------------------------------------------
+  ## Raft Links
+  ## ---------------------------------------------------------------
+
+  describe "list_raft_links/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns links sorted by position" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition})
+
+      _link2 = raft_link_fixture(%{raft: raft, title: "Second", position: 2})
+      _link1 = raft_link_fixture(%{raft: raft, title: "First", position: 1})
+
+      links = Events.list_raft_links(raft.id)
+      assert length(links) == 2
+      assert Enum.at(links, 0).title == "First"
+      assert Enum.at(links, 1).title == "Second"
+    end
+  end
+
+  describe "create_raft_link/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "creates with valid attrs" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition})
+
+      assert {:ok, link} =
+               Events.create_raft_link(%{
+                 raft_id: raft.id,
+                 title: "Docs",
+                 url: "https://docs.example.com"
+               })
+
+      assert link.title == "Docs"
+      assert link.url == "https://docs.example.com"
+    end
+
+    test "fails with invalid attrs" do
+      assert {:error, %Ecto.Changeset{}} = Events.create_raft_link(%{title: nil, url: nil})
+    end
+  end
+
+  describe "update_raft_link/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "updates link" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition})
+      link = raft_link_fixture(%{raft: raft})
+
+      assert {:ok, updated} = Events.update_raft_link(link, %{title: "Updated Title"})
+      assert updated.title == "Updated Title"
+    end
+  end
+
+  describe "delete_raft_link/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "deletes link" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition})
+      link = raft_link_fixture(%{raft: raft})
+
+      assert {:ok, _} = Events.delete_raft_link(link)
+      assert Events.list_raft_links(link.raft_id) == []
+    end
+  end
+
+  describe "list_public_raft_links/1" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns only public links" do
+      edition = edition_fixture(%{is_current: true})
+      raft = raft_fixture(%{edition: edition})
+
+      _public = raft_link_fixture(%{raft: raft, title: "Public", is_public: true})
+      _private = raft_link_fixture(%{raft: raft, title: "Private", is_public: false})
+
+      links = Events.list_public_raft_links(raft.id)
+      assert length(links) == 1
+      assert hd(links).title == "Public"
+    end
+  end
+
+  ## ---------------------------------------------------------------
+  ## Registration Forms
+  ## ---------------------------------------------------------------
+
+  describe "get_current_registration_form/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns most recent form" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+
+      old =
+        registration_form_fixture(%{user: user, edition: edition})
+
+      # Move the old form's uploaded_at into the past so the ordering is deterministic
+      old
+      |> Ecto.Changeset.change(uploaded_at: ~U[2025-01-01 00:00:00Z])
+      |> HoMonRadeau.Repo.update!()
+
+      new =
+        registration_form_fixture(%{user: user, edition: edition})
+
+      found = Events.get_current_registration_form(user.id, edition.id)
+      assert found.id == new.id
+    end
+
+    test "returns nil if none" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+
+      assert Events.get_current_registration_form(user.id, edition.id) == nil
+    end
+  end
+
+  describe "required_form_type/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns :captain for captain" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      crew = crew_fixture(%{edition: edition})
+      crew_member_fixture(%{crew: crew, user: user, is_captain: true})
+
+      assert Events.required_form_type(user, edition.id) == :captain
+    end
+
+    test "returns :participant for non-captain member" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      crew = crew_fixture(%{edition: edition})
+      crew_member_fixture(%{crew: crew, user: user, is_captain: false})
+
+      assert Events.required_form_type(user, edition.id) == :participant
+    end
+
+    test "returns nil for user not in a crew" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+
+      assert Events.required_form_type(user, edition.id) == nil
+    end
+  end
+
+  describe "registration_form_status/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "returns :missing when no form exists" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+
+      assert Events.registration_form_status(user, edition.id) == :missing
+    end
+
+    test "returns :pending for pending form" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      _form = registration_form_fixture(%{user: user, edition: edition})
+
+      assert Events.registration_form_status(user, edition.id) == :pending
+    end
+
+    test "returns :approved for approved form" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      reviewer = user_fixture()
+      form = registration_form_fixture(%{user: user, edition: edition})
+      {:ok, _} = Events.approve_registration_form(form, reviewer)
+
+      assert Events.registration_form_status(user, edition.id) == :approved
+    end
+
+    test "returns :rejected for rejected form" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      reviewer = user_fixture()
+      form = registration_form_fixture(%{user: user, edition: edition})
+      {:ok, _} = Events.reject_registration_form(form, reviewer, "Bad scan")
+
+      assert Events.registration_form_status(user, edition.id) == :rejected
+    end
+  end
+
+  describe "approve_registration_form/2" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "approves the form" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      reviewer = user_fixture()
+      form = registration_form_fixture(%{user: user, edition: edition})
+
+      assert {:ok, approved} = Events.approve_registration_form(form, reviewer)
+      assert approved.status == "approved"
+      assert approved.reviewed_by_id == reviewer.id
+      assert approved.reviewed_at != nil
+    end
+  end
+
+  describe "reject_registration_form/3" do
+    import HoMonRadeau.AccountsFixtures
+    import HoMonRadeau.EventsFixtures, except: [edition_fixture: 0, edition_fixture: 1]
+
+    test "rejects with reason" do
+      edition = edition_fixture(%{is_current: true})
+      user = user_fixture()
+      reviewer = user_fixture()
+      form = registration_form_fixture(%{user: user, edition: edition})
+
+      assert {:ok, rejected} =
+               Events.reject_registration_form(form, reviewer, "Missing signature")
+
+      assert rejected.status == "rejected"
+      assert rejected.rejection_reason == "Missing signature"
+      assert rejected.reviewed_by_id == reviewer.id
+      assert rejected.reviewed_at != nil
+    end
+  end
 end
