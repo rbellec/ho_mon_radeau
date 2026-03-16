@@ -16,11 +16,14 @@ Allez sur votre profil (`/mon-profil`), section "Tokens API (MCP)" en bas de pag
 
 #### Claude Desktop
 
+Note : "type": "sse" a été ajouté suite à test avec Claude code. Le type "streamable-http" ne fonctionnait pas. Il est possible qu'il ne corresponde pas à d'autres outils.
+
 ```json
 {
   "mcpServers": {
     "ho-mon-radeau": {
-      "url": "https://ho-mon-radeau.fly.dev/api/mcp",
+      "url": "https://ho-mon-radeau.fly.dev/mcp",
+      "type": "sse",
       "headers": {
         "Authorization": "Bearer VOTRE_TOKEN"
       }
