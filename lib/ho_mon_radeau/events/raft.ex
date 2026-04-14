@@ -21,6 +21,10 @@ defmodule HoMonRadeau.Events.Raft do
     field :validated, :boolean, default: false
     field :validated_at, :utc_datetime
 
+    # Capacity
+    field :max_capacity, :integer
+    field :open_for_applications, :boolean, default: false
+
     # Virtual fields
     field :crew_count, :integer, virtual: true, default: 0
 
@@ -70,8 +74,16 @@ defmodule HoMonRadeau.Events.Raft do
   """
   def update_changeset(raft, attrs) do
     raft
-    |> cast(attrs, [:description, :description_short, :forum_url, :picture_url])
+    |> cast(attrs, [
+      :description,
+      :description_short,
+      :forum_url,
+      :picture_url,
+      :max_capacity,
+      :open_for_applications
+    ])
     |> validate_length(:description_short, max: 150)
+    |> validate_number(:max_capacity, greater_than: 0)
     |> validate_url(:forum_url)
   end
 

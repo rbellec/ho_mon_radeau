@@ -92,7 +92,10 @@ defmodule HoMonRadeau.Integration.RaftManagementTest do
 
       # 5. Update roles for member B (lead_construction, cooking)
       member_b = Events.get_crew_member(crew.id, user_b.id)
-      {:ok, updated_member_b} = Events.update_member_roles(member_b, ["lead_construction", "cooking"])
+
+      {:ok, updated_member_b} =
+        Events.update_member_roles(member_b, ["lead_construction", "cooking"])
+
       assert "lead_construction" in updated_member_b.roles
       assert "cooking" in updated_member_b.roles
 

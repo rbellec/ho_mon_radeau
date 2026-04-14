@@ -17,7 +17,7 @@ defmodule HoMonRadeauWeb.ProfileLive do
 
     transverse_teams = Events.get_user_transverse_teams(user)
 
-    api_tokens = if user.is_admin, do: Accounts.list_active_api_tokens(user), else: []
+    api_tokens = if user.validated, do: Accounts.list_active_api_tokens(user), else: []
 
     {:ok,
      socket
@@ -95,27 +95,6 @@ defmodule HoMonRadeauWeb.ProfileLive do
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Erreur lors de la révocation.")}
     end
-  end
-
-  defp mcp_config_example(assigns) do
-    json = """
-    {
-      "mcpServers": {
-        "ho-mon-radeau": {
-          "url": "https://ho-mon-radeau.fly.dev/api/mcp",
-          "headers": {
-            "Authorization": "Bearer VOTRE_TOKEN"
-          }
-        }
-      }
-    }\
-    """
-
-    assigns = assign(assigns, :json, json)
-
-    ~H"""
-    <pre class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs overflow-x-auto"><code>{@json}</code></pre>
-    """
   end
 
   @impl true
@@ -291,12 +270,12 @@ defmodule HoMonRadeauWeb.ProfileLive do
           </div>
         </div>
         <%!-- API Tokens (admin only) --%>
-        <%= if @user.is_admin do %>
+        <%= if @user.validated do %>
           <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="api-tokens">
             <div class="p-6">
-              <h2 class="text-lg font-semibold text-slate-900 mb-1">Tokens API (MCP)</h2>
+              <h2 class="text-lg font-semibold text-slate-900 mb-1">Tokens API</h2>
               <p class="text-sm text-slate-500 mb-4">
-                Créez des tokens pour utiliser le serveur MCP avec Claude ou d'autres outils IA.
+                Créez des tokens pour accéder à l'API REST.
               </p>
 
               <%!-- New token alert --%>
@@ -380,54 +359,15 @@ defmodule HoMonRadeauWeb.ProfileLive do
                   <.icon
                     name="hero-chevron-down-mini"
                     class="size-4 transition-transform group-open:rotate-180"
-                  /> Comment configurer mon outil IA ?
+                  /> Comment utiliser l'API ?
                 </summary>
                 <div class="mt-3 space-y-4 text-sm text-slate-600">
-                  <div>
-                    <h4 class="font-semibold text-slate-900 mb-1">Claude Desktop</h4>
-                    <p class="mb-2">
-                      Ouvrez les paramètres de Claude Desktop, section "MCP Servers", et ajoutez un nouveau serveur avec ces informations :
-                    </p>
-                    <.mcp_config_example />
-                    <p class="mt-1 text-xs text-slate-400">
-                      Remplacez <code>VOTRE_TOKEN</code> par le token copié ci-dessus.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 class="font-semibold text-slate-900 mb-1">ChatGPT (Custom GPT / Actions)</h4>
-                    <p class="mb-2">
-                      Dans la configuration d'un Custom GPT, ajoutez une Action avec :
-                    </p>
-                    <ul class="list-disc list-inside space-y-1 ml-2">
-                      <li>
-                        <strong>URL</strong>
-                        :
-                        <code class="bg-slate-50 px-1 rounded">
-                          https://ho-mon-radeau.fly.dev/api/mcp
-                        </code>
-                      </li>
-                      <li><strong>Authentification</strong> : API Key</li>
-                      <li>
-                        <strong>Header</strong>
-                        :
-                        <code class="bg-slate-50 px-1 rounded">
-                          Authorization: Bearer VOTRE_TOKEN
-                        </code>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h4 class="font-semibold text-slate-900 mb-1">Autre outil MCP</h4>
-                    <p>
-                      Tout client compatible MCP peut se connecter via HTTP. Configurez l'URL
-                      <code class="bg-slate-50 px-1 rounded">
-                        https://ho-mon-radeau.fly.dev/api/mcp
-                      </code>
-                      avec le header <code class="bg-slate-50 px-1 rounded">Authorization: Bearer VOTRE_TOKEN</code>.
-                    </p>
-                  </div>
+                  <p>
+                    Utilisez le header
+                    <code class="bg-slate-50 px-1 rounded">Authorization: Bearer VOTRE_TOKEN</code>
+                    pour authentifier vos requêtes vers l'API REST.
+                    La documentation OpenAPI est disponible à <code class="bg-slate-50 px-1 rounded">/api/openapi</code>.
+                  </p>
                 </div>
               </details>
             </div>

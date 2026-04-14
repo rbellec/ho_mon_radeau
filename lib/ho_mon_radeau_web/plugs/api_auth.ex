@@ -2,6 +2,7 @@ defmodule HoMonRadeauWeb.Plugs.ApiAuth do
   @moduledoc """
   Plug for authenticating API requests via Bearer token.
   Extracts the token from the Authorization header and loads the user.
+  Authorization (role checks) is handled by RequireApiRole.
   """
   import Plug.Conn
 
@@ -12,9 +13,7 @@ defmodule HoMonRadeauWeb.Plugs.ApiAuth do
   def call(conn, _opts) do
     with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
          %{} = user <- Accounts.authenticate_by_api_token(token) do
-      conn
-      |> assign(:current_user, user)
-      |> assign(:api_authenticated, true)
+      assign(conn, :current_user, user)
     else
       _ ->
         conn

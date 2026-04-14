@@ -21,10 +21,96 @@ defmodule HoMonRadeauWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :api_auth do
+    plug :accepts, ["json"]
+    plug HoMonRadeauWeb.Plugs.ApiAuth
+  end
+
+  pipeline :require_validated do
+    plug HoMonRadeauWeb.Plugs.RequireApiRole, role: :validated
+  end
+
+  pipeline :require_admin do
+    plug HoMonRadeauWeb.Plugs.RequireApiRole, role: :admin
+  end
+
   scope "/", HoMonRadeauWeb do
     pipe_through :browser
 
     get "/", PageController, :home
+  end
+
+  # Public OpenAPI spec (no auth required)
+  scope "/api" do
+    pipe_through :api
+
+    get "/openapi", OpenApiSpex.Plug.RenderSpec, []
+  end
+
+  # Validated member API (any authenticated + validated user)
+  scope "/api", HoMonRadeauWeb.Api do
+    pipe_through [:api_auth, :require_validated]
+
+    get "/me", MeController, :show
+    get "/rafts", RaftController, :index
+    get "/rafts/:id", RaftController, :show
+  end
+
+  # Manager/captain API (authorization checked in controllers)
+  scope "/api", HoMonRadeauWeb.Api do
+    pipe_through [:api_auth, :require_validated]
+
+    # Crew management
+    get "/rafts/:raft_id/crew", CrewController, :show
+    post "/rafts/:raft_id/crew/:member_id/promote", CrewController, :promote_manager
+    post "/rafts/:raft_id/crew/:member_id/demote", CrewController, :demote_manager
+    post "/rafts/:raft_id/crew/:member_id/set-captain", CrewController, :set_captain
+    delete "/rafts/:raft_id/crew/:member_id", CrewController, :remove_member
+
+    # Join requests
+    get "/rafts/:raft_id/join-requests", JoinRequestController, :index
+    post "/join-requests/:id/accept", JoinRequestController, :accept
+    post "/join-requests/:id/reject", JoinRequestController, :reject
+  end
+
+  # Admin-only API
+  scope "/api", HoMonRadeauWeb.Api do
+    pipe_through [:api_auth, :require_admin]
+
+    # Users
+    get "/users", UserController, :index
+    get "/users/search", UserController, :search
+    get "/users/:id", UserController, :show
+    post "/users/:id/validate", UserController, :validate
+    post "/users/:id/invalidate", UserController, :invalidate
+
+    # Raft admin actions
+    post "/rafts/:id/validate", RaftController, :validate
+    post "/rafts/:id/invalidate", RaftController, :invalidate
+
+    # Registration forms
+    get "/registration-forms", RegistrationFormController, :index
+    post "/registration-forms/:id/approve", RegistrationFormController, :approve
+    post "/registration-forms/:id/reject", RegistrationFormController, :reject
+
+    # Drums
+    get "/drums", DrumController, :index
+    get "/drums/settings", DrumController, :settings
+    put "/drums/settings", DrumController, :update_settings
+    post "/drums/:id/validate-payment", DrumController, :validate_payment
+
+    # CUF
+    get "/cuf", CUFController, :index
+    get "/cuf/settings", CUFController, :settings
+    put "/cuf/settings", CUFController, :update_settings
+    post "/cuf/:id/validate", CUFController, :validate
+
+    # Transverse teams
+    get "/teams", TransverseTeamController, :index
+    get "/teams/:id", TransverseTeamController, :show
+    post "/teams", TransverseTeamController, :create
+    post "/teams/:id/members", TransverseTeamController, :add_member
+    delete "/teams/:id/members/:user_id", TransverseTeamController, :remove_member
   end
 
   # Public LiveView routes with optional user scope
@@ -34,13 +120,6 @@ defmodule HoMonRadeauWeb.Router do
 
       live "/radeaux", RaftLive.Index, :index
     end
-  end
-
-  # MCP API endpoint (authenticated via Bearer token)
-  scope "/api", HoMonRadeauWeb do
-    pipe_through :api
-
-    match :*, "/mcp", MCPController, :handle
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

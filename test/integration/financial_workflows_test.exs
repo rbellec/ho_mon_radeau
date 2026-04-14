@@ -46,6 +46,7 @@ defmodule HoMonRadeau.Integration.FinancialWorkflowsTest do
 
       # Step 6: An admin validates the declaration
       admin = user_fixture()
+
       {:ok, %{declaration: validated_declaration}} =
         CUF.validate_declaration(declaration, admin.id)
 

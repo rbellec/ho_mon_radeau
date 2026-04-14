@@ -544,6 +544,19 @@ defmodule HoMonRadeau.Events do
   end
 
   @doc """
+  Checks if a user is a manager or captain of a crew.
+  """
+  def is_manager_or_captain?(crew_id, user_id) do
+    CrewMember
+    |> where(
+      [cm],
+      cm.crew_id == ^crew_id and cm.user_id == ^user_id and
+        (cm.is_manager == true or cm.is_captain == true)
+    )
+    |> Repo.exists?()
+  end
+
+  @doc """
   Gets all managers of a crew.
   """
   def get_crew_managers(crew_id) do
