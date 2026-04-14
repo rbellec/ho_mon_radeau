@@ -8,7 +8,7 @@ defmodule HoMonRadeauWeb.Api.UserController do
 
   operation(:index,
     summary: "List all confirmed users",
-    responses: [ok: {"User list", "application/json", :map}]
+    responses: [ok: {"User list", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def index(conn, _params) do
@@ -19,7 +19,7 @@ defmodule HoMonRadeauWeb.Api.UserController do
   operation(:search,
     summary: "Search users by nickname or email",
     parameters: [q: [in: :query, type: :string, required: true]],
-    responses: [ok: {"Search results", "application/json", :map}]
+    responses: [ok: {"Search results", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def search(conn, %{"q" => query}) do
@@ -30,7 +30,7 @@ defmodule HoMonRadeauWeb.Api.UserController do
   operation(:show,
     summary: "Get a single user",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"User", "application/json", :map}]
+    responses: [ok: {"User", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def show(conn, %{"id" => id}) do
@@ -41,7 +41,7 @@ defmodule HoMonRadeauWeb.Api.UserController do
   operation(:validate,
     summary: "Validate a user (welcome team approval)",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Validated user", "application/json", :map}]
+    responses: [ok: {"Validated user", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def validate(conn, %{"id" => id}) do
@@ -56,7 +56,7 @@ defmodule HoMonRadeauWeb.Api.UserController do
   operation(:invalidate,
     summary: "Revoke user validation",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Invalidated user", "application/json", :map}]
+    responses: [ok: {"Invalidated user", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def invalidate(conn, %{"id" => id}) do

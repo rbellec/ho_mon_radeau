@@ -8,7 +8,7 @@ defmodule HoMonRadeauWeb.Api.RaftController do
 
   operation(:index,
     summary: "List rafts for the current edition",
-    responses: [ok: {"Raft list", "application/json", :map}]
+    responses: [ok: {"Raft list", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def index(conn, _params) do
@@ -19,7 +19,7 @@ defmodule HoMonRadeauWeb.Api.RaftController do
   operation(:show,
     summary: "Get raft details",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Raft detail", "application/json", :map}]
+    responses: [ok: {"Raft detail", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def show(conn, %{"id" => id}) do
@@ -30,7 +30,7 @@ defmodule HoMonRadeauWeb.Api.RaftController do
   operation(:validate,
     summary: "Validate a raft",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Validated raft", "application/json", :map}]
+    responses: [ok: {"Validated raft", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def validate(conn, %{"id" => id}) do
@@ -45,7 +45,7 @@ defmodule HoMonRadeauWeb.Api.RaftController do
   operation(:invalidate,
     summary: "Revoke raft validation",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Invalidated raft", "application/json", :map}]
+    responses: [ok: {"Invalidated raft", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def invalidate(conn, %{"id" => id}) do

@@ -12,7 +12,7 @@ defmodule HoMonRadeauWeb.Api.JoinRequestController do
   operation(:index,
     summary: "List pending join requests for a crew",
     parameters: [raft_id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Join requests", "application/json", :map}]
+    responses: [ok: {"Join requests", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def index(conn, %{"raft_id" => raft_id}) do
@@ -25,7 +25,7 @@ defmodule HoMonRadeauWeb.Api.JoinRequestController do
   operation(:accept,
     summary: "Accept a join request",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Accepted", "application/json", :map}]
+    responses: [ok: {"Accepted", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def accept(conn, %{"id" => id}) do
@@ -43,7 +43,7 @@ defmodule HoMonRadeauWeb.Api.JoinRequestController do
   operation(:reject,
     summary: "Reject a join request",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Rejected", "application/json", :map}]
+    responses: [ok: {"Rejected", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def reject(conn, %{"id" => id}) do

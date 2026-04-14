@@ -8,7 +8,7 @@ defmodule HoMonRadeauWeb.Api.TransverseTeamController do
 
   operation(:index,
     summary: "List all transverse teams",
-    responses: [ok: {"Team list", "application/json", :map}]
+    responses: [ok: {"Team list", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def index(conn, _params) do
@@ -19,7 +19,7 @@ defmodule HoMonRadeauWeb.Api.TransverseTeamController do
   operation(:show,
     summary: "Get team details with members",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Team detail", "application/json", :map}]
+    responses: [ok: {"Team detail", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def show(conn, %{"id" => id}) do
@@ -29,7 +29,7 @@ defmodule HoMonRadeauWeb.Api.TransverseTeamController do
 
   operation(:create,
     summary: "Create a new transverse team",
-    responses: [ok: {"Created team", "application/json", :map}]
+    responses: [ok: {"Created team", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def create(conn, params) do
@@ -45,7 +45,7 @@ defmodule HoMonRadeauWeb.Api.TransverseTeamController do
   operation(:add_member,
     summary: "Add a member to a transverse team",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Added member", "application/json", :map}]
+    responses: [ok: {"Added member", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def add_member(conn, %{"id" => id} = params) do
@@ -69,7 +69,7 @@ defmodule HoMonRadeauWeb.Api.TransverseTeamController do
       id: [in: :path, type: :integer, required: true],
       user_id: [in: :path, type: :integer, required: true]
     ],
-    responses: [ok: {"Removed", "application/json", :map}]
+    responses: [ok: {"Removed", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def remove_member(conn, %{"id" => id, "user_id" => user_id}) do

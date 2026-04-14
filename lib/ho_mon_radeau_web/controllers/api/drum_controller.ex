@@ -11,7 +11,7 @@ defmodule HoMonRadeauWeb.Api.DrumController do
     parameters: [
       status: [in: :query, type: :string, required: false, description: "paid, pending, or all"]
     ],
-    responses: [ok: {"Drum requests", "application/json", :map}]
+    responses: [ok: {"Drum requests", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def index(conn, params) do
@@ -23,7 +23,7 @@ defmodule HoMonRadeauWeb.Api.DrumController do
   operation(:validate_payment,
     summary: "Mark a drum request as paid",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Validated request", "application/json", :map}]
+    responses: [ok: {"Validated request", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def validate_payment(conn, %{"id" => id}) do
@@ -37,7 +37,7 @@ defmodule HoMonRadeauWeb.Api.DrumController do
 
   operation(:settings,
     summary: "Get drum settings",
-    responses: [ok: {"Settings", "application/json", :map}]
+    responses: [ok: {"Settings", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def settings(conn, _params) do
@@ -53,7 +53,7 @@ defmodule HoMonRadeauWeb.Api.DrumController do
 
   operation(:update_settings,
     summary: "Update drum settings",
-    responses: [ok: {"Updated settings", "application/json", :map}]
+    responses: [ok: {"Updated settings", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def update_settings(conn, params) do

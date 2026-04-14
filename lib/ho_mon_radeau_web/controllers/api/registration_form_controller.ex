@@ -12,7 +12,7 @@ defmodule HoMonRadeauWeb.Api.RegistrationFormController do
       status: [in: :query, type: :string, required: false],
       raft_id: [in: :query, type: :integer, required: false]
     ],
-    responses: [ok: {"Form list", "application/json", :map}]
+    responses: [ok: {"Form list", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def index(conn, params) do
@@ -31,7 +31,7 @@ defmodule HoMonRadeauWeb.Api.RegistrationFormController do
   operation(:approve,
     summary: "Approve a registration form",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Approved form", "application/json", :map}]
+    responses: [ok: {"Approved form", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def approve(conn, %{"id" => id}) do
@@ -46,7 +46,7 @@ defmodule HoMonRadeauWeb.Api.RegistrationFormController do
   operation(:reject,
     summary: "Reject a registration form",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Rejected form", "application/json", :map}]
+    responses: [ok: {"Rejected form", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def reject(conn, %{"id" => id}) do

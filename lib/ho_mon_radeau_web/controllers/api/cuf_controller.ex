@@ -16,7 +16,7 @@ defmodule HoMonRadeauWeb.Api.CUFController do
         description: "validated, pending, or all"
       ]
     ],
-    responses: [ok: {"CUF declarations", "application/json", :map}]
+    responses: [ok: {"CUF declarations", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def index(conn, params) do
@@ -28,7 +28,9 @@ defmodule HoMonRadeauWeb.Api.CUFController do
   operation(:validate,
     summary: "Validate a CUF declaration",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Validated declaration", "application/json", :map}]
+    responses: [
+      ok: {"Validated declaration", "application/json", %OpenApiSpex.Schema{type: :object}}
+    ]
   )
 
   def validate(conn, %{"id" => id}) do
@@ -42,7 +44,7 @@ defmodule HoMonRadeauWeb.Api.CUFController do
 
   operation(:settings,
     summary: "Get CUF settings",
-    responses: [ok: {"Settings", "application/json", :map}]
+    responses: [ok: {"Settings", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def settings(conn, _params) do
@@ -58,7 +60,7 @@ defmodule HoMonRadeauWeb.Api.CUFController do
 
   operation(:update_settings,
     summary: "Update CUF settings",
-    responses: [ok: {"Updated settings", "application/json", :map}]
+    responses: [ok: {"Updated settings", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def update_settings(conn, params) do

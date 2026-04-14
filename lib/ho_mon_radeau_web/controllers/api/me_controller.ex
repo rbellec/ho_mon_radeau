@@ -8,7 +8,7 @@ defmodule HoMonRadeauWeb.Api.MeController do
 
   operation(:show,
     summary: "Get current user dashboard with status and next actions",
-    responses: [ok: {"Dashboard", "application/json", :map}]
+    responses: [ok: {"Dashboard", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def show(conn, _params) do

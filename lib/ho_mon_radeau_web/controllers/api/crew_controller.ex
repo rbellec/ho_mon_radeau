@@ -11,7 +11,7 @@ defmodule HoMonRadeauWeb.Api.CrewController do
   operation(:show,
     summary: "List crew members for a raft",
     parameters: [raft_id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Crew members", "application/json", :map}]
+    responses: [ok: {"Crew members", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def show(conn, %{"raft_id" => raft_id}) do
@@ -34,7 +34,7 @@ defmodule HoMonRadeauWeb.Api.CrewController do
       raft_id: [in: :path, type: :integer, required: true],
       member_id: [in: :path, type: :integer, required: true]
     ],
-    responses: [ok: {"Updated member", "application/json", :map}]
+    responses: [ok: {"Updated member", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def promote_manager(conn, %{"raft_id" => raft_id, "member_id" => member_id}) do
@@ -54,7 +54,7 @@ defmodule HoMonRadeauWeb.Api.CrewController do
       raft_id: [in: :path, type: :integer, required: true],
       member_id: [in: :path, type: :integer, required: true]
     ],
-    responses: [ok: {"Updated member", "application/json", :map}]
+    responses: [ok: {"Updated member", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def demote_manager(conn, %{"raft_id" => raft_id, "member_id" => member_id}) do
@@ -74,7 +74,7 @@ defmodule HoMonRadeauWeb.Api.CrewController do
       raft_id: [in: :path, type: :integer, required: true],
       member_id: [in: :path, type: :integer, required: true]
     ],
-    responses: [ok: {"Updated member", "application/json", :map}]
+    responses: [ok: {"Updated member", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def set_captain(conn, %{"raft_id" => raft_id, "member_id" => member_id}) do
@@ -94,7 +94,7 @@ defmodule HoMonRadeauWeb.Api.CrewController do
       raft_id: [in: :path, type: :integer, required: true],
       member_id: [in: :path, type: :integer, required: true]
     ],
-    responses: [ok: {"Success", "application/json", :map}]
+    responses: [ok: {"Success", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
   def remove_member(conn, %{"raft_id" => raft_id, "member_id" => member_id}) do
