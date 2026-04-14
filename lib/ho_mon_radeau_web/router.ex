@@ -19,6 +19,7 @@ defmodule HoMonRadeauWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug OpenApiSpex.Plug.PutApiSpec, module: HoMonRadeauWeb.ApiSpec
   end
 
   pipeline :api_auth do

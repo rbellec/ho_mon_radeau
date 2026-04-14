@@ -40,7 +40,7 @@ defmodule HoMonRadeauWeb.UserSettingsControllerTest do
           }
         })
 
-      assert redirected_to(new_password_conn) == ~p"/users/settings"
+      assert redirected_to(new_password_conn) == ~p"/mon-profil"
 
       assert get_session(new_password_conn, :user_token) != get_session(conn, :user_token)
 
