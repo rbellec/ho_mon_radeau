@@ -60,6 +60,33 @@ defmodule HoMonRadeau.Release do
       end)
   end
 
+  @doc """
+  Resets a user's password.
+
+  Usage in production:
+    /app/bin/ho_mon_radeau eval "HoMonRadeau.Release.reset_password(\"email@example.com\", \"new_password\")"
+  """
+  def reset_password(email, new_password) do
+    load_app()
+
+    {:ok, _, _} =
+      Ecto.Migrator.with_repo(HoMonRadeau.Repo, fn repo ->
+        case repo.get_by(HoMonRadeau.Accounts.User, email: email) do
+          nil ->
+            IO.puts("Error: user not found: #{email}")
+
+          user ->
+            user
+            |> Ecto.Changeset.change(%{
+              hashed_password: Bcrypt.hash_pwd_salt(new_password)
+            })
+            |> repo.update!()
+
+            IO.puts("Password reset for: #{email}")
+        end
+      end)
+  end
+
   defp repos do
     Application.fetch_env!(@app, :ecto_repos)
   end

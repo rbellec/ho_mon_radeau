@@ -1,13 +1,47 @@
 # Console et manipulation des données
 
-## Lancer la console IEx
+## Ouvrir une console
 
 ```bash
-# Depuis le répertoire du projet
-docker compose exec app iex -S mix
+# Développement (iex -S mix)
+./console.sh
+
+# Production (remote console sur l'app en cours)
+./console.sh prod
 ```
 
-## Manipulations utilisateurs
+## Commandes release (production, sans Mix)
+
+Ces commandes s'exécutent via `eval`, sans ouvrir de console interactive :
+
+```bash
+COMPOSE="docker compose -f docker-compose.prod.yml --env-file .env.prod"
+```
+
+### Créer / promouvoir un admin
+
+```bash
+$COMPOSE exec app /app/bin/ho_mon_radeau eval \
+  'HoMonRadeau.Release.create_admin("admin@example.com")'
+```
+
+Si l'email n'existe pas : crée le compte (confirmé, validé, admin) avec un mot de passe aléatoire.
+Si l'email existe : promeut l'utilisateur admin + validé.
+
+### Forcer un mot de passe
+
+```bash
+$COMPOSE exec app /app/bin/ho_mon_radeau eval \
+  'HoMonRadeau.Release.reset_password("user@example.com", "nouveau_mot_de_passe")'
+```
+
+### Lancer les migrations
+
+```bash
+$COMPOSE run --rm app /app/bin/migrate
+```
+
+## Console IEx — manipulations utilisateurs
 
 ### Importer les modules nécessaires
 
@@ -70,56 +104,25 @@ user
 |> Repo.update()
 ```
 
-## Manipulations radeaux et équipages
+## Console IEx — manipulations radeaux et équipages
 
 ### Importer les modules
 
 ```elixir
 alias HoMonRadeau.{Events, Repo}
-alias HoMonRadeau.Events.{Raft, CrewMembership}
 ```
 
 ### Lister les radeaux
 
 ```elixir
-Events.list_rafts()
-```
-
-### Ajouter un utilisateur à un équipage
-
-```elixir
-user = Accounts.get_user_by_email("email@example.com")
-raft = Events.get_raft!(1)
-
-Events.add_crew_member(raft, user, %{role: "equipier"})
-# Rôles possibles: "capitaine", "second", "equipier"
-```
-
-### Retirer un membre d'équipage
-
-```elixir
-Events.remove_crew_member(raft, user)
+Events.list_current_edition_rafts()
 ```
 
 ### Voir l'équipage d'un radeau
 
 ```elixir
-raft = Events.get_raft!(1) |> Repo.preload(:crew_members)
-raft.crew_members
-```
-
-## Créer un jeu de données de test
-
-Pour initialiser une base de données avec des données de test :
-
-```bash
-docker compose exec app mix run priv/repo/seeds_dev.exs
-```
-
-Ou depuis IEx :
-
-```elixir
-Code.require_file("priv/repo/seeds_dev.exs")
+raft = Events.get_raft!(1) |> Events.preload_raft_details()
+raft.crew.crew_members
 ```
 
 ## Quitter la console
