@@ -1,6 +1,6 @@
 defmodule HoMonRadeau.Accounts.ApiToken do
   @moduledoc """
-  Schema for API tokens used to authenticate MCP and API requests.
+  Schema for API tokens used to authenticate API requests.
   Each user can have multiple tokens with labels for identification.
   """
   use Ecto.Schema

@@ -79,8 +79,8 @@ defmodule HoMonRadeau.MixProject do
       {:sweet_xml, "~> 0.7"},
       # Admin interface
       {:kaffy, "~> 0.10"},
-      # MCP server for AI admin
-      {:ex_mcp, "~> 0.8"}
+      # OpenAPI spec generation
+      {:open_api_spex, "~> 3.21"}
     ]
   end
 
