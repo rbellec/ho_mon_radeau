@@ -45,7 +45,7 @@ defmodule HoMonRadeauWeb.UserSettingsController do
       {:ok, {user, _}} ->
         conn
         |> put_flash(:info, "Mot de passe mis à jour.")
-        |> put_session(:user_return_to, ~p"/users/settings")
+        |> put_session(:user_return_to, ~p"/mon-profil")
         |> UserAuth.log_in_user(user)
 
       {:error, changeset} ->
