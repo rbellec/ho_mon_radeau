@@ -107,10 +107,11 @@ if config_env() == :prod do
   config :ho_mon_radeau,
     mailer_from_email: System.get_env("MAILER_FROM_EMAIL", "onboarding@resend.dev")
 
-  # ## Configuring S3/Tigris storage
+  # ## Configuring storage
   #
-  # Tigris is an S3-compatible object storage service integrated with Fly.io.
-  # These environment variables are automatically set when you create a Tigris bucket.
+  # If BUCKET_NAME is set, use S3/Tigris. Otherwise, use local file storage.
+  # Local storage writes to UPLOAD_DIR (default: /app/uploads), which should
+  # be a Docker volume to persist across deploys.
   if System.get_env("BUCKET_NAME") do
     config :ex_aws,
       access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
@@ -124,6 +125,11 @@ if config_env() == :prod do
 
     config :ho_mon_radeau, :storage,
       bucket: System.get_env("BUCKET_NAME"),
+      enabled: true
+  else
+    config :ho_mon_radeau, :storage,
+      adapter: :local,
+      upload_dir: System.get_env("UPLOAD_DIR", "/app/uploads"),
       enabled: true
   end
 end

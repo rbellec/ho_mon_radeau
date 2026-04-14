@@ -29,9 +29,13 @@ services:
       PORT: "4000"
       RESEND_API_KEY: ${RESEND_API_KEY:?Set RESEND_API_KEY in .env.prod}
       MAILER_FROM_EMAIL: ${MAILER_FROM_EMAIL:-noreply@homonradeau.fr}
+    volumes:
+      - uploads:/app/uploads
     ports:
       - "${EXPOSED_PORT:-4000}:4000"
 
 volumes:
   postgres-data:
+    driver: local
+  uploads:
     driver: local
