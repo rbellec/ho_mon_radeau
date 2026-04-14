@@ -61,6 +61,7 @@ ENV LC_ALL en_US.UTF-8
 
 WORKDIR "/app"
 RUN chown nobody /app
+RUN mkdir -p /app/logs /app/uploads && chown nobody:root /app/logs /app/uploads
 
 ENV MIX_ENV="prod"
 
