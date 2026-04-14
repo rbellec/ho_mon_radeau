@@ -2,11 +2,6 @@ services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "5"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-ho_mon_radeau}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.prod}
@@ -24,11 +19,6 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
-    logging:
-      driver: json-file
-      options:
-        max-size: "50m"
-        max-file: "10"
     depends_on:
       db:
         condition: service_healthy
@@ -50,6 +40,7 @@ services:
       - traefik.http.services.hmr.loadbalancer.server.port=4000
     volumes:
       - uploads:/app/uploads
+      - ${LOG_DIR:-./logs}:/app/logs
 
 volumes:
   postgres-data:

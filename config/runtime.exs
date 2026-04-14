@@ -24,6 +24,19 @@ config :ho_mon_radeau, HoMonRadeauWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :prod do
+  # Write logs to file in addition to console
+  log_dir = System.get_env("LOG_DIR", "/app/logs")
+
+  if File.dir?(log_dir) do
+    config :logger, :default_handler,
+      config: [
+        file: ~c"#{log_dir}/app.log",
+        max_no_bytes: 10_485_760,
+        max_no_files: 10,
+        compress_on_rotate: true
+      ]
+  end
+
   database_url =
     System.get_env("DATABASE_URL") ||
       raise """
