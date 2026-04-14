@@ -3,6 +3,8 @@ set -euo pipefail
 
 # Deploy HoMonRadeau to production VPS
 # Usage: ./deploy.sh
+#
+# Full workflow: git pull && ./deploy.sh
 
 ENV_FILE=".env.prod"
 
@@ -11,13 +13,21 @@ if [ ! -f "$ENV_FILE" ]; then
   exit 1
 fi
 
+# Source env file to read PHX_HOST for the final message
+set -a; source "$ENV_FILE"; set +a
+
+COMPOSE="docker compose -f docker-compose.prod.yml --env-file $ENV_FILE"
+
+echo "==> Pulling latest code..."
+git pull --ff-only
+
 echo "==> Building production image..."
-docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE" build
+$COMPOSE build
 
 echo "==> Running database migrations..."
-docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE" run --rm app /app/bin/migrate
+$COMPOSE run --rm app /app/bin/migrate
 
-echo "==> Starting services..."
-docker compose -f docker-compose.prod.yml --env-file "$ENV_FILE" up -d
+echo "==> Restarting services..."
+$COMPOSE up -d
 
-echo "==> Done! App should be available at https://${PHX_HOST:-hmr.bellec.in}"
+echo "==> Done! App available at https://${PHX_HOST}"
