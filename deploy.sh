@@ -18,6 +18,9 @@ set -a; source "$ENV_FILE"; set +a
 
 COMPOSE="docker compose -f docker-compose.prod.yml --env-file $ENV_FILE"
 
+echo "==> Ensuring traefik-net network exists..."
+docker network create traefik-net 2>/dev/null || true
+
 echo "==> Pulling latest code..."
 git pull --ff-only
 

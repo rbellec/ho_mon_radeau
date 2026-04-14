@@ -29,13 +29,24 @@ services:
       PORT: "4000"
       RESEND_API_KEY: ${RESEND_API_KEY:?Set RESEND_API_KEY in .env.prod}
       MAILER_FROM_EMAIL: ${MAILER_FROM_EMAIL:-noreply@homonradeau.fr}
+    networks:
+      - default
+      - traefik-net
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.hmr.rule=Host(`${PHX_HOST}`)
+      - traefik.http.routers.hmr.entrypoints=websecure
+      - traefik.http.routers.hmr.tls.certresolver=letsencrypt
+      - traefik.http.services.hmr.loadbalancer.server.port=4000
     volumes:
       - uploads:/app/uploads
-    ports:
-      - "${EXPOSED_PORT:-4000}:4000"
 
 volumes:
   postgres-data:
     driver: local
   uploads:
     driver: local
+
+networks:
+  traefik-net:
+    external: true
