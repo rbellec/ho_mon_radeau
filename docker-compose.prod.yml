@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ho_mon_radeau}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.prod}
+      POSTGRES_DB: ${POSTGRES_DB:-ho_mon_radeau_prod}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ho_mon_radeau}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ecto://${POSTGRES_USER:-ho_mon_radeau}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-ho_mon_radeau_prod}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?Set SECRET_KEY_BASE in .env.prod}
+      PHX_HOST: ${PHX_HOST:?Set PHX_HOST in .env.prod}
+      PORT: "4000"
+      RESEND_API_KEY: ${RESEND_API_KEY:?Set RESEND_API_KEY in .env.prod}
+      MAILER_FROM_EMAIL: ${MAILER_FROM_EMAIL:-noreply@homonradeau.fr}
+    ports:
+      - "${EXPOSED_PORT:-4000}:4000"
+
+volumes:
+  postgres-data:
+    driver: local
