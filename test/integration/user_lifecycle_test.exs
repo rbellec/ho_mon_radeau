@@ -23,7 +23,8 @@ defmodule HoMonRadeau.Integration.UserLifecycleTest do
 
       assert user.id
       assert is_nil(user.confirmed_at)
-      refute user.validated
+      # TODO: TEMPORARY - users auto-validated now, so validated is true at registration
+      assert user.validated
 
       # Step 2: Confirm the user (simulate email confirmation)
       confirmed_user =

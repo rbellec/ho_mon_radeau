@@ -53,8 +53,10 @@ defmodule HoMonRadeauWeb.RaftLive.NewTest do
                live(conn, ~p"/radeaux/nouveau")
     end
 
+    # TODO: TEMPORARY - users auto-validated now, must explicitly unvalidate
     test "redirects non-validated user away", %{conn: conn} do
       user = user_fixture()
+      user |> Ecto.Changeset.change(validated: false) |> HoMonRadeau.Repo.update!()
       conn = log_in_user(conn, user)
 
       assert {:error, {:redirect, %{to: "/"}}} =

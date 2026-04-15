@@ -80,9 +80,11 @@ defmodule HoMonRadeau.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
+  # TODO: TEMPORARY - auto-validate new users for testing, remove when no longer needed
   def register_user(attrs) do
     %User{}
     |> User.registration_changeset(attrs)
+    |> Ecto.Changeset.put_change(:validated, true)
     |> Repo.insert()
   end
 

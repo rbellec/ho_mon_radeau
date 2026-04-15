@@ -435,9 +435,10 @@ defmodule HoMonRadeau.AccountsTest do
   end
 
   describe "list_pending_validation_users/0" do
+    # TODO: TEMPORARY - users auto-validated now, must explicitly unvalidate for these tests
     test "returns confirmed but not validated users" do
       confirmed_user = user_fixture()
-      # confirmed_user is confirmed but not validated by default
+      confirmed_user |> Ecto.Changeset.change(validated: false) |> HoMonRadeau.Repo.update!()
       results = Accounts.list_pending_validation_users()
       assert Enum.any?(results, fn u -> u.id == confirmed_user.id end)
     end
@@ -445,6 +446,7 @@ defmodule HoMonRadeau.AccountsTest do
     test "excludes unconfirmed users" do
       _unconfirmed = unconfirmed_user_fixture()
       confirmed_user = user_fixture()
+      confirmed_user |> Ecto.Changeset.change(validated: false) |> HoMonRadeau.Repo.update!()
 
       results = Accounts.list_pending_validation_users()
       assert Enum.any?(results, fn u -> u.id == confirmed_user.id end)

@@ -13,7 +13,9 @@ defmodule HoMonRadeauWeb.ProfileLiveTest do
       assert has_element?(view, "#profile-form")
       assert has_element?(view, "#email-setting")
       assert has_element?(view, "#password-setting")
-      # User is not validated by default
+      # TODO: TEMPORARY - user auto-validated now, so manually unvalidate to test warning
+      user |> Ecto.Changeset.change(validated: false) |> HoMonRadeau.Repo.update!()
+      {:ok, view, _html} = live(conn, ~p"/mon-profil")
       assert has_element?(view, "#validation-warning")
       assert has_element?(view, "#validation-status")
       # Email displayed in account settings

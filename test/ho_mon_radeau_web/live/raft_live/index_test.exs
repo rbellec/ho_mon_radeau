@@ -45,8 +45,10 @@ defmodule HoMonRadeauWeb.RaftLive.IndexTest do
       assert render(view) =~ "Créer un radeau"
     end
 
+    # TODO: TEMPORARY - users auto-validated now, must explicitly unvalidate
     test "hides create button for non-validated user", %{conn: conn} do
       user = user_fixture()
+      user |> Ecto.Changeset.change(validated: false) |> HoMonRadeau.Repo.update!()
       conn = log_in_user(conn, user)
       _edition = edition_fixture()
 
