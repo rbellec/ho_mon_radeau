@@ -82,3 +82,7 @@ assan_multipurpose_template_v5.8
 .mcp.json
 .devtoken
 .mcp.prod.json
+
+# Claude Code local overrides
+CLAUDE.local.md
+audit_claude_code.md

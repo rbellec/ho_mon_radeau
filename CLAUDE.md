@@ -34,17 +34,13 @@ ho_mon_radeau/
 3. Use mailcatcher for email testing in development
 4. LiveView for minimal frontend interactions
 
-### Claude Code Conventions
-- **Never use `cd`** in bash commands — the working directory is already the project root
-- Run tests with: `docker compose run --rm -e MIX_ENV=test app mix precommit`
-
 ### Stack
 - **Language:** Elixir (latest stable)
 - **Framework:** Phoenix (latest stable)
 - **Database:** PostgreSQL 16
 - **Auth:** phx.gen.auth (email/password with verification)
 - **Frontend:** Phoenix LiveView (minimal JS)
-- **Deployment:** Fly.io
+- **Deployment:** VPS (Ionos) via Docker Compose + Traefik
 
 ### Personal Notes
 - Keep personal TODOs in `todo_personnel.md` (git-ignored)
@@ -62,15 +58,37 @@ http://localhost:4000
 http://localhost:1080
 ```
 
+## Useful Commands
+
+```bash
+# Full precommit (format + credo + tests)
+docker compose run --rm -e MIX_ENV=test app mix precommit
+
+# Tests only
+docker compose run --rm -e MIX_ENV=test app mix test
+
+# Single test file
+docker compose run --rm -e MIX_ENV=test app mix test test/path/to_test.exs
+
+# Migrations
+docker compose run --rm app mix ecto.migrate
+```
+
 ## Deployment
 
-Deploy to Fly.io:
-```bash
-fly deploy
-```
+Deploy via VPS:
+1. `git push`
+2. SSH to VPS, run `./deploy.sh`
+
+Never edit files directly on the VPS (except `.env.prod`).
 
 ## Configuration
 
 Environment variables are managed through:
 - `.env` (local development, git-ignored)
-- Fly.io secrets (production)
+- `.env.prod` on the VPS (production)
+
+## Gotchas
+- Always run mix commands via `docker compose run`, never directly
+- Never use `cd` in bash commands — the working directory is already the project root
+- Use `docker compose`, not `docker-compose`
