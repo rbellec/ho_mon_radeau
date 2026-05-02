@@ -72,18 +72,6 @@ defmodule HoMonRadeau.Events.RaftTest do
       assert get_change(changeset, :slug) == "my-raft"
     end
 
-    test "validates forum_url format" do
-      attrs = Map.merge(@valid_attrs, %{forum_url: "not-a-url"})
-      changeset = Raft.changeset(%Raft{}, attrs)
-      refute changeset.valid?
-      assert "must be a valid URL" in errors_on(changeset).forum_url
-    end
-
-    test "accepts valid forum_url" do
-      attrs = Map.merge(@valid_attrs, %{forum_url: "https://forum.example.com/topic/1"})
-      changeset = Raft.changeset(%Raft{}, attrs)
-      assert changeset.valid?
-    end
   end
 
   describe "validation_changeset/2" do
@@ -115,11 +103,6 @@ defmodule HoMonRadeau.Events.RaftTest do
       assert get_change(changeset, :description_short) == "Short desc"
     end
 
-    test "casts forum_url" do
-      changeset = Raft.update_changeset(%Raft{}, %{forum_url: "https://forum.example.com"})
-      assert get_change(changeset, :forum_url) == "https://forum.example.com"
-    end
-
     test "casts picture_url" do
       changeset =
         Raft.update_changeset(%Raft{}, %{picture_url: "https://img.example.com/pic.jpg"})
@@ -138,10 +121,5 @@ defmodule HoMonRadeau.Events.RaftTest do
       assert %{description_short: [_]} = errors_on(changeset)
     end
 
-    test "validates forum_url format" do
-      changeset = Raft.update_changeset(%Raft{}, %{forum_url: "bad-url"})
-      refute changeset.valid?
-      assert "must be a valid URL" in errors_on(changeset).forum_url
-    end
   end
 end

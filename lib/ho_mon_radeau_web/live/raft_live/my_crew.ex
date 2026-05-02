@@ -385,6 +385,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     crew = socket.assigns.crew
     user = socket.assigns.current_scope.user
     raft = Events.get_raft!(crew.raft_id) |> Events.preload_raft_details()
+    edition = Events.get_current_edition()
     is_manager = Events.is_crew_manager?(crew, user)
     pending_requests = if is_manager, do: Events.list_pending_join_requests(crew), else: []
     captain = Events.get_captain(crew.id)
@@ -413,6 +414,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     |> assign(:cuf_settings, cuf_settings)
     |> assign(:my_member, my_member)
     |> assign(:is_captain, is_captain)
+    |> assign(:edition, edition)
     |> assign(:raft_links, Events.list_raft_links(raft.id))
     |> assign_new(:link_form, fn -> nil end)
   end
@@ -549,12 +551,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                     label="Description complète"
                     rows="4"
                   />
-                  <.input
-                    field={@edit_form[:forum_url]}
-                    type="url"
-                    label="Lien forum"
-                    placeholder="https://..."
-                  />
                   <div class="flex gap-3 pt-2">
                     <button
                       type="submit"
@@ -578,18 +574,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                 <% else %>
                   <p class="text-slate-400 italic">Aucune description.</p>
                 <% end %>
-                <%= if @raft.forum_url do %>
-                  <div class="mt-3">
-                    <a
-                      href={@raft.forum_url}
-                      target="_blank"
-                      class="text-sm text-indigo-600 hover:underline inline-flex items-center gap-1"
-                    >
-                      <.icon name="hero-chat-bubble-left-right-mini" class="size-4" />
-                      Discussion forum
-                    </a>
-                  </div>
-                <% end %>
               <% end %>
             </div>
           </div>
@@ -611,7 +595,24 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
               <%!-- Existing links --%>
               <%= if @raft_links == [] && is_nil(@link_form) do %>
-                <p class="text-sm text-slate-400 italic">Aucun lien.</p>
+                <%= if @edition && @edition.forum_url do %>
+                  <div class="flex items-center justify-between py-2">
+                    <a
+                      href={@edition.forum_url}
+                      target="_blank"
+                      class="text-sm text-indigo-600 hover:underline inline-flex items-center gap-1.5 min-w-0"
+                    >
+                      <.icon name="hero-chat-bubble-left-right-mini" class="size-4 shrink-0" />
+                      <span class="truncate">Forum Tutto Blu</span>
+                    </a>
+                    <span class="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 shrink-0 ml-2">
+                      public
+                    </span>
+                  </div>
+                <% end %>
+                <p class="text-sm text-amber-600 italic mt-2">
+                  Votre équipage n'a pas encore de lien forum spécifique. Ajoutez le lien vers votre discussion !
+                </p>
               <% end %>
               <%= for link <- @raft_links do %>
                 <div class="flex items-center justify-between py-2 group/link">
@@ -983,16 +984,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
               >
                 <.icon name="hero-document-text-mini" class="size-4" /> Ma fiche d'inscription
               </.link>
-              <%= if @raft.forum_url do %>
-                <span class="text-slate-300">·</span>
-                <a
-                  href={@raft.forum_url}
-                  target="_blank"
-                  class="text-slate-500 hover:text-indigo-600 transition inline-flex items-center gap-1"
-                >
-                  <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> Forum
-                </a>
-              <% end %>
             </div>
             <button
               class="text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition"

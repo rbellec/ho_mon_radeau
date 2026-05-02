@@ -98,16 +98,6 @@ defmodule HoMonRadeauWeb.RaftLive.New do
             rows="5"
           />
 
-          <.input
-            field={@form[:forum_url]}
-            type="url"
-            label="Lien forum (optionnel)"
-            placeholder="https://forum.flotille-tutto-blu.org/..."
-          />
-          <p class="text-sm text-slate-400 -mt-2">
-            Lien vers la discussion de votre équipage sur le forum.
-          </p>
-
           <div class="flex gap-4 pt-4">
             <button
               type="submit"

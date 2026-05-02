@@ -18,6 +18,8 @@ defmodule HoMonRadeau.Events.Edition do
     field :participant_form_url, :string
     field :captain_form_url, :string
 
+    field :forum_url, :string
+
     timestamps(type: :utc_datetime)
   end
 
@@ -34,7 +36,8 @@ defmodule HoMonRadeau.Events.Edition do
       :end_date,
       :registration_deadline,
       :participant_form_url,
-      :captain_form_url
+      :captain_form_url,
+      :forum_url
     ])
     |> validate_required([:year])
     |> validate_number(:year, greater_than: 2000, less_than: 3000)
@@ -42,6 +45,7 @@ defmodule HoMonRadeau.Events.Edition do
     |> validate_dates()
     |> validate_url(:participant_form_url)
     |> validate_url(:captain_form_url)
+    |> validate_url(:forum_url)
   end
 
   defp validate_dates(changeset) do

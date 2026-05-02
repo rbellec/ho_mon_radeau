@@ -99,7 +99,6 @@ defmodule HoMonRadeauWeb.Api.MeController do
       raft_id: raft.id,
       raft_name: raft.name,
       raft_slug: raft.slug,
-      forum_url: raft.forum_url,
       role: role,
       crew_count: Events.count_crew_members(crew.id),
       max_capacity: raft.max_capacity,
