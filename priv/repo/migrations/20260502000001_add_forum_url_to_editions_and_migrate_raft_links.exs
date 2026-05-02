@@ -13,6 +13,10 @@ defmodule HoMonRadeau.Repo.Migrations.AddForumUrlToEditionsAndMigrateRaftLinks d
     WHERE forum_url IS NOT NULL
     """)
 
+    execute("""
+    UPDATE editions SET forum_url = 'https://tuttoblu.discourse.group/' WHERE year = 2026
+    """)
+
     alter table(:rafts) do
       remove :forum_url
     end
