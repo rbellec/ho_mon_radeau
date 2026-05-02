@@ -80,6 +80,12 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
 
   defp build_attrs(params, mode), do: Map.put(params, "mode", mode)
 
+  defp has_specific_data?(%{declared: true, mode: "specific", lines: lines}) when is_list(lines) do
+    Enum.any?(lines, &((&1.quantity || 0) > 0))
+  end
+
+  defp has_specific_data?(_), do: false
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -192,6 +198,12 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
                 type="button"
                 phx-click="set_mode"
                 phx-value-mode="simple"
+                data-confirm={
+                  if has_specific_data?(@declaration),
+                    do:
+                      "Vous avez une déclaration détaillée enregistrée. Revenir au mode simple écrasera ces quantités lors de la prochaine sauvegarde. Continuer ?",
+                    else: nil
+                }
                 class="text-sm text-slate-500 hover:text-slate-700 font-medium inline-flex items-center gap-1"
               >
                 <.icon name="hero-arrow-left-mini" class="size-4" /> Revenir au mode simple
