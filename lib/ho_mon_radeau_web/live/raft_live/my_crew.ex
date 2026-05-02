@@ -797,7 +797,15 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
             <div class="px-6 pb-6 border-t border-slate-100 pt-4 space-y-6">
               <%!-- Drums --%>
               <div>
-                <h4 class="text-sm font-semibold text-slate-500 mb-2">Bidons</h4>
+                <div class="flex items-center justify-between mb-2">
+                  <h4 class="text-sm font-semibold text-slate-500">Bidons</h4>
+                  <.link
+                    navigate={~p"/mon-radeau/bidons"}
+                    class="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
+                  >
+                    Déclarer <.icon name="hero-arrow-right-mini" class="size-4" />
+                  </.link>
+                </div>
                 <div class="text-sm text-slate-600">
                   <%= cond do %>
                     <% @drum_declaration.status == "paid" -> %>
