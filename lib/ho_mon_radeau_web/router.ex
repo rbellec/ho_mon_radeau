@@ -94,12 +94,6 @@ defmodule HoMonRadeauWeb.Router do
     post "/registration-forms/:id/approve", RegistrationFormController, :approve
     post "/registration-forms/:id/reject", RegistrationFormController, :reject
 
-    # Drums
-    get "/drums", DrumController, :index
-    get "/drums/settings", DrumController, :settings
-    put "/drums/settings", DrumController, :update_settings
-    post "/drums/:id/validate-payment", DrumController, :validate_payment
-
     # CUF
     get "/cuf", CUFController, :index
     get "/cuf/settings", CUFController, :settings
@@ -164,6 +158,7 @@ defmodule HoMonRadeauWeb.Router do
       pipe_through :browser
 
       live "/mon-radeau", RaftLive.MyCrew, :show
+      live "/mon-radeau/bidons", RaftLive.DrumsLive, :show
       live "/mon-profil", ProfileLive, :show
     end
   end

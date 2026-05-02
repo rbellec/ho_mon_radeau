@@ -7,30 +7,28 @@ defmodule HoMonRadeauWeb.Api.DrumController do
   tags(["Drums"])
 
   operation(:index,
-    summary: "List all drum requests",
-    parameters: [
-      status: [in: :query, type: :string, required: false, description: "paid, pending, or all"]
-    ],
-    responses: [ok: {"Drum requests", "application/json", %OpenApiSpex.Schema{type: :object}}]
+    summary: "List all drum declarations",
+    responses: [ok: {"Drum declarations", "application/json", %OpenApiSpex.Schema{type: :object}}]
   )
 
-  def index(conn, params) do
-    filter_status = Map.get(params, "status")
-    requests = Drums.list_all_requests(filter_status: filter_status)
-    json(conn, %{data: Enum.map(requests, &serialize_request/1)})
+  def index(conn, _params) do
+    declarations = Drums.list_all_declarations()
+    json(conn, %{data: Enum.map(declarations, &serialize_declaration/1)})
   end
 
   operation(:validate_payment,
-    summary: "Mark a drum request as paid",
+    summary: "Mark a drum declaration as paid",
     parameters: [id: [in: :path, type: :integer, required: true]],
-    responses: [ok: {"Validated request", "application/json", %OpenApiSpex.Schema{type: :object}}]
+    responses: [
+      ok: {"Validated declaration", "application/json", %OpenApiSpex.Schema{type: :object}}
+    ]
   )
 
   def validate_payment(conn, %{"id" => id}) do
-    request = Drums.get_request!(id)
+    declaration = Drums.get_declaration!(id)
 
-    case Drums.validate_payment(request, conn.assigns.current_user) do
-      {:ok, request} -> json(conn, %{data: serialize_request(request)})
+    case Drums.validate_payment(declaration, conn.assigns.current_user.id) do
+      {:ok, declaration} -> json(conn, %{data: serialize_declaration(declaration)})
       {:error, changeset} -> json_error(conn, changeset)
     end
   end
@@ -45,8 +43,9 @@ defmodule HoMonRadeauWeb.Api.DrumController do
 
     json(conn, %{
       data: %{
-        unit_price: settings.unit_price,
-        rib: settings.rib
+        forfait_price: settings.forfait_price,
+        rib_iban: settings.rib_iban,
+        rib_bic: settings.rib_bic
       }
     })
   end
@@ -59,29 +58,35 @@ defmodule HoMonRadeauWeb.Api.DrumController do
   def update_settings(conn, params) do
     case Drums.update_settings(params) do
       {:ok, settings} ->
-        json(conn, %{data: %{unit_price: settings.unit_price, rib: settings.rib}})
+        json(conn, %{
+          data: %{
+            forfait_price: settings.forfait_price,
+            rib_iban: settings.rib_iban
+          }
+        })
 
       {:error, changeset} ->
         json_error(conn, changeset)
     end
   end
 
-  defp serialize_request(request) do
-    base = %{
-      id: request.id,
-      quantity: request.quantity,
-      status: request.status,
-      inserted_at: request.inserted_at
+  defp serialize_declaration(declaration) do
+    %{
+      id: declaration.id,
+      declared: declaration.declared,
+      mode: declaration.mode,
+      total_quantity: declaration.total_quantity,
+      status: declaration.status,
+      total_amount: declaration.total_amount,
+      inserted_at: declaration.inserted_at
     }
-
-    raft_info =
-      case request do
-        %{crew: %{raft: %{name: name, id: id}}} -> %{raft_id: id, raft_name: name}
-        _ -> %{}
-      end
-
-    Map.merge(base, raft_info)
+    |> maybe_merge_raft(declaration)
   end
+
+  defp maybe_merge_raft(map, %{crew: %{raft: %{name: name, id: id}}}),
+    do: Map.merge(map, %{raft_id: id, raft_name: name})
+
+  defp maybe_merge_raft(map, _), do: map
 
   defp json_error(conn, changeset) do
     errors =

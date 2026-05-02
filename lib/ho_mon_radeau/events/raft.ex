@@ -13,7 +13,6 @@ defmodule HoMonRadeau.Events.Raft do
     field :name, :string
     field :description, :string
     field :description_short, :string
-    field :forum_url, :string
     field :picture_url, :string
     field :slug, :string
 
@@ -48,14 +47,12 @@ defmodule HoMonRadeau.Events.Raft do
       :name,
       :description,
       :description_short,
-      :forum_url,
       :picture_url,
       :edition_id
     ])
     |> validate_required([:name, :edition_id])
     |> validate_length(:name, min: 2, max: 100)
     |> validate_length(:description_short, max: 150)
-    |> validate_url(:forum_url)
     |> generate_slug()
     |> unique_constraint([:name, :edition_id])
     |> unique_constraint([:slug, :edition_id])
@@ -77,26 +74,12 @@ defmodule HoMonRadeau.Events.Raft do
     |> cast(attrs, [
       :description,
       :description_short,
-      :forum_url,
       :picture_url,
       :max_capacity,
       :open_for_applications
     ])
     |> validate_length(:description_short, max: 150)
     |> validate_number(:max_capacity, greater_than: 0)
-    |> validate_url(:forum_url)
-  end
-
-  defp validate_url(changeset, field) do
-    validate_change(changeset, field, fn _, value ->
-      case URI.parse(value) do
-        %URI{scheme: scheme, host: host} when scheme in ["http", "https"] and is_binary(host) ->
-          []
-
-        _ ->
-          [{field, "must be a valid URL"}]
-      end
-    end)
   end
 
   defp generate_slug(changeset) do

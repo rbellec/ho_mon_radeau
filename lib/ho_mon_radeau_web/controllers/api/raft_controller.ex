@@ -69,7 +69,6 @@ defmodule HoMonRadeauWeb.Api.RaftController do
       name: raft.name,
       slug: raft.slug,
       description: raft.description,
-      forum_url: raft.forum_url,
       validated: raft.validated,
       validated_at: raft.validated_at,
       crew_count: crew_count,

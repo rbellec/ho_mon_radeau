@@ -168,6 +168,10 @@ defmodule HoMonRadeauWeb.ProfileLive do
         <div class="bg-white rounded-xl shadow-sm border border-slate-200">
           <div class="p-6">
             <h2 class="text-lg font-semibold text-slate-900">Informations personnelles</h2>
+            <p class="text-sm text-slate-500 mt-1 inline-flex items-center gap-1.5">
+              <.icon name="hero-lock-closed-mini" class="size-4" />
+              Seul votre pseudo (et la photo si vous l'autorisez) est visible publiquement. Les autres informations sont réservées à votre équipage et à l'organisation.
+            </p>
 
             <.form for={@form} id="profile-form" phx-change="validate" phx-submit="save">
               <div class="space-y-4">

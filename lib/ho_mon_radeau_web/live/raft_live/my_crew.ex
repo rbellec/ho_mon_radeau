@@ -282,47 +282,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     {:noreply, put_flash(socket, :error, "Veuillez sélectionner au moins un participant.")}
   end
 
-  # -- Drums --
-
-  @impl true
-  def handle_event("validate_drums", %{"drum_request" => params}, socket) do
-    changeset =
-      Drums.change_drum_request(
-        socket.assigns.pending_drum_request || %Drums.DrumRequest{},
-        params
-      )
-      |> Map.put(:action, :validate)
-
-    {:noreply, assign(socket, :drum_form, to_form(changeset))}
-  end
-
-  @impl true
-  def handle_event("submit_drums", %{"drum_request" => params}, socket) do
-    crew = socket.assigns.crew
-    pending = socket.assigns.pending_drum_request
-
-    result =
-      if pending do
-        Drums.update_drum_request(pending, params)
-      else
-        Drums.create_drum_request(crew.id, params)
-      end
-
-    case result do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Demande de bidons enregistrée.")
-         |> load_crew_data()}
-
-      {:error, :already_paid} ->
-        {:noreply, put_flash(socket, :error, "Cette demande est déjà payée.")}
-
-      {:error, changeset} ->
-        {:noreply, assign(socket, :drum_form, to_form(changeset))}
-    end
-  end
-
   # -- Links --
 
   @impl true
@@ -385,14 +344,13 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     crew = socket.assigns.crew
     user = socket.assigns.current_scope.user
     raft = Events.get_raft!(crew.raft_id) |> Events.preload_raft_details()
+    edition = Events.get_current_edition()
     is_manager = Events.is_crew_manager?(crew, user)
     pending_requests = if is_manager, do: Events.list_pending_join_requests(crew), else: []
     captain = Events.get_captain(crew.id)
     roles_summary = Events.get_roles_summary(crew.id)
-    drums_summary = Drums.get_crew_summary(crew.id)
-    pending_drum = Drums.get_pending_request(crew.id)
+    drum_declaration = Drums.get_or_build_declaration(crew.id)
     drum_settings = Drums.get_settings()
-    drum_form = to_form(Drums.change_drum_request(pending_drum || %Drums.DrumRequest{}))
     cuf_summary = CUF.get_crew_cuf_summary(crew.id)
     cuf_settings = CUF.get_settings()
     my_member = Events.get_crew_member(crew.id, user.id)
@@ -405,14 +363,13 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     |> assign(:pending_requests, pending_requests)
     |> assign(:captain, captain)
     |> assign(:roles_summary, roles_summary)
-    |> assign(:drums_summary, drums_summary)
-    |> assign(:pending_drum_request, pending_drum)
+    |> assign(:drum_declaration, drum_declaration)
     |> assign(:drum_settings, drum_settings)
-    |> assign(:drum_form, drum_form)
     |> assign(:cuf_summary, cuf_summary)
     |> assign(:cuf_settings, cuf_settings)
     |> assign(:my_member, my_member)
     |> assign(:is_captain, is_captain)
+    |> assign(:edition, edition)
     |> assign(:raft_links, Events.list_raft_links(raft.id))
     |> assign_new(:link_form, fn -> nil end)
   end
@@ -549,12 +506,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                     label="Description complète"
                     rows="4"
                   />
-                  <.input
-                    field={@edit_form[:forum_url]}
-                    type="url"
-                    label="Lien forum"
-                    placeholder="https://..."
-                  />
                   <div class="flex gap-3 pt-2">
                     <button
                       type="submit"
@@ -578,18 +529,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                 <% else %>
                   <p class="text-slate-400 italic">Aucune description.</p>
                 <% end %>
-                <%= if @raft.forum_url do %>
-                  <div class="mt-3">
-                    <a
-                      href={@raft.forum_url}
-                      target="_blank"
-                      class="text-sm text-indigo-600 hover:underline inline-flex items-center gap-1"
-                    >
-                      <.icon name="hero-chat-bubble-left-right-mini" class="size-4" />
-                      Discussion forum
-                    </a>
-                  </div>
-                <% end %>
               <% end %>
             </div>
           </div>
@@ -611,7 +550,24 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
               <%!-- Existing links --%>
               <%= if @raft_links == [] && is_nil(@link_form) do %>
-                <p class="text-sm text-slate-400 italic">Aucun lien.</p>
+                <%= if @edition && @edition.forum_url do %>
+                  <div class="flex items-center justify-between py-2">
+                    <a
+                      href={@edition.forum_url}
+                      target="_blank"
+                      class="text-sm text-indigo-600 hover:underline inline-flex items-center gap-1.5 min-w-0"
+                    >
+                      <.icon name="hero-chat-bubble-left-right-mini" class="size-4 shrink-0" />
+                      <span class="truncate">Forum Tutto Blu</span>
+                    </a>
+                    <span class="text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 shrink-0 ml-2">
+                      public
+                    </span>
+                  </div>
+                <% end %>
+                <p class="text-sm text-amber-600 italic mt-2">
+                  Votre équipage n'a pas encore de lien forum spécifique. Ajoutez le lien vers votre discussion !
+                </p>
               <% end %>
               <%= for link <- @raft_links do %>
                 <div class="flex items-center justify-between py-2 group/link">
@@ -809,6 +765,56 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
             </div>
           </details>
 
+          <%!-- ===== BIDONS (collapsible) ===== --%>
+          <% drum_count =
+            cond do
+              !@drum_declaration.declared -> nil
+              @drum_declaration.mode == "simple" -> @drum_declaration.total_quantity || 0
+              true -> @drum_declaration.lines |> Enum.map(& &1.quantity) |> Enum.sum()
+            end %>
+          <details
+            class="bg-white rounded-xl shadow-sm border border-slate-200 group"
+            id="bidons-section"
+          >
+            <summary class="p-6 cursor-pointer select-none flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <h3 class="text-lg font-semibold text-slate-900">Bidons</h3>
+                <%= cond do %>
+                  <% !@drum_declaration.declared -> %>
+                    <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                      Déclarez vos bidons
+                    </span>
+                  <% drum_count == 0 -> %>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                      Radeau sans bidons. Flottez s'il vous plaît !
+                    </span>
+                  <% true -> %>
+                    <span class="bg-sky-100 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                      {drum_count} bidon{if drum_count > 1, do: "s"}<%= if @drum_declaration.total_amount do %>, {@drum_declaration.total_amount} €<% end %>
+                    </span>
+                    <%= if @drum_declaration.status == "paid" do %>
+                      <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                        Payé
+                      </span>
+                    <% end %>
+                <% end %>
+              </div>
+              <.icon
+                name="hero-chevron-down-mini"
+                class="size-5 text-slate-400 transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <div class="px-6 pb-6 border-t border-slate-100 pt-4">
+              <.link
+                navigate={~p"/mon-radeau/bidons"}
+                class="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
+              >
+                {if @drum_declaration.declared, do: "Modifier la déclaration", else: "Déclarer vos bidons"}
+                <.icon name="hero-arrow-right-mini" class="size-4" />
+              </.link>
+            </div>
+          </details>
+
           <%!-- ===== FINANCES (collapsible) ===== --%>
           <details
             class="bg-white rounded-xl shadow-sm border border-slate-200 group"
@@ -817,19 +823,11 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
             <summary class="p-6 cursor-pointer select-none flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <h3 class="text-lg font-semibold text-slate-900">Finances</h3>
-                <div class="flex gap-2">
-                  <span class="text-xs text-slate-500">
-                    Bidons : {if @drums_summary.total_paid_quantity > 0,
-                      do: "#{@drums_summary.total_paid_quantity} payés",
-                      else: "—"}
-                  </span>
-                  <span class="text-xs text-slate-300">·</span>
-                  <span class="text-xs text-slate-500">
-                    CUF : {if @cuf_summary.total_validated_amount > 0,
-                      do: "#{@cuf_summary.total_validated_amount} €",
-                      else: "—"}
-                  </span>
-                </div>
+                <span class="text-xs text-slate-500">
+                  CUF : {if @cuf_summary.total_validated_amount > 0,
+                    do: "#{@cuf_summary.total_validated_amount} €",
+                    else: "—"}
+                </span>
               </div>
               <.icon
                 name="hero-chevron-down-mini"
@@ -837,68 +835,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
               />
             </summary>
             <div class="px-6 pb-6 border-t border-slate-100 pt-4 space-y-6">
-              <%!-- Drums --%>
-              <div>
-                <h4 class="text-sm font-semibold text-slate-500 mb-2">Bidons</h4>
-                <%= if @drums_summary.requests != [] do %>
-                  <div class="space-y-1 mb-3">
-                    <%= for req <- @drums_summary.requests do %>
-                      <div class="flex items-center justify-between text-sm">
-                        <span>
-                          {req.quantity} bidons — {req.total_amount} €
-                        </span>
-                        <%= if req.status == "paid" do %>
-                          <span class="bg-green-100 text-green-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
-                            Payé
-                          </span>
-                        <% else %>
-                          <span class="bg-amber-100 text-amber-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
-                            En attente
-                          </span>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-                <.form
-                  for={@drum_form}
-                  id="drum-request-form"
-                  phx-change="validate_drums"
-                  phx-submit="submit_drums"
-                >
-                  <div class="flex items-end gap-3">
-                    <div class="flex-1">
-                      <.input
-                        field={@drum_form[:quantity]}
-                        type="number"
-                        label={
-                          if @pending_drum_request,
-                            do: "Modifier la demande",
-                            else: "Nombre de bidons"
-                        }
-                        min="0"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition mb-0.5"
-                      phx-disable-with="Envoi..."
-                    >
-                      {if @pending_drum_request, do: "Modifier", else: "Demander"}
-                    </button>
-                  </div>
-                  <.input field={@drum_form[:note]} type="text" label="Note (optionnel)" />
-                  <p class="text-xs text-slate-400 mt-1">
-                    Tarif : {@drum_settings.unit_price} € / bidon
-                    <%= if @drum_settings.rib_iban do %>
-                      — IBAN : {@drum_settings.rib_iban}
-                    <% end %>
-                  </p>
-                </.form>
-              </div>
-
               <%!-- CUF --%>
-              <div class="border-t border-slate-100 pt-4">
+              <div>
                 <h4 class="text-sm font-semibold text-slate-500 mb-2">
                   CUF (Cotisation Urbaine Flottante)
                 </h4>
@@ -983,16 +921,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
               >
                 <.icon name="hero-document-text-mini" class="size-4" /> Ma fiche d'inscription
               </.link>
-              <%= if @raft.forum_url do %>
-                <span class="text-slate-300">·</span>
-                <a
-                  href={@raft.forum_url}
-                  target="_blank"
-                  class="text-slate-500 hover:text-indigo-600 transition inline-flex items-center gap-1"
-                >
-                  <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> Forum
-                </a>
-              <% end %>
             </div>
             <button
               class="text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition"

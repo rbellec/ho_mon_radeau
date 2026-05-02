@@ -110,22 +110,10 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
             </div>
           <% end %>
 
-          <%= if @raft.forum_url || @public_links != [] do %>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h3 class="text-base font-semibold text-slate-900 mb-3">Liens</h3>
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-base font-semibold text-slate-900 mb-3">Liens</h3>
+            <%= if @public_links != [] do %>
               <ul class="space-y-2">
-                <%= if @raft.forum_url do %>
-                  <li>
-                    <a
-                      href={@raft.forum_url}
-                      target="_blank"
-                      class="text-indigo-600 hover:underline inline-flex items-center gap-1.5 text-sm"
-                    >
-                      <.icon name="hero-chat-bubble-left-right-mini" class="size-4" />
-                      Discussion forum
-                    </a>
-                  </li>
-                <% end %>
                 <%= for link <- @public_links do %>
                   <li>
                     <a
@@ -139,8 +127,21 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
                   </li>
                 <% end %>
               </ul>
-            </div>
-          <% end %>
+            <% else %>
+              <%= if @edition.forum_url do %>
+                <a
+                  href={@edition.forum_url}
+                  target="_blank"
+                  class="text-indigo-600 hover:underline inline-flex items-center gap-1.5 text-sm"
+                >
+                  <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> Forum Tutto Blu
+                </a>
+              <% end %>
+              <p class="text-sm text-slate-400 italic mt-3">
+                À Tutto Blu on n'impose rien à personne. Ce radeau a choisi de ne pas encore avoir de discussion sur le forum. On ne juge pas, on regrette seulement 🙂
+              </p>
+            <% end %>
+          </div>
         </div>
 
         <%!-- Sidebar --%>
