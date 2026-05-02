@@ -765,6 +765,56 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
             </div>
           </details>
 
+          <%!-- ===== BIDONS (collapsible) ===== --%>
+          <% drum_count =
+            cond do
+              !@drum_declaration.declared -> nil
+              @drum_declaration.mode == "simple" -> @drum_declaration.total_quantity || 0
+              true -> @drum_declaration.lines |> Enum.map(& &1.quantity) |> Enum.sum()
+            end %>
+          <details
+            class="bg-white rounded-xl shadow-sm border border-slate-200 group"
+            id="bidons-section"
+          >
+            <summary class="p-6 cursor-pointer select-none flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <h3 class="text-lg font-semibold text-slate-900">Bidons</h3>
+                <%= cond do %>
+                  <% !@drum_declaration.declared -> %>
+                    <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                      Déclarez vos bidons
+                    </span>
+                  <% drum_count == 0 -> %>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                      Radeau sans bidons. Flottez s'il vous plaît !
+                    </span>
+                  <% true -> %>
+                    <span class="bg-sky-100 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                      {drum_count} bidon{if drum_count > 1, do: "s"}<%= if @drum_declaration.total_amount do %>, {@drum_declaration.total_amount} €<% end %>
+                    </span>
+                    <%= if @drum_declaration.status == "paid" do %>
+                      <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                        Payé
+                      </span>
+                    <% end %>
+                <% end %>
+              </div>
+              <.icon
+                name="hero-chevron-down-mini"
+                class="size-5 text-slate-400 transition-transform group-open:rotate-180"
+              />
+            </summary>
+            <div class="px-6 pb-6 border-t border-slate-100 pt-4">
+              <.link
+                navigate={~p"/mon-radeau/bidons"}
+                class="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
+              >
+                {if @drum_declaration.declared, do: "Modifier la déclaration", else: "Déclarer vos bidons"}
+                <.icon name="hero-arrow-right-mini" class="size-4" />
+              </.link>
+            </div>
+          </details>
+
           <%!-- ===== FINANCES (collapsible) ===== --%>
           <details
             class="bg-white rounded-xl shadow-sm border border-slate-200 group"
@@ -773,21 +823,11 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
             <summary class="p-6 cursor-pointer select-none flex items-center justify-between">
               <div class="flex items-center gap-3">
                 <h3 class="text-lg font-semibold text-slate-900">Finances</h3>
-                <div class="flex gap-2">
-                  <span class="text-xs text-slate-500">
-                    Bidons : {cond do
-                      @drum_declaration.status == "paid" -> "payés"
-                      @drum_declaration.declared -> "déclarés"
-                      true -> "—"
-                    end}
-                  </span>
-                  <span class="text-xs text-slate-300">·</span>
-                  <span class="text-xs text-slate-500">
-                    CUF : {if @cuf_summary.total_validated_amount > 0,
-                      do: "#{@cuf_summary.total_validated_amount} €",
-                      else: "—"}
-                  </span>
-                </div>
+                <span class="text-xs text-slate-500">
+                  CUF : {if @cuf_summary.total_validated_amount > 0,
+                    do: "#{@cuf_summary.total_validated_amount} €",
+                    else: "—"}
+                </span>
               </div>
               <.icon
                 name="hero-chevron-down-mini"
@@ -795,41 +835,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
               />
             </summary>
             <div class="px-6 pb-6 border-t border-slate-100 pt-4 space-y-6">
-              <%!-- Drums --%>
-              <div>
-                <div class="flex items-center justify-between mb-2">
-                  <h4 class="text-sm font-semibold text-slate-500">Bidons</h4>
-                  <.link
-                    navigate={~p"/mon-radeau/bidons"}
-                    class="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
-                  >
-                    Déclarer <.icon name="hero-arrow-right-mini" class="size-4" />
-                  </.link>
-                </div>
-                <div class="text-sm text-slate-600">
-                  <%= cond do %>
-                    <% @drum_declaration.status == "paid" -> %>
-                      <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
-                        Paiement validé
-                      </span>
-                    <% @drum_declaration.declared && @drum_declaration.mode == "simple" -> %>
-                      <span class="bg-sky-100 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full">
-                        {@drum_declaration.total_quantity} bidon{if (@drum_declaration.total_quantity ||
-                                                                       0) > 1,
-                                                                    do: "s"} déclarés (mode simple)
-                      </span>
-                    <% @drum_declaration.declared -> %>
-                      <span class="bg-sky-100 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full">
-                        Déclaré par type
-                      </span>
-                    <% true -> %>
-                      <span class="text-amber-600 text-xs">Pas encore déclaré</span>
-                  <% end %>
-                </div>
-              </div>
-
               <%!-- CUF --%>
-              <div class="border-t border-slate-100 pt-4">
+              <div>
                 <h4 class="text-sm font-semibold text-slate-500 mb-2">
                   CUF (Cotisation Urbaine Flottante)
                 </h4>
