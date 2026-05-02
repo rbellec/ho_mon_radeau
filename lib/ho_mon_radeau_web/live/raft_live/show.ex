@@ -134,8 +134,7 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
                   target="_blank"
                   class="text-indigo-600 hover:underline inline-flex items-center gap-1.5 text-sm"
                 >
-                  <.icon name="hero-chat-bubble-left-right-mini" class="size-4" />
-                  Forum Tutto Blu
+                  <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> Forum Tutto Blu
                 </a>
               <% end %>
               <p class="text-sm text-slate-400 italic mt-3">

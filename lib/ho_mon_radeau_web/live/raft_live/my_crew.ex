@@ -282,47 +282,6 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     {:noreply, put_flash(socket, :error, "Veuillez sélectionner au moins un participant.")}
   end
 
-  # -- Drums --
-
-  @impl true
-  def handle_event("validate_drums", %{"drum_request" => params}, socket) do
-    changeset =
-      Drums.change_drum_request(
-        socket.assigns.pending_drum_request || %Drums.DrumRequest{},
-        params
-      )
-      |> Map.put(:action, :validate)
-
-    {:noreply, assign(socket, :drum_form, to_form(changeset))}
-  end
-
-  @impl true
-  def handle_event("submit_drums", %{"drum_request" => params}, socket) do
-    crew = socket.assigns.crew
-    pending = socket.assigns.pending_drum_request
-
-    result =
-      if pending do
-        Drums.update_drum_request(pending, params)
-      else
-        Drums.create_drum_request(crew.id, params)
-      end
-
-    case result do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Demande de bidons enregistrée.")
-         |> load_crew_data()}
-
-      {:error, :already_paid} ->
-        {:noreply, put_flash(socket, :error, "Cette demande est déjà payée.")}
-
-      {:error, changeset} ->
-        {:noreply, assign(socket, :drum_form, to_form(changeset))}
-    end
-  end
-
   # -- Links --
 
   @impl true
@@ -390,10 +349,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     pending_requests = if is_manager, do: Events.list_pending_join_requests(crew), else: []
     captain = Events.get_captain(crew.id)
     roles_summary = Events.get_roles_summary(crew.id)
-    drums_summary = Drums.get_crew_summary(crew.id)
-    pending_drum = Drums.get_pending_request(crew.id)
+    drum_declaration = Drums.get_or_build_declaration(crew.id)
     drum_settings = Drums.get_settings()
-    drum_form = to_form(Drums.change_drum_request(pending_drum || %Drums.DrumRequest{}))
     cuf_summary = CUF.get_crew_cuf_summary(crew.id)
     cuf_settings = CUF.get_settings()
     my_member = Events.get_crew_member(crew.id, user.id)
@@ -406,10 +363,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     |> assign(:pending_requests, pending_requests)
     |> assign(:captain, captain)
     |> assign(:roles_summary, roles_summary)
-    |> assign(:drums_summary, drums_summary)
-    |> assign(:pending_drum_request, pending_drum)
+    |> assign(:drum_declaration, drum_declaration)
     |> assign(:drum_settings, drum_settings)
-    |> assign(:drum_form, drum_form)
     |> assign(:cuf_summary, cuf_summary)
     |> assign(:cuf_settings, cuf_settings)
     |> assign(:my_member, my_member)
@@ -820,9 +775,11 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                 <h3 class="text-lg font-semibold text-slate-900">Finances</h3>
                 <div class="flex gap-2">
                   <span class="text-xs text-slate-500">
-                    Bidons : {if @drums_summary.total_paid_quantity > 0,
-                      do: "#{@drums_summary.total_paid_quantity} payés",
-                      else: "—"}
+                    Bidons : {cond do
+                      @drum_declaration.status == "paid" -> "payés"
+                      @drum_declaration.declared -> "déclarés"
+                      true -> "—"
+                    end}
                   </span>
                   <span class="text-xs text-slate-300">·</span>
                   <span class="text-xs text-slate-500">
@@ -841,61 +798,26 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
               <%!-- Drums --%>
               <div>
                 <h4 class="text-sm font-semibold text-slate-500 mb-2">Bidons</h4>
-                <%= if @drums_summary.requests != [] do %>
-                  <div class="space-y-1 mb-3">
-                    <%= for req <- @drums_summary.requests do %>
-                      <div class="flex items-center justify-between text-sm">
-                        <span>
-                          {req.quantity} bidons — {req.total_amount} €
-                        </span>
-                        <%= if req.status == "paid" do %>
-                          <span class="bg-green-100 text-green-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
-                            Payé
-                          </span>
-                        <% else %>
-                          <span class="bg-amber-100 text-amber-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
-                            En attente
-                          </span>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-                <.form
-                  for={@drum_form}
-                  id="drum-request-form"
-                  phx-change="validate_drums"
-                  phx-submit="submit_drums"
-                >
-                  <div class="flex items-end gap-3">
-                    <div class="flex-1">
-                      <.input
-                        field={@drum_form[:quantity]}
-                        type="number"
-                        label={
-                          if @pending_drum_request,
-                            do: "Modifier la demande",
-                            else: "Nombre de bidons"
-                        }
-                        min="0"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition mb-0.5"
-                      phx-disable-with="Envoi..."
-                    >
-                      {if @pending_drum_request, do: "Modifier", else: "Demander"}
-                    </button>
-                  </div>
-                  <.input field={@drum_form[:note]} type="text" label="Note (optionnel)" />
-                  <p class="text-xs text-slate-400 mt-1">
-                    Tarif : {@drum_settings.unit_price} € / bidon
-                    <%= if @drum_settings.rib_iban do %>
-                      — IBAN : {@drum_settings.rib_iban}
-                    <% end %>
-                  </p>
-                </.form>
+                <div class="text-sm text-slate-600">
+                  <%= cond do %>
+                    <% @drum_declaration.status == "paid" -> %>
+                      <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                        Paiement validé
+                      </span>
+                    <% @drum_declaration.declared && @drum_declaration.mode == "simple" -> %>
+                      <span class="bg-sky-100 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                        {@drum_declaration.total_quantity} bidon{if (@drum_declaration.total_quantity ||
+                                                                       0) > 1,
+                                                                    do: "s"} déclarés (mode simple)
+                      </span>
+                    <% @drum_declaration.declared -> %>
+                      <span class="bg-sky-100 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                        Déclaré par type
+                      </span>
+                    <% true -> %>
+                      <span class="text-amber-600 text-xs">Pas encore déclaré</span>
+                  <% end %>
+                </div>
               </div>
 
               <%!-- CUF --%>

@@ -61,10 +61,10 @@ defmodule HoMonRadeau.Integration.FinancialWorkflowsTest do
     end
   end
 
-  describe "Drum request lifecycle" do
-    test "creates, validates payment, and tracks a drum request" do
-      # Step 1: Create drum settings with unit price
-      drum_settings_fixture(%{unit_price: Decimal.new("5.00")})
+  describe "Drum declaration lifecycle" do
+    test "creates, validates payment, and tracks a drum declaration" do
+      # Step 1: Create drum settings with forfait price
+      drum_settings_fixture(%{forfait_price: Decimal.new("5.00")})
 
       # Step 2: Create a raft with crew
       edition = edition_fixture()
@@ -72,38 +72,30 @@ defmodule HoMonRadeau.Integration.FinancialWorkflowsTest do
       raft = raft_with_crew_fixture(%{user: manager, edition: edition})
       crew = Events.get_crew_by_raft(raft.id)
 
-      # Step 3: Create a drum request for 2 drums
-      {:ok, request} = Drums.create_drum_request(crew.id, %{quantity: 2})
+      # Step 3: Submit a simple declaration for 2 drums
+      {:ok, declaration} =
+        Drums.submit_declaration(crew.id, %{"mode" => "simple", "total_quantity" => "2"})
 
-      # Step 4: Verify total_amount calculation (2 * 5.00 = 10.00)
-      assert request.quantity == 2
-      assert Decimal.equal?(request.total_amount, Decimal.new("10.00"))
-      assert Decimal.equal?(request.unit_price, Decimal.new("5.00"))
-      assert request.status == "pending"
+      assert declaration.declared
+      assert declaration.mode == "simple"
+      assert declaration.total_quantity == 2
+      assert declaration.status == "pending"
 
-      # Step 5: Verify it appears in get_crew_summary/1
-      summary = Drums.get_crew_summary(crew.id)
-      assert summary.pending_quantity == 2
-      assert Decimal.equal?(summary.pending_amount, Decimal.new("10.00"))
-      assert summary.total_paid_quantity == 0
-      assert length(summary.requests) == 1
-
-      # Step 6: Admin validates payment
+      # Step 4: Admin validates payment
       admin = user_fixture()
-      {:ok, paid_request} = Drums.validate_payment(request, admin.id)
+      {:ok, paid} = Drums.validate_payment(declaration, admin.id)
 
-      # Step 7: Verify status is "paid"
-      assert paid_request.status == "paid"
-      assert paid_request.validated_by_id == admin.id
-      assert paid_request.paid_at != nil
+      # Step 5: Verify status is "paid"
+      assert paid.status == "paid"
+      assert paid.validated_by_id == admin.id
+      assert paid.paid_at != nil
 
-      # Step 8: Verify the request no longer appears as pending
-      assert Drums.get_pending_request(crew.id) == nil
+      # Step 6: Re-submitting updates the same declaration
+      {:ok, updated} =
+        Drums.submit_declaration(crew.id, %{"mode" => "simple", "total_quantity" => "5"})
 
-      updated_summary = Drums.get_crew_summary(crew.id)
-      assert updated_summary.pending_quantity == 0
-      assert updated_summary.total_paid_quantity == 2
-      assert Decimal.equal?(updated_summary.total_paid_amount, Decimal.new("10.00"))
+      assert updated.id == declaration.id
+      assert updated.total_quantity == 5
     end
   end
 

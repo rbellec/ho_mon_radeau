@@ -5,7 +5,7 @@ defmodule HoMonRadeau.DrumsFixtures do
   """
 
   alias HoMonRadeau.Repo
-  alias HoMonRadeau.Drums.{DrumSettings, DrumRequest}
+  alias HoMonRadeau.Drums.{DrumSettings, DrumType, DrumDeclaration, DrumDeclarationLine}
 
   @doc """
   Creates drum settings with default or overridden attributes.
@@ -13,7 +13,7 @@ defmodule HoMonRadeau.DrumsFixtures do
   def drum_settings_fixture(attrs \\ %{}) do
     attrs =
       Enum.into(attrs, %{
-        unit_price: Decimal.new("5.00")
+        forfait_price: Decimal.new("5.00")
       })
 
     %DrumSettings{}
@@ -22,35 +22,73 @@ defmodule HoMonRadeau.DrumsFixtures do
   end
 
   @doc """
-  Creates a drum request. Auto-creates a crew and drum settings if not provided.
+  Creates a drum type.
   """
-  def drum_request_fixture(attrs \\ %{}) do
+  def drum_type_fixture(attrs \\ %{}) do
+    attrs =
+      Enum.into(attrs, %{
+        name: "Type #{System.unique_integer([:positive])}",
+        unit_price: Decimal.new("5.00"),
+        buoyancy_kg: 70,
+        position: 1,
+        active: true
+      })
+
+    %DrumType{}
+    |> DrumType.changeset(attrs)
+    |> Repo.insert!()
+  end
+
+  @doc """
+  Creates a drum declaration. Auto-creates a crew if not provided.
+  """
+  def drum_declaration_fixture(attrs \\ %{}) do
     crew_id = Map.get_lazy(attrs, :crew_id, fn -> create_crew!().id end)
-    settings = Repo.one(DrumSettings) || drum_settings_fixture()
+    _settings = Repo.one(DrumSettings) || drum_settings_fixture()
 
-    quantity = Map.get(attrs, :quantity, 2)
-    total_amount = Decimal.mult(Decimal.new(quantity), settings.unit_price)
+    base = %{
+      mode: "simple",
+      total_quantity: 3,
+      declared: true,
+      declared_at: DateTime.utc_now(:second),
+      status: "pending"
+    }
 
-    insert_attrs =
-      Map.merge(
-        %{
-          quantity: quantity,
-          unit_price: settings.unit_price,
-          total_amount: total_amount,
-          status: "pending"
-        },
-        Map.drop(attrs, [:crew_id, :quantity])
-      )
+    insert_attrs = Map.merge(base, Map.drop(attrs, [:crew_id]))
 
-    %DrumRequest{crew_id: crew_id}
+    %DrumDeclaration{crew_id: crew_id}
     |> Ecto.Changeset.cast(insert_attrs, [
-      :quantity,
-      :unit_price,
-      :total_amount,
+      :mode,
+      :total_quantity,
+      :notes,
+      :declared,
+      :declared_at,
       :status,
-      :note,
+      :total_amount,
       :paid_at,
       :validated_by_id
+    ])
+    |> Repo.insert!()
+  end
+
+  @doc """
+  Creates a drum declaration line.
+  """
+  def drum_declaration_line_fixture(attrs) do
+    attrs =
+      Enum.into(attrs, %{
+        quantity: 2,
+        unit_price_snapshot: Decimal.new("5.00"),
+        subtotal: Decimal.new("10.00")
+      })
+
+    %DrumDeclarationLine{}
+    |> Ecto.Changeset.cast(attrs, [
+      :declaration_id,
+      :drum_type_id,
+      :quantity,
+      :unit_price_snapshot,
+      :subtotal
     ])
     |> Repo.insert!()
   end

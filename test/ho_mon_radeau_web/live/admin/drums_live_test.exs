@@ -18,11 +18,11 @@ defmodule HoMonRadeauWeb.Admin.DrumsLiveTest do
       %{conn: conn, admin: admin}
     end
 
-    test "lists drum requests", %{conn: conn} do
+    test "lists drum declarations", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/admin/bidons")
 
       assert render(view) =~ "Gestion des bidons"
-      assert has_element?(view, "#drums-stats")
+      assert has_element?(view, "#drums-declarations-table")
     end
 
     test "redirects non-admin users" do

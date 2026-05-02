@@ -25,11 +25,27 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/ho_mon_radeau"
 import topbar from "../vendor/topbar"
 
+const CsvDownloader = {
+  mounted() {
+    this.handleEvent("download_csv", ({content, filename}) => {
+      const blob = new Blob([content], {type: "text/csv;charset=utf-8;"})
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    })
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, CsvDownloader},
 })
 
 // Show progress bar on live navigation and form submits

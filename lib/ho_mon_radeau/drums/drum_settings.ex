@@ -3,7 +3,7 @@ defmodule HoMonRadeau.Drums.DrumSettings do
   import Ecto.Changeset
 
   schema "drum_settings" do
-    field :unit_price, :decimal
+    field :forfait_price, :decimal
     field :rib_iban, :string
     field :rib_bic, :string
 
@@ -12,8 +12,7 @@ defmodule HoMonRadeau.Drums.DrumSettings do
 
   def changeset(settings, attrs) do
     settings
-    |> cast(attrs, [:unit_price, :rib_iban, :rib_bic])
-    |> validate_required([:unit_price])
-    |> validate_number(:unit_price, greater_than: Decimal.new(0))
+    |> cast(attrs, [:forfait_price, :rib_iban, :rib_bic])
+    |> validate_number(:forfait_price, greater_than: Decimal.new(0))
   end
 end

@@ -5,6 +5,7 @@ defmodule HoMonRadeau.DrumsTest do
   alias HoMonRadeau.Events
 
   import HoMonRadeau.AccountsFixtures
+  import HoMonRadeau.DrumsFixtures
 
   setup do
     user = user_fixture()
@@ -25,65 +26,117 @@ defmodule HoMonRadeau.DrumsTest do
   describe "settings" do
     test "get_settings/0 returns defaults when no settings exist" do
       settings = Drums.get_settings()
-      assert Decimal.equal?(settings.unit_price, Decimal.new(5))
+      assert Decimal.equal?(settings.forfait_price, Decimal.new(5))
     end
 
     test "update_settings/1 creates or updates settings" do
-      assert {:ok, settings} = Drums.update_settings(%{unit_price: "7.50", rib_iban: "FR76123"})
-      assert Decimal.equal?(settings.unit_price, Decimal.new("7.50"))
+      assert {:ok, settings} =
+               Drums.update_settings(%{forfait_price: "7.50", rib_iban: "FR76123"})
+
+      assert Decimal.equal?(settings.forfait_price, Decimal.new("7.50"))
       assert settings.rib_iban == "FR76123"
     end
   end
 
-  describe "drum requests" do
-    test "create_drum_request/2 creates a request with calculated amount", %{crew: crew} do
-      assert {:ok, request} = Drums.create_drum_request(crew.id, %{quantity: 10})
-      assert request.quantity == 10
-      assert request.status == "pending"
-      assert Decimal.equal?(request.unit_price, Decimal.new(5))
-      assert Decimal.equal?(request.total_amount, Decimal.new(50))
+  describe "drum types" do
+    test "create_drum_type/1 creates a type" do
+      assert {:ok, type} =
+               Drums.create_drum_type(%{name: "Test 100L", buoyancy_kg: 25, position: 1})
+
+      assert type.name == "Test 100L"
+      assert type.buoyancy_kg == 25
+      assert type.active == true
     end
 
-    test "update_drum_request/2 updates a pending request", %{crew: crew} do
-      {:ok, request} = Drums.create_drum_request(crew.id, %{quantity: 10})
-      assert {:ok, updated} = Drums.update_drum_request(request, %{quantity: 20})
-      assert updated.quantity == 20
-      assert Decimal.equal?(updated.total_amount, Decimal.new(100))
+    test "list_drum_types/0 returns types ordered by position" do
+      _t1 = drum_type_fixture(name: "ZZZ", position: 99)
+      _t2 = drum_type_fixture(name: "AAA", position: 0)
+      types = Drums.list_drum_types()
+      # Position 0 (AAA) should come first
+      assert Enum.at(types, 0).name == "AAA"
+      # Position 99 (ZZZ) should come last
+      assert List.last(types).name == "ZZZ"
+    end
+  end
+
+  describe "declarations" do
+    test "get_or_build_declaration/1 returns empty struct when none exists", %{crew: crew} do
+      decl = Drums.get_or_build_declaration(crew.id)
+      assert decl.crew_id == crew.id
+      refute decl.declared
+      assert decl.lines == []
     end
 
-    test "update_drum_request/2 rejects update on paid request", %{crew: crew, user: user} do
-      {:ok, request} = Drums.create_drum_request(crew.id, %{quantity: 10})
-      {:ok, paid_request} = Drums.validate_payment(request, user.id)
-      assert {:error, :already_paid} = Drums.update_drum_request(paid_request, %{quantity: 20})
+    test "submit_declaration/2 in simple mode marks as declared", %{crew: crew} do
+      assert {:ok, decl} =
+               Drums.submit_declaration(crew.id, %{"mode" => "simple", "total_quantity" => "5"})
+
+      assert decl.declared
+      assert decl.declared_at
+      assert decl.mode == "simple"
+      assert decl.total_quantity == 5
     end
 
-    test "validate_payment/2 marks request as paid", %{crew: crew, user: user} do
-      {:ok, request} = Drums.create_drum_request(crew.id, %{quantity: 10})
-      assert {:ok, paid} = Drums.validate_payment(request, user.id)
+    test "submit_declaration/2 with 0 quantity is valid (deliberate no-bidons)", %{crew: crew} do
+      assert {:ok, decl} =
+               Drums.submit_declaration(crew.id, %{"mode" => "simple", "total_quantity" => "0"})
+
+      assert decl.declared
+      assert decl.total_quantity == 0
+    end
+
+    test "submit_declaration/2 in specific mode creates lines", %{crew: crew} do
+      _settings = drum_settings_fixture()
+      type1 = drum_type_fixture(name: "Type 1", unit_price: Decimal.new("4.00"))
+      type2 = drum_type_fixture(name: "Type 2", unit_price: Decimal.new("6.00"))
+
+      attrs = %{
+        "mode" => "specific",
+        "lines" => %{
+          Integer.to_string(type1.id) => "3",
+          Integer.to_string(type2.id) => "2"
+        }
+      }
+
+      assert {:ok, decl} = Drums.submit_declaration(crew.id, attrs)
+      decl = Repo.preload(decl, :lines)
+
+      assert decl.declared
+      assert decl.mode == "specific"
+
+      # Lines created for all active types (seeded + custom). Check our two have correct quantities.
+      lines_by_type = Map.new(decl.lines, fn l -> {l.drum_type_id, l.quantity} end)
+      assert lines_by_type[type1.id] == 3
+      assert lines_by_type[type2.id] == 2
+    end
+
+    test "submit_declaration/2 updates existing declaration on second call", %{crew: crew} do
+      {:ok, decl1} =
+        Drums.submit_declaration(crew.id, %{"mode" => "simple", "total_quantity" => "3"})
+
+      {:ok, decl2} =
+        Drums.submit_declaration(crew.id, %{"mode" => "simple", "total_quantity" => "8"})
+
+      assert decl1.id == decl2.id
+      assert decl2.total_quantity == 8
+    end
+
+    test "validate_payment/2 marks declaration as paid", %{crew: crew, user: user} do
+      {:ok, decl} =
+        Drums.submit_declaration(crew.id, %{"mode" => "simple", "total_quantity" => "3"})
+
+      assert {:ok, paid} = Drums.validate_payment(decl, user.id)
       assert paid.status == "paid"
-      assert paid.paid_at != nil
+      assert paid.paid_at
       assert paid.validated_by_id == user.id
     end
 
-    test "get_crew_summary/1 returns correct totals", %{crew: crew, user: user} do
-      {:ok, req1} = Drums.create_drum_request(crew.id, %{quantity: 10})
-      {:ok, _} = Drums.validate_payment(req1, user.id)
-      {:ok, _req2} = Drums.create_drum_request(crew.id, %{quantity: 5})
+    test "list_all_declarations/0 returns declarations with raft preloaded", %{crew: crew} do
+      {:ok, _} = Drums.submit_declaration(crew.id, %{"mode" => "simple", "total_quantity" => "2"})
 
-      summary = Drums.get_crew_summary(crew.id)
-      assert summary.total_paid_quantity == 10
-      assert summary.pending_quantity == 5
-      assert Decimal.equal?(summary.total_paid_amount, Decimal.new(50))
-      assert Decimal.equal?(summary.pending_amount, Decimal.new(25))
-    end
-
-    test "get_pending_request/1 returns only the pending request", %{crew: crew, user: user} do
-      {:ok, req1} = Drums.create_drum_request(crew.id, %{quantity: 10})
-      {:ok, _} = Drums.validate_payment(req1, user.id)
-      {:ok, req2} = Drums.create_drum_request(crew.id, %{quantity: 5})
-
-      pending = Drums.get_pending_request(crew.id)
-      assert pending.id == req2.id
+      declarations = Drums.list_all_declarations()
+      assert length(declarations) == 1
+      assert hd(declarations).crew.raft.name == "Test Raft"
     end
   end
 end

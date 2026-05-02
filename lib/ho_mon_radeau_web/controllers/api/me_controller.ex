@@ -23,7 +23,7 @@ defmodule HoMonRadeauWeb.Api.MeController do
         else: :missing
 
     cuf_summary = if crew, do: CUF.get_crew_cuf_summary(crew.id), else: nil
-    drums_summary = if crew, do: Drums.get_crew_summary(crew.id), else: nil
+    drum_declaration = if crew, do: Drums.get_or_build_declaration(crew.id), else: nil
     transverse_teams = Events.get_user_transverse_teams(user)
     join_requests = Events.list_user_join_requests(user)
 
@@ -35,7 +35,7 @@ defmodule HoMonRadeauWeb.Api.MeController do
         crew: serialize_crew(crew_member, crew),
         registration_form: %{status: form_status},
         cuf: serialize_cuf(cuf_summary),
-        drums: serialize_drums(drums_summary),
+        drums: serialize_drums(drum_declaration),
         transverse_teams:
           Enum.map(transverse_teams, fn t ->
             %{id: t.id, name: t.name, transverse_type: t.transverse_type}
@@ -118,12 +118,13 @@ defmodule HoMonRadeauWeb.Api.MeController do
 
   defp serialize_drums(nil), do: nil
 
-  defp serialize_drums(summary) do
+  defp serialize_drums(declaration) do
     %{
-      total_paid_quantity: summary.total_paid_quantity,
-      total_paid_amount: summary.total_paid_amount,
-      pending_quantity: summary.pending_quantity,
-      pending_amount: summary.pending_amount
+      declared: declaration.declared,
+      mode: declaration.mode,
+      total_quantity: declaration.total_quantity,
+      status: declaration.status,
+      total_amount: declaration.total_amount
     }
   end
 

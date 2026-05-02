@@ -71,7 +71,6 @@ defmodule HoMonRadeau.Events.RaftTest do
       changeset = Raft.changeset(%Raft{}, %{name: "MY RAFT", edition_id: 1})
       assert get_change(changeset, :slug) == "my-raft"
     end
-
   end
 
   describe "validation_changeset/2" do
@@ -120,6 +119,5 @@ defmodule HoMonRadeau.Events.RaftTest do
       refute changeset.valid?
       assert %{description_short: [_]} = errors_on(changeset)
     end
-
   end
 end
