@@ -152,46 +152,6 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
           </div>
         <% end %>
 
-        <%!-- Mode selector --%>
-        <div class="mt-6">
-          <p class="text-sm font-medium text-slate-700 mb-2">Mode de déclaration</p>
-          <div class="flex gap-2">
-            <button
-              phx-click="set_mode"
-              phx-value-mode="simple"
-              class={[
-                "rounded-lg px-4 py-2 text-sm font-medium border transition",
-                if(@mode == "simple",
-                  do: "bg-indigo-600 text-white border-indigo-600",
-                  else: "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
-                )
-              ]}
-            >
-              Simple (total)
-            </button>
-            <button
-              phx-click="set_mode"
-              phx-value-mode="specific"
-              class={[
-                "rounded-lg px-4 py-2 text-sm font-medium border transition",
-                if(@mode == "specific",
-                  do: "bg-indigo-600 text-white border-indigo-600",
-                  else: "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
-                )
-              ]}
-            >
-              Par type
-            </button>
-          </div>
-          <p class="text-xs text-slate-400 mt-1">
-            <%= if @mode == "simple" do %>
-              Indiquez un total — les admins répartiront les types. Portance estimée : ~70 kg/bidon.
-            <% else %>
-              Précisez vos besoins par type si vous avez des contraintes de construction.
-            <% end %>
-          </p>
-        </div>
-
         <%!-- Declaration form --%>
         <form phx-submit="submit_declaration" id="drums-declaration-form" class="mt-6 space-y-4">
           <input type="hidden" name="mode" value={@mode} />
@@ -210,10 +170,33 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
                 placeholder="0"
               />
               <p class="text-xs text-slate-400 mt-1">
-                Saisissez 0 si vous n'avez pas besoin de bidons (autre solution de flottaison).
+                Portance estimée : ~70 kg/bidon. Saisissez 0 si vous n'avez pas besoin
+                de bidons (autre solution de flottaison).
               </p>
             </div>
+            <button
+              type="button"
+              phx-click="set_mode"
+              phx-value-mode="specific"
+              class="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
+            >
+              Préciser les types par contrainte de construction
+              <.icon name="hero-arrow-right-mini" class="size-4" />
+            </button>
           <% else %>
+            <div class="flex items-center justify-between">
+              <p class="text-sm text-slate-600">
+                Précisez les quantités par type de bidon.
+              </p>
+              <button
+                type="button"
+                phx-click="set_mode"
+                phx-value-mode="simple"
+                class="text-sm text-slate-500 hover:text-slate-700 font-medium inline-flex items-center gap-1"
+              >
+                <.icon name="hero-arrow-left-mini" class="size-4" /> Revenir au mode simple
+              </button>
+            </div>
             <%!-- Drum types table --%>
             <div class="overflow-x-auto rounded-xl border border-slate-200">
               <table class="w-full text-left text-sm">
