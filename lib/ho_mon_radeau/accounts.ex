@@ -330,6 +330,40 @@ defmodule HoMonRadeau.Accounts do
   end
 
   @doc """
+  Updates only the avatar key for a user.
+
+  Pass `nil` to remove the avatar. The previous picture (if any) is deleted
+  from storage on success.
+  """
+  def update_user_avatar(%User{} = user, key) do
+    previous = user.profile_picture_url
+
+    user
+    |> Ecto.Changeset.change(%{profile_picture_url: key})
+    |> Repo.update()
+    |> case do
+      {:ok, _updated} = ok ->
+        if previous && previous != key, do: HoMonRadeau.Storage.delete(previous)
+        ok
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Returns the displayable URL for the user's profile picture, or `nil` if none.
+  """
+  def profile_picture_url(%User{profile_picture_url: nil}), do: nil
+
+  def profile_picture_url(%User{profile_picture_url: key}) do
+    case HoMonRadeau.Storage.get_url(key) do
+      {:ok, url} -> url
+      _ -> nil
+    end
+  end
+
+  @doc """
   Returns the display name for a user.
   Uses nickname if available, otherwise returns "matelot sans pseudonyme".
   """

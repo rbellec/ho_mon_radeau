@@ -3,6 +3,7 @@ defmodule HoMonRadeauWeb.ProfileLive do
 
   alias HoMonRadeau.Accounts
   alias HoMonRadeau.Events
+  alias HoMonRadeau.Storage
 
   @impl true
   def mount(_params, _session, socket) do
@@ -29,7 +30,12 @@ defmodule HoMonRadeauWeb.ProfileLive do
      |> assign(:form, to_form(changeset))
      |> assign(:api_tokens, api_tokens)
      |> assign(:new_token, nil)
-     |> assign(:token_label, "")}
+     |> assign(:token_label, "")
+     |> allow_upload(:avatar,
+       accept: ~w(.jpg .jpeg .png .gif .webp),
+       max_entries: 1,
+       max_file_size: 5_000_000
+     )}
   end
 
   @impl true
@@ -56,6 +62,65 @@ defmodule HoMonRadeauWeb.ProfileLive do
 
       {:error, changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
+    end
+  end
+
+  @impl true
+  def handle_event("validate_avatar", _params, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("cancel_avatar_upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :avatar, ref)}
+  end
+
+  @impl true
+  def handle_event("save_avatar", _params, socket) do
+    user = socket.assigns.user
+
+    result =
+      consume_uploaded_entries(socket, :avatar, fn %{path: path}, _entry ->
+        key = Storage.avatar_key(user.id)
+
+        case Storage.Image.process_and_upload(path, key, width: 400, height: 400, mode: :crop) do
+          {:ok, key} -> {:ok, key}
+          {:error, reason} -> {:postpone, {:error, reason}}
+        end
+      end)
+
+    case result do
+      [key] when is_binary(key) ->
+        case Accounts.update_user_avatar(user, key) do
+          {:ok, updated_user} ->
+            {:noreply,
+             socket
+             |> assign(:user, updated_user)
+             |> put_flash(:info, "Photo de profil mise à jour.")}
+
+          {:error, _changeset} ->
+            {:noreply, put_flash(socket, :error, "Impossible d'enregistrer la photo.")}
+        end
+
+      [{:error, _reason}] ->
+        {:noreply, put_flash(socket, :error, "Erreur lors du traitement de l'image.")}
+
+      [] ->
+        {:noreply, put_flash(socket, :error, "Aucune image sélectionnée.")}
+    end
+  end
+
+  @impl true
+  def handle_event("remove_avatar", _params, socket) do
+    case Accounts.update_user_avatar(socket.assigns.user, nil) do
+      {:ok, updated_user} ->
+        {:noreply,
+         socket
+         |> assign(:user, updated_user)
+         |> put_flash(:info, "Photo de profil supprimée.")}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Impossible de supprimer la photo.")}
     end
   end
 
@@ -105,9 +170,18 @@ defmodule HoMonRadeauWeb.ProfileLive do
         <%!-- Header section --%>
         <div class="flex items-center gap-4" id="profile-header">
           <div>
-            <div class="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl">
-              {String.first(@user.nickname || @user.email)}
-            </div>
+            <% avatar_url = Accounts.profile_picture_url(@user) %>
+            <%= if avatar_url do %>
+              <img
+                src={avatar_url}
+                alt={Accounts.display_name(@user)}
+                class="w-16 h-16 rounded-full object-cover border border-slate-200"
+              />
+            <% else %>
+              <div class="bg-indigo-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl">
+                {String.first(@user.nickname || @user.email)}
+              </div>
+            <% end %>
           </div>
           <div>
             <h1 class="text-2xl font-bold">
@@ -163,6 +237,88 @@ defmodule HoMonRadeauWeb.ProfileLive do
             </div>
           </div>
         <% end %>
+
+        <%!-- Avatar upload --%>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="avatar-section">
+          <div class="p-6">
+            <h2 class="text-lg font-semibold text-slate-900">Photo de profil</h2>
+            <p class="text-sm text-slate-500 mt-1">
+              Recadrée en carré de 400×400 pixels. Visibilité réglée juste en dessous.
+            </p>
+
+            <form phx-submit="save_avatar" phx-change="validate_avatar" class="mt-4">
+              <div
+                class="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors"
+                phx-drop-target={@uploads.avatar.ref}
+              >
+                <.live_file_input upload={@uploads.avatar} class="hidden" />
+
+                <%= for entry <- @uploads.avatar.entries do %>
+                  <div class="flex items-center justify-between bg-white p-3 rounded-lg mb-3">
+                    <div class="flex items-center gap-3">
+                      <.live_img_preview entry={entry} class="w-12 h-12 rounded-full object-cover" />
+                      <div class="text-left">
+                        <p class="font-medium text-sm">{entry.client_name}</p>
+                        <p class="text-xs text-slate-500">{entry.progress}%</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      phx-click="cancel_avatar_upload"
+                      phx-value-ref={entry.ref}
+                      class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full p-1 transition"
+                    >
+                      <.icon name="hero-x-mark" class="size-5" />
+                    </button>
+                  </div>
+
+                  <%= for err <- upload_errors(@uploads.avatar, entry) do %>
+                    <p class="text-red-600 text-sm">{avatar_error(err)}</p>
+                  <% end %>
+                <% end %>
+
+                <%= if @uploads.avatar.entries == [] do %>
+                  <.icon name="hero-photo" class="size-10 mx-auto text-slate-400" />
+                  <p class="mt-2 text-sm text-slate-500">
+                    Glissez-déposez une image ou
+                    <label
+                      for={@uploads.avatar.ref}
+                      class="text-indigo-600 hover:underline cursor-pointer"
+                    >
+                      parcourez
+                    </label>
+                  </p>
+                  <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF ou WebP (max 5 Mo)</p>
+                <% end %>
+              </div>
+
+              <%= for err <- upload_errors(@uploads.avatar) do %>
+                <p class="text-red-600 text-sm mt-2">{avatar_error(err)}</p>
+              <% end %>
+
+              <div class="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={@uploads.avatar.entries == []}
+                  phx-disable-with="Envoi..."
+                >
+                  Enregistrer la photo
+                </button>
+                <%= if @user.profile_picture_url do %>
+                  <button
+                    type="button"
+                    phx-click="remove_avatar"
+                    data-confirm="Supprimer votre photo de profil ?"
+                    class="text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition"
+                  >
+                    Supprimer la photo
+                  </button>
+                <% end %>
+              </div>
+            </form>
+          </div>
+        </div>
 
         <%!-- Profile form --%>
         <div class="bg-white rounded-xl shadow-sm border border-slate-200">
@@ -381,4 +537,9 @@ defmodule HoMonRadeauWeb.ProfileLive do
     </Layouts.app>
     """
   end
+
+  defp avatar_error(:too_large), do: "Image trop volumineuse (max 5 Mo)"
+  defp avatar_error(:not_accepted), do: "Format non accepté (JPG, PNG, GIF ou WebP)"
+  defp avatar_error(:too_many_files), do: "Une seule image autorisée"
+  defp avatar_error(err), do: "Erreur : #{inspect(err)}"
 end
