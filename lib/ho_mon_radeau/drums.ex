@@ -96,6 +96,7 @@ defmodule HoMonRadeau.Drums do
     declaration
     |> build_changeset(changeset_fn, attrs)
     |> maybe_put_lines(attrs)
+    |> put_total_amount(attrs)
     |> Repo.insert()
   end
 
@@ -103,6 +104,7 @@ defmodule HoMonRadeau.Drums do
     declaration
     |> build_changeset(changeset_fn, attrs)
     |> maybe_put_lines(attrs)
+    |> put_total_amount(attrs)
     |> Repo.update()
   end
 
@@ -136,6 +138,26 @@ defmodule HoMonRadeau.Drums do
   end
 
   defp maybe_put_lines(changeset, _attrs), do: changeset
+
+  defp put_total_amount(changeset, %{"mode" => "specific"}) do
+    lines = Ecto.Changeset.get_field(changeset, :lines) || []
+
+    total =
+      Enum.reduce(lines, Decimal.new(0), fn line, acc ->
+        Decimal.add(acc, line.subtotal || Decimal.new(0))
+      end)
+
+    Ecto.Changeset.put_change(changeset, :total_amount, total)
+  end
+
+  defp put_total_amount(changeset, %{"mode" => "simple"}) do
+    qty = Ecto.Changeset.get_field(changeset, :total_quantity) || 0
+    forfait = get_settings().forfait_price || Decimal.new(0)
+    total = Decimal.mult(Decimal.new(qty), forfait)
+    Ecto.Changeset.put_change(changeset, :total_amount, total)
+  end
+
+  defp put_total_amount(changeset, _attrs), do: changeset
 
   defp parse_int(val) when is_binary(val) do
     case Integer.parse(val) do

@@ -451,6 +451,9 @@ defmodule HoMonRadeauWeb.Admin.DrumsLive.Index do
                 Total
               </th>
               <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
+                Prix
+              </th>
+              <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
                 Paiement
               </th>
               <th class="bg-slate-50 text-slate-500 text-xs font-medium uppercase px-3 py-2">
@@ -510,6 +513,14 @@ defmodule HoMonRadeauWeb.Admin.DrumsLive.Index do
                       {decl.total_quantity}
                     <% true -> %>
                       {decl.lines |> Enum.map(& &1.quantity) |> Enum.sum()}
+                  <% end %>
+                </td>
+                <%!-- Price --%>
+                <td class="px-3 py-2 text-sm font-medium">
+                  <%= if decl.declared && decl.total_amount do %>
+                    {decl.total_amount} €
+                  <% else %>
+                    <span class="text-slate-300">—</span>
                   <% end %>
                 </td>
                 <%!-- Payment --%>
