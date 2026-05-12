@@ -790,7 +790,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                     </span>
                   <% true -> %>
                     <span class="bg-sky-100 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full">
-                      {drum_count} bidon{if drum_count > 1, do: "s"}<%= if @drum_declaration.total_amount do %>, {@drum_declaration.total_amount} €<% end %>
+                      {drum_count} bidon{if drum_count > 1, do: "s"}
+                      <%= if @drum_declaration.total_amount do %>
+                        , {@drum_declaration.total_amount} €
+                      <% end %>
                     </span>
                     <%= if @drum_declaration.status == "paid" do %>
                       <span class="bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full">
@@ -809,7 +812,9 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                 navigate={~p"/mon-radeau/bidons"}
                 class="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1"
               >
-                {if @drum_declaration.declared, do: "Modifier la déclaration", else: "Déclarer vos bidons"}
+                {if @drum_declaration.declared,
+                  do: "Modifier la déclaration",
+                  else: "Déclarer vos bidons"}
                 <.icon name="hero-arrow-right-mini" class="size-4" />
               </.link>
             </div>

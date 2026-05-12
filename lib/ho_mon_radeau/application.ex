@@ -12,8 +12,7 @@ defmodule HoMonRadeau.Application do
       HoMonRadeau.Repo,
       {DNSCluster, query: Application.get_env(:ho_mon_radeau, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: HoMonRadeau.PubSub},
-      # Start a worker by calling: HoMonRadeau.Worker.start_link(arg)
-      # {HoMonRadeau.Worker, arg},
+      {PlugAttack.Storage.Ets, name: HoMonRadeauWeb.RateLimitStorage, clean_period: 60_000},
       # Start to serve requests, typically the last entry
       HoMonRadeauWeb.Endpoint
     ]
