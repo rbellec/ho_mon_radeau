@@ -17,6 +17,10 @@ defmodule HoMonRadeauWeb.Router do
     plug :fetch_current_scope_for_user
   end
 
+  pipeline :throttle do
+    plug HoMonRadeauWeb.Plugs.RateLimit
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
     plug OpenApiSpex.Plug.PutApiSpec, module: HoMonRadeauWeb.ApiSpec
@@ -137,7 +141,7 @@ defmodule HoMonRadeauWeb.Router do
   ## Authentication routes
 
   scope "/", HoMonRadeauWeb do
-    pipe_through [:browser, :redirect_if_user_is_authenticated]
+    pipe_through [:browser, :redirect_if_user_is_authenticated, :throttle]
 
     get "/users/register", UserRegistrationController, :new
     post "/users/register", UserRegistrationController, :create
@@ -209,7 +213,7 @@ defmodule HoMonRadeauWeb.Router do
   end
 
   scope "/", HoMonRadeauWeb do
-    pipe_through [:browser]
+    pipe_through [:browser, :throttle]
 
     get "/users/log-in", UserSessionController, :new
     get "/users/log-in/:token", UserSessionController, :confirm

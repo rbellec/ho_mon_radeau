@@ -88,6 +88,10 @@ Environment variables are managed through:
 - `.env` (local development, git-ignored)
 - `.env.prod` on the VPS (production)
 
+## Git Workflow
+- Commit after each logical unit of work — do not batch unrelated changes
+- Run `mix precommit` before committing to catch format/credo/test failures early
+
 ## Gotchas
 - Always run mix commands via `docker compose run`, never directly
 - Never use `cd` in bash commands — the working directory is already the project root
