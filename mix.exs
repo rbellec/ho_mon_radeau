@@ -79,6 +79,8 @@ defmodule HoMonRadeau.MixProject do
       {:sweet_xml, "~> 0.7"},
       # Image processing (resize/convert uploaded pictures via ImageMagick)
       {:mogrify, "~> 0.9"},
+      # Bot protection
+      {:plug_attack, "~> 0.4"},
       # Admin interface
       {:kaffy, "~> 0.10"},
       # OpenAPI spec generation

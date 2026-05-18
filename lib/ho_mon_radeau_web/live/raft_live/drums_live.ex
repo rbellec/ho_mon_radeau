@@ -80,7 +80,8 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
 
   defp build_attrs(params, mode), do: Map.put(params, "mode", mode)
 
-  defp has_specific_data?(%{declared: true, mode: "specific", lines: lines}) when is_list(lines) do
+  defp has_specific_data?(%{declared: true, mode: "specific", lines: lines})
+       when is_list(lines) do
     Enum.any?(lines, &((&1.quantity || 0) > 0))
   end
 
