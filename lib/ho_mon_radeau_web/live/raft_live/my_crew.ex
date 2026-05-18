@@ -6,6 +6,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   alias HoMonRadeau.Accounts
   alias HoMonRadeau.Drums
   alias HoMonRadeau.CUF
+  alias HoMonRadeau.Storage
 
   @role_labels %{
     "captain" => "Capitaine",
@@ -37,7 +38,73 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
          |> assign(:my_member, my_member)
          |> assign(:crew, crew)
          |> assign(:editing_info, false)
+         |> load_crew_data()
+         |> allow_upload(:raft_picture,
+           accept: ~w(.jpg .jpeg .png .gif .webp),
+           max_entries: 1,
+           max_file_size: 5_000_000
+         )}
+    end
+  end
+
+  # -- Raft picture --
+
+  @impl true
+  def handle_event("validate_raft_picture", _params, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("cancel_raft_picture_upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :raft_picture, ref)}
+  end
+
+  @impl true
+  def handle_event("save_raft_picture", _params, socket) do
+    raft = socket.assigns.raft
+
+    result =
+      consume_uploaded_entries(socket, :raft_picture, fn %{path: path}, _entry ->
+        key = Storage.raft_picture_key(raft.id)
+
+        case Storage.Image.process_and_upload(path, key, width: 1200, height: 630, mode: :fit) do
+          {:ok, key} -> {:ok, key}
+          {:error, reason} -> {:postpone, {:error, reason}}
+        end
+      end)
+
+    case result do
+      [key] when is_binary(key) ->
+        case Events.update_raft_picture(raft, key) do
+          {:ok, _updated} ->
+            {:noreply,
+             socket
+             |> put_flash(:info, "Photo du radeau mise à jour.")
+             |> load_crew_data()}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Impossible d'enregistrer la photo.")}
+        end
+
+      [{:error, _reason}] ->
+        {:noreply, put_flash(socket, :error, "Erreur lors du traitement de l'image.")}
+
+      [] ->
+        {:noreply, put_flash(socket, :error, "Aucune image sélectionnée.")}
+    end
+  end
+
+  @impl true
+  def handle_event("remove_raft_picture", _params, socket) do
+    case Events.update_raft_picture(socket.assigns.raft, nil) do
+      {:ok, _updated} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Photo supprimée.")
          |> load_crew_data()}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Impossible de supprimer la photo.")}
     end
   end
 
@@ -376,6 +443,11 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
   defp role_label(role), do: Map.get(@role_labels, role, role)
 
+  defp raft_picture_error(:too_large), do: "Image trop volumineuse (max 5 Mo)"
+  defp raft_picture_error(:not_accepted), do: "Format non accepté (JPG, PNG, GIF ou WebP)"
+  defp raft_picture_error(:too_many_files), do: "Une seule image autorisée"
+  defp raft_picture_error(err), do: "Erreur : #{inspect(err)}"
+
   # -- Render --
 
   @impl true
@@ -422,6 +494,105 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
       <div class="mt-8 grid gap-8 lg:grid-cols-3">
         <div class="lg:col-span-2 space-y-6">
+          <%!-- ===== RAFT PICTURE ===== --%>
+          <%= if @is_manager do %>
+            <% picture_url = Events.raft_picture_url(@raft) %>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="raft-picture-section">
+              <div class="p-6">
+                <h3 class="text-lg font-semibold text-slate-900">Photo du radeau</h3>
+                <p class="text-sm text-slate-500 mt-1">
+                  Visible sur la page publique et dans la liste des radeaux.
+                </p>
+
+                <%= if picture_url do %>
+                  <div class="mt-4">
+                    <img
+                      src={picture_url}
+                      alt={@raft.name}
+                      class="w-full rounded-lg object-cover max-h-64"
+                    />
+                  </div>
+                <% end %>
+
+                <form
+                  phx-submit="save_raft_picture"
+                  phx-change="validate_raft_picture"
+                  class="mt-4"
+                >
+                  <div
+                    class="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-indigo-500 transition-colors"
+                    phx-drop-target={@uploads.raft_picture.ref}
+                  >
+                    <.live_file_input upload={@uploads.raft_picture} class="hidden" />
+
+                    <%= for entry <- @uploads.raft_picture.entries do %>
+                      <div class="flex items-center justify-between bg-white p-3 rounded-lg mb-3">
+                        <div class="flex items-center gap-3">
+                          <.live_img_preview entry={entry} class="w-16 h-10 rounded object-cover" />
+                          <div class="text-left">
+                            <p class="font-medium text-sm">{entry.client_name}</p>
+                            <p class="text-xs text-slate-500">{entry.progress}%</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          phx-click="cancel_raft_picture_upload"
+                          phx-value-ref={entry.ref}
+                          class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full p-1 transition"
+                        >
+                          <.icon name="hero-x-mark" class="size-5" />
+                        </button>
+                      </div>
+
+                      <%= for err <- upload_errors(@uploads.raft_picture, entry) do %>
+                        <p class="text-red-600 text-sm">{raft_picture_error(err)}</p>
+                      <% end %>
+                    <% end %>
+
+                    <%= if @uploads.raft_picture.entries == [] do %>
+                      <.icon name="hero-photo" class="size-10 mx-auto text-slate-400" />
+                      <p class="mt-2 text-sm text-slate-500">
+                        Glissez-déposez une image ou
+                        <label
+                          for={@uploads.raft_picture.ref}
+                          class="text-indigo-600 hover:underline cursor-pointer"
+                        >
+                          parcourez
+                        </label>
+                      </p>
+                      <p class="text-xs text-slate-400 mt-1">JPG, PNG, GIF ou WebP (max 5 Mo)</p>
+                    <% end %>
+                  </div>
+
+                  <%= for err <- upload_errors(@uploads.raft_picture) do %>
+                    <p class="text-red-600 text-sm mt-2">{raft_picture_error(err)}</p>
+                  <% end %>
+
+                  <div class="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      type="submit"
+                      class="bg-indigo-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={@uploads.raft_picture.entries == []}
+                      phx-disable-with="Envoi..."
+                    >
+                      Enregistrer la photo
+                    </button>
+                    <%= if @raft.picture_url do %>
+                      <button
+                        type="button"
+                        phx-click="remove_raft_picture"
+                        data-confirm="Supprimer la photo du radeau ?"
+                        class="text-sm text-red-600 hover:bg-red-50 rounded-lg px-3 py-1.5 font-medium transition"
+                      >
+                        Supprimer la photo
+                      </button>
+                    <% end %>
+                  </div>
+                </form>
+              </div>
+            </div>
+          <% end %>
+
           <%!-- ===== PENDING JOIN REQUESTS ===== --%>
           <%= if @is_manager && length(@pending_requests) > 0 do %>
             <div class="bg-amber-50 border border-amber-200 rounded-xl">
