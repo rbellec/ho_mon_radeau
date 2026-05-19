@@ -117,6 +117,22 @@ defmodule HoMonRadeau.Storage do
     "registration_forms/#{edition_id}/#{user_id}/#{timestamp}_#{safe_filename}"
   end
 
+  @doc """
+  Generates a storage key for a user avatar (always JPEG).
+  """
+  def avatar_key(user_id) do
+    timestamp = DateTime.utc_now() |> DateTime.to_unix()
+    "avatars/#{user_id}/#{timestamp}.jpg"
+  end
+
+  @doc """
+  Generates a storage key for a raft cover picture (always JPEG).
+  """
+  def raft_picture_key(raft_id) do
+    timestamp = DateTime.utc_now() |> DateTime.to_unix()
+    "rafts/#{raft_id}/#{timestamp}.jpg"
+  end
+
   # Private functions
 
   defp get_config do

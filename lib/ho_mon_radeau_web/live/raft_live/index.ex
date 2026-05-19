@@ -152,10 +152,18 @@ defmodule HoMonRadeauWeb.RaftLive.Index do
             <%!-- Grid view --%>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <%= for raft <- @rafts do %>
+                <% picture_url = Events.raft_picture_url(raft) %>
                 <.link
                   navigate={~p"/radeaux/#{raft.slug}"}
-                  class="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow"
+                  class="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow overflow-hidden"
                 >
+                  <%= if picture_url do %>
+                    <img
+                      src={picture_url}
+                      alt={raft.name}
+                      class="w-full h-36 object-cover"
+                    />
+                  <% end %>
                   <div class="p-6">
                     <h2 class="text-lg font-semibold text-slate-900">
                       {raft.name}
@@ -181,10 +189,22 @@ defmodule HoMonRadeauWeb.RaftLive.Index do
             <%!-- List view --%>
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 divide-y divide-slate-100">
               <%= for raft <- @rafts do %>
+                <% picture_url = Events.raft_picture_url(raft) %>
                 <.link
                   navigate={~p"/radeaux/#{raft.slug}"}
-                  class="flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+                  class="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors"
                 >
+                  <%= if picture_url do %>
+                    <img
+                      src={picture_url}
+                      alt={raft.name}
+                      class="w-14 h-14 rounded-lg object-cover shrink-0"
+                    />
+                  <% else %>
+                    <div class="w-14 h-14 rounded-lg bg-slate-100 shrink-0 flex items-center justify-center">
+                      <.icon name="hero-photo" class="size-6 text-slate-300" />
+                    </div>
+                  <% end %>
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2">
                       <h2 class="font-semibold text-slate-900 truncate">{raft.name}</h2>

@@ -77,6 +77,16 @@ defmodule HoMonRadeauWeb.RaftLive.Show do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <%= if picture_url = Events.raft_picture_url(@raft) do %>
+        <div class="w-full rounded-xl overflow-hidden mb-6 shadow-sm">
+          <img
+            src={picture_url}
+            alt={@raft.name}
+            class="w-full max-h-72 object-cover"
+          />
+        </div>
+      <% end %>
+
       <.header>
         {@raft.name}
         <:subtitle>

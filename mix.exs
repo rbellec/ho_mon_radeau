@@ -77,6 +77,8 @@ defmodule HoMonRadeau.MixProject do
       {:ex_aws_s3, "~> 2.5"},
       {:hackney, "~> 1.20"},
       {:sweet_xml, "~> 0.7"},
+      # Image processing (resize/convert uploaded pictures via ImageMagick)
+      {:mogrify, "~> 0.9"},
       # Bot protection
       {:plug_attack, "~> 0.4"},
       # Admin interface

@@ -266,6 +266,38 @@ defmodule HoMonRadeau.Events do
   end
 
   @doc """
+  Updates only the picture_url for a raft. Pass `nil` to remove it.
+  Deletes the previous picture from storage on success.
+  """
+  def update_raft_picture(%Raft{} = raft, key) do
+    previous = raft.picture_url
+
+    raft
+    |> Ecto.Changeset.change(%{picture_url: key})
+    |> Repo.update()
+    |> case do
+      {:ok, _updated} = ok ->
+        if previous && previous != key, do: HoMonRadeau.Storage.delete(previous)
+        ok
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Returns the displayable URL for a raft's picture, or `nil` if none.
+  """
+  def raft_picture_url(%Raft{picture_url: nil}), do: nil
+
+  def raft_picture_url(%Raft{picture_url: key}) do
+    case HoMonRadeau.Storage.get_url(key) do
+      {:ok, url} -> url
+      _ -> nil
+    end
+  end
+
+  @doc """
   Returns a changeset for editing a raft.
   """
   def change_raft(%Raft{} = raft, attrs \\ %{}) do
