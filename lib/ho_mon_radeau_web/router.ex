@@ -28,6 +28,7 @@ defmodule HoMonRadeauWeb.Router do
 
   pipeline :api_auth do
     plug :accepts, ["json"]
+    plug HoMonRadeauWeb.Plugs.RateLimit
     plug HoMonRadeauWeb.Plugs.ApiAuth
   end
 

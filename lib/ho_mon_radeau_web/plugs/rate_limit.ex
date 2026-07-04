@@ -22,4 +22,16 @@ defmodule HoMonRadeauWeb.Plugs.RateLimit do
       )
     end
   end
+
+  # 300 API requests per IP per minute - generous enough for normal/MCP usage,
+  # low enough to blunt token brute-forcing or runaway scripts.
+  rule "api by ip", conn do
+    if String.starts_with?(conn.request_path, "/api") do
+      throttle(conn.remote_ip,
+        period: 60_000,
+        limit: 300,
+        storage: {PlugAttack.Storage.Ets, HoMonRadeauWeb.RateLimitStorage}
+      )
+    end
+  end
 end
