@@ -15,7 +15,13 @@ defmodule HoMonRadeauWeb.Api.TransverseTeamController do
 
   def index(conn, _params) do
     teams = Events.list_transverse_teams()
-    json(conn, %{data: Enum.map(teams, &serialize_team/1)})
+
+    data =
+      Enum.map(teams, fn %{team: crew, member_count: member_count} ->
+        serialize_team(Map.put(crew, :member_count, member_count))
+      end)
+
+    json(conn, %{data: data})
   end
 
   operation(:show,
@@ -55,7 +61,7 @@ defmodule HoMonRadeauWeb.Api.TransverseTeamController do
     user_id = Map.fetch!(params, "user_id")
     opts = if params["is_manager"], do: [is_manager: true], else: []
 
-    case Events.add_transverse_team_member(team, user_id, opts) do
+    case Events.add_transverse_team_member(team.id, user_id, opts) do
       {:ok, _member} ->
         team = Events.get_transverse_team!(id)
         json(conn, %{data: serialize_team_detail(team)})
@@ -77,7 +83,7 @@ defmodule HoMonRadeauWeb.Api.TransverseTeamController do
   def remove_member(conn, %{"id" => id, "user_id" => user_id}) do
     team = Events.get_transverse_team!(id)
 
-    case Events.remove_transverse_team_member(team, user_id) do
+    case Events.remove_transverse_team_member(team.id, user_id) do
       {:ok, _} ->
         json(conn, %{data: %{removed: true}})
 
