@@ -92,4 +92,137 @@ defmodule HoMonRadeau.CUFTest do
       assert stats.validated >= 1
     end
   end
+
+  describe "CUF exchange" do
+    test "get_cuf_status/1 reflects received vs crew member count", %{crew: crew} do
+      status = CUF.get_cuf_status(crew.id)
+      assert status.received == 0
+      assert status.needed == 2
+      assert status.available == 0
+      assert status.deficit == 2
+    end
+
+    test "update_received_count/2 updates the crew's count", %{crew: crew} do
+      assert {:ok, updated} = CUF.update_received_count(crew, 5)
+      assert updated.cuf_received_count == 5
+      assert CUF.get_cuf_status(crew.id).received == 5
+    end
+
+    test "update_received_count/2 rejects negative counts", %{crew: crew} do
+      assert {:error, changeset} = CUF.update_received_count(crew, -1)
+      assert "must be greater than or equal to 0" in errors_on(changeset).cuf_received_count
+    end
+
+    test "upsert_exchange_listing/2 creates then updates the crew's one open listing", %{
+      crew: crew
+    } do
+      assert {:ok, listing} =
+               CUF.upsert_exchange_listing(crew.id, %{"kind" => "request", "quantity" => "1"})
+
+      assert listing.kind == "request"
+      assert listing.quantity == 1
+      assert listing.status == "open"
+
+      assert {:ok, updated} =
+               CUF.upsert_exchange_listing(crew.id, %{"kind" => "offer", "quantity" => "2"})
+
+      assert updated.id == listing.id
+      assert updated.kind == "offer"
+      assert updated.quantity == 2
+      assert CUF.get_open_exchange_listing(crew.id).id == listing.id
+    end
+
+    test "an open offer is subtracted from the crew's available count", %{crew: crew} do
+      {:ok, _} = CUF.update_received_count(crew, 3)
+      {:ok, _} = CUF.upsert_exchange_listing(crew.id, %{"kind" => "offer", "quantity" => "1"})
+
+      status = CUF.get_cuf_status(crew.id)
+      assert status.received == 3
+      assert status.available == 2
+      assert status.deficit == 0
+    end
+
+    test "cancel_exchange_listing/1 closes the listing so a new one can be posted", %{
+      crew: crew
+    } do
+      {:ok, listing} =
+        CUF.upsert_exchange_listing(crew.id, %{"kind" => "request", "quantity" => "1"})
+
+      assert {:ok, cancelled} = CUF.cancel_exchange_listing(listing)
+      assert cancelled.status == "cancelled"
+      assert CUF.get_open_exchange_listing(crew.id) == nil
+
+      assert {:ok, new_listing} =
+               CUF.upsert_exchange_listing(crew.id, %{"kind" => "offer", "quantity" => "1"})
+
+      refute new_listing.id == listing.id
+    end
+
+    test "list_open_exchange_listings/2 lists other crews' open listings, can exclude one crew",
+         %{crew: crew} do
+      edition = Events.get_current_edition()
+      other_user = user_fixture(%{email: "other-captain@test.com"})
+
+      {:ok, %{crew: other_crew}} =
+        Events.create_raft_with_crew(other_user, %{name: "Other Raft"}, edition.id)
+
+      {:ok, _} = CUF.upsert_exchange_listing(crew.id, %{"kind" => "request", "quantity" => "1"})
+
+      {:ok, _} =
+        CUF.upsert_exchange_listing(other_crew.id, %{"kind" => "offer", "quantity" => "1"})
+
+      all = CUF.list_open_exchange_listings(edition.id)
+      assert length(all) == 2
+
+      excluding_mine = CUF.list_open_exchange_listings(edition.id, crew.id)
+      assert length(excluding_mine) == 1
+      assert hd(excluding_mine).crew_id == other_crew.id
+      assert hd(excluding_mine).crew.raft.name == "Other Raft"
+    end
+
+    test "transfer_cuf/4 moves CUFs between crews and records the transfer", %{
+      crew: crew,
+      user1: u1
+    } do
+      edition = Events.get_current_edition()
+      other_user = user_fixture(%{email: "receiving-captain@test.com"})
+
+      {:ok, %{crew: other_crew}} =
+        Events.create_raft_with_crew(other_user, %{name: "Receiving Raft"}, edition.id)
+
+      {:ok, _} = CUF.update_received_count(crew, 3)
+
+      assert {:ok, %{transfer: transfer}} =
+               CUF.transfer_cuf(crew.id, other_crew.id, 1, u1)
+
+      assert transfer.quantity == 1
+      assert CUF.get_cuf_status(crew.id).received == 2
+      assert CUF.get_cuf_status(other_crew.id).received == 1
+
+      [recorded] = CUF.list_crew_transfers(crew.id)
+      assert recorded.id == transfer.id
+      assert recorded.from_crew.raft.name == "CUF Test Raft"
+      assert recorded.to_crew.raft.name == "Receiving Raft"
+    end
+
+    test "transfer_cuf/4 fails when the giving crew doesn't have enough", %{
+      crew: crew,
+      user1: u1
+    } do
+      edition = Events.get_current_edition()
+      other_user = user_fixture(%{email: "receiving-captain2@test.com"})
+
+      {:ok, %{crew: other_crew}} =
+        Events.create_raft_with_crew(other_user, %{name: "Receiving Raft 2"}, edition.id)
+
+      {:ok, _} = CUF.update_received_count(crew, 1)
+
+      assert {:error, :updated_from, changeset, _changes} =
+               CUF.transfer_cuf(crew.id, other_crew.id, 2, u1)
+
+      assert "must be greater than or equal to 0" in errors_on(changeset).cuf_received_count
+      assert CUF.get_cuf_status(crew.id).received == 1
+      assert CUF.get_cuf_status(other_crew.id).received == 0
+    end
+  end
 end
