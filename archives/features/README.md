@@ -1,5 +1,9 @@
 # Documentation des Features
 
+> **Historique.** Ces fiches décrivent les specs telles qu'écrites avant l'implémentation initiale.
+> Le code a évolué depuis (ex. FEATURE-002 : la validation admin décrite ici n'est pas celle
+> actuellement en place). Pour l'état fonctionnel courant, voir `docs/features/`.
+
 Ce répertoire contient la documentation détaillée de chaque fonctionnalité de l'application **HoMonRadeaaaUUUUUHOAUUUUOOOOOOO !**
 
 ## Organisation
