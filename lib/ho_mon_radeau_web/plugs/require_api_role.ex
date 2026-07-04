@@ -38,7 +38,7 @@ defmodule HoMonRadeauWeb.Plugs.RequireApiRole do
     else
       raft_id = conn.path_params["raft_id"] || conn.path_params["id"]
       raft = Events.get_raft!(raft_id)
-      crew = Events.get_crew_by_raft(raft)
+      crew = Events.get_crew_by_raft(raft.id)
 
       if crew && Events.is_manager_or_captain?(crew.id, user.id) do
         conn

@@ -492,12 +492,9 @@ defmodule HoMonRadeau.Accounts do
       |> Repo.one()
 
     if api_token do
-      # Update last_used_at asynchronously (don't block the request)
-      Task.start(fn ->
-        api_token
-        |> Ecto.Changeset.change(%{last_used_at: DateTime.utc_now(:second)})
-        |> Repo.update()
-      end)
+      api_token
+      |> Ecto.Changeset.change(%{last_used_at: DateTime.utc_now(:second)})
+      |> Repo.update()
 
       api_token.user
     end

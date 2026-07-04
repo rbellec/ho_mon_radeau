@@ -76,4 +76,16 @@ defmodule HoMonRadeauWeb.ConnCase do
   defp maybe_set_token_authenticated_at(token, authenticated_at) do
     HoMonRadeau.AccountsFixtures.override_token_authenticated_at(token, authenticated_at)
   end
+
+  @doc """
+  Builds a conn authenticated as `user` via a Bearer API token, for testing
+  controllers/api/*.
+  """
+  def api_conn(user) do
+    {:ok, raw_token, _api_token} = HoMonRadeau.Accounts.create_api_token(user, "test token")
+
+    Phoenix.ConnTest.build_conn()
+    |> Plug.Conn.put_req_header("authorization", "Bearer #{raw_token}")
+    |> Plug.Conn.put_req_header("accept", "application/json")
+  end
 end
