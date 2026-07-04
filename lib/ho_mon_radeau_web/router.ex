@@ -164,6 +164,7 @@ defmodule HoMonRadeauWeb.Router do
 
       live "/mon-radeau", RaftLive.MyCrew, :show
       live "/mon-radeau/bidons", RaftLive.DrumsLive, :show
+      live "/mon-radeau/cufexchange", RaftLive.CufExchangeLive, :show
       live "/mon-profil", ProfileLive, :show
     end
   end

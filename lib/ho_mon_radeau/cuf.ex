@@ -230,6 +230,21 @@ defmodule HoMonRadeau.CUF do
   end
 
   @doc """
+  Lists other non-transverse crews in an edition, for picking a CUF
+  transfer recipient.
+  """
+  def list_other_crews(edition_id, exclude_crew_id) do
+    from(c in Crew,
+      join: r in assoc(c, :raft),
+      where:
+        c.edition_id == ^edition_id and c.is_transverse == false and c.id != ^exclude_crew_id,
+      order_by: r.name,
+      select: %{id: c.id, raft_name: r.name}
+    )
+    |> Repo.all()
+  end
+
+  @doc """
   Records a CUF transfer between two crews, performed unilaterally by the
   giving crew. Updates both crews' received counts atomically; fails if
   the giving crew doesn't have enough available to give.
