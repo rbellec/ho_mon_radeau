@@ -29,6 +29,8 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrewTest do
 
       assert render(view) =~ "Le Corsaire"
       assert render(view) =~ "membre"
+      assert render(view) =~ "vot&#39;bon Cuf"
+      assert render(view) =~ "il vous manque 1 CUF"
     end
 
     test "shows management actions for managers", %{conn: conn} do

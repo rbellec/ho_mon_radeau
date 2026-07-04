@@ -440,6 +440,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     drum_settings = Drums.get_settings()
     cuf_summary = CUF.get_crew_cuf_summary(crew.id)
     cuf_settings = CUF.get_settings()
+    cuf_exchange_status = CUF.get_cuf_status(crew.id)
     my_member = Events.get_crew_member(crew.id, user.id)
     is_captain = my_member && my_member.is_captain
 
@@ -454,6 +455,7 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
     |> assign(:drum_settings, drum_settings)
     |> assign(:cuf_summary, cuf_summary)
     |> assign(:cuf_settings, cuf_settings)
+    |> assign(:cuf_exchange_status, cuf_exchange_status)
     |> assign(:my_member, my_member)
     |> assign(:is_captain, is_captain)
     |> assign(:edition, edition)
@@ -462,6 +464,16 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
   end
 
   defp role_label(role), do: Map.get(@role_labels, role, role)
+
+  defp cuf_exchange_hint(%{deficit: deficit}) when deficit > 0 do
+    "il vous manque #{deficit} CUF#{if deficit > 1, do: "s"}"
+  end
+
+  defp cuf_exchange_hint(%{deficit: deficit}) when deficit < 0 do
+    "#{-deficit} CUF#{if -deficit > 1, do: "s"} en trop"
+  end
+
+  defp cuf_exchange_hint(_status), do: "à jour"
 
   defp raft_picture_error(:too_large), do: "Image trop volumineuse (max 5 Mo)"
   defp raft_picture_error(:not_accepted), do: "Format non accepté (JPG, PNG, GIF ou WebP)"
@@ -1100,6 +1112,27 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
                     </form>
                   </div>
                 <% end %>
+              </div>
+
+              <%!-- À vot'bon Cuf --%>
+              <div class="border-t border-slate-100 pt-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-500 mb-1">À vot'bon Cuf</h4>
+                    <p class="text-sm">
+                      <span class="font-medium">
+                        {@cuf_exchange_status.available} / {@cuf_exchange_status.needed}
+                      </span>
+                      CUF reçues — {cuf_exchange_hint(@cuf_exchange_status)}
+                    </p>
+                  </div>
+                  <.link
+                    navigate={~p"/mon-radeau/cufexchange"}
+                    class="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1 shrink-0"
+                  >
+                    Gérer <.icon name="hero-arrow-right-mini" class="size-4" />
+                  </.link>
+                </div>
               </div>
             </div>
           </details>
