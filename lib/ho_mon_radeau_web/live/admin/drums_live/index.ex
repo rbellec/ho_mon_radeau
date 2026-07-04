@@ -373,31 +373,15 @@ defmodule HoMonRadeauWeb.Admin.DrumsLive.Index do
         </div>
       </details>
 
-      <%!-- Settings --%>
-      <details class="mt-4">
-        <summary class="cursor-pointer font-medium text-slate-700">Configuration</summary>
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 mt-2">
-          <div class="p-6">
-            <.form for={@settings_form} id="drum-settings-form" phx-submit="update_settings">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <.input
-                  field={@settings_form[:forfait_price]}
-                  type="number"
-                  label="Tarif forfaitaire par bidon (€)"
-                  step="0.01"
-                />
-                <.input field={@settings_form[:rib_iban]} type="text" label="IBAN" />
-                <.input field={@settings_form[:rib_bic]} type="text" label="BIC" />
-              </div>
-              <div class="mt-4">
-                <.button variant="primary" phx-disable-with="Enregistrement...">
-                  Enregistrer
-                </.button>
-              </div>
-            </.form>
-          </div>
-        </div>
-      </details>
+      <%!-- Off-app management note --%>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4 flex items-start gap-2">
+        <.icon name="hero-information-circle-mini" class="size-5 text-amber-600 shrink-0 mt-0.5" />
+        <p class="text-sm text-amber-800">
+          Le stock, la tarification et le paiement des bidons sont gérés directement avec l'équipe bidons,
+          en dehors de cette application. Les déclarations ci-dessous sont conservées à titre d'historique
+          informatif. Le tarif et l'IBAN restent modifiables en base si besoin.
+        </p>
+      </div>
 
       <%!-- Filter + export --%>
       <div class="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -535,17 +519,8 @@ defmodule HoMonRadeauWeb.Admin.DrumsLive.Index do
                     </span>
                   <% end %>
                 </td>
-                <td class="px-3 py-2 text-sm">
-                  <%= if decl.declared && decl.status == "pending" do %>
-                    <button
-                      class="bg-green-600 text-white rounded-md px-2 py-1 text-xs font-medium hover:bg-green-700 transition"
-                      phx-click="validate_payment"
-                      phx-value-id={decl.id}
-                      data-confirm={"Valider le paiement pour #{decl.crew.raft.name} ?"}
-                    >
-                      Valider paiement
-                    </button>
-                  <% end %>
+                <td class="px-3 py-2 text-sm text-slate-400 italic">
+                  Géré avec l'équipe bidons
                 </td>
               </tr>
             <% end %>

@@ -5,7 +5,6 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
   alias HoMonRadeau.Events
 
   @notion_url "https://carnetbleu.notion.site/La-flottaison-et-les-bidons-209d51b5bb228042835ee53c9f000a79"
-  @forum_url "https://tuttoblu.discourse.group/t/construire-son-radeau/11/4"
 
   @impl true
   def mount(_params, _session, socket) do
@@ -21,7 +20,7 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
       crew ->
         declaration = Drums.get_or_build_declaration(crew.id)
         drum_types = Drums.list_active_drum_types()
-        settings = Drums.get_settings()
+        edition = Events.get_current_edition()
 
         lines_by_type =
           Map.new(declaration.lines || [], fn l -> {l.drum_type_id, l.quantity} end)
@@ -32,12 +31,11 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
          |> assign(:raft, Events.get_raft!(crew.raft_id))
          |> assign(:declaration, declaration)
          |> assign(:drum_types, drum_types)
-         |> assign(:settings, settings)
          |> assign(:lines_by_type, lines_by_type)
          |> assign(:mode, declaration.mode || "simple")
          |> assign(:page_title, "Bidons — déclaration")
          |> assign(:notion_url, @notion_url)
-         |> assign(:forum_url, @forum_url)}
+         |> assign(:edition, edition)}
     end
   end
 
@@ -116,14 +114,24 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
             >
               <.icon name="hero-book-open-mini" class="size-4" /> Guide bidons
             </a>
-            <a
-              href={@forum_url}
-              target="_blank"
-              class="text-sm text-sky-700 hover:text-sky-900 font-medium inline-flex items-center gap-1 underline underline-offset-2"
-            >
-              <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> Forum
-            </a>
+            <%= if @edition && @edition.forum_url do %>
+              <a
+                href={@edition.forum_url}
+                target="_blank"
+                class="text-sm text-sky-700 hover:text-sky-900 font-medium inline-flex items-center gap-1 underline underline-offset-2"
+              >
+                <.icon name="hero-chat-bubble-left-right-mini" class="size-4" /> Forum
+              </a>
+            <% end %>
           </div>
+        </div>
+
+        <%!-- Off-app management note --%>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-3 flex items-start gap-2">
+          <.icon name="hero-information-circle-mini" class="size-5 text-amber-600 shrink-0 mt-0.5" />
+          <p class="text-sm text-amber-800">
+            Cette déclaration sert d'historique pour votre équipage. Le stock, la répartition et le paiement des bidons sont gérés directement avec l'équipe bidons, en dehors de cette application.
+          </p>
         </div>
 
         <%!-- Current status --%>
@@ -145,19 +153,6 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
             </div>
           <% end %>
         </div>
-
-        <%!-- Payment status (if paid) --%>
-        <%= if @declaration.status == "paid" do %>
-          <div class="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-2 mt-2">
-            <.icon name="hero-banknotes-mini" class="size-4" />
-            <span>
-              Paiement validé
-              <%= if @declaration.total_amount do %>
-                — {@declaration.total_amount} €
-              <% end %>
-            </span>
-          </div>
-        <% end %>
 
         <%!-- Declaration form --%>
         <form phx-submit="submit_declaration" id="drums-declaration-form" class="mt-6 space-y-4">
@@ -272,21 +267,6 @@ defmodule HoMonRadeauWeb.RaftLive.DrumsLive do
               placeholder="Contraintes de construction, questions..."
             ><%= @declaration.notes %></textarea>
           </div>
-
-          <%= if @settings.rib_iban do %>
-            <div class="bg-slate-50 rounded-lg px-4 py-3 text-sm text-slate-600">
-              <p class="font-medium">Règlement par virement</p>
-              <p>
-                IBAN : {@settings.rib_iban}
-                <%= if @settings.rib_bic do %>
-                  — BIC : {@settings.rib_bic}
-                <% end %>
-              </p>
-              <%= if @settings.forfait_price do %>
-                <p class="mt-1">Tarif forfaitaire : {@settings.forfait_price} € / bidon</p>
-              <% end %>
-            </div>
-          <% end %>
 
           <button
             type="submit"
