@@ -19,6 +19,7 @@ defmodule HoMonRadeau.Events.Crew do
     field :transverse_type, :string
     field :name, :string
     field :description, :string
+    field :cuf_received_count, :integer, default: 0
 
     has_many :crew_members, CrewMember
     has_many :members, through: [:crew_members, :user]
@@ -53,5 +54,15 @@ defmodule HoMonRadeau.Events.Crew do
     |> validate_required([:name, :transverse_type])
     |> validate_inclusion(:transverse_type, @transverse_types)
     |> validate_length(:name, min: 2, max: 100)
+  end
+
+  @doc """
+  Changeset for a crew self-reporting how many CUFs it has received.
+  """
+  def cuf_received_changeset(crew, attrs) do
+    crew
+    |> cast(attrs, [:cuf_received_count])
+    |> validate_required([:cuf_received_count])
+    |> validate_number(:cuf_received_count, greater_than_or_equal_to: 0)
   end
 end
