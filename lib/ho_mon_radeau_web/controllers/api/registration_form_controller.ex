@@ -18,16 +18,20 @@ defmodule HoMonRadeauWeb.Api.RegistrationFormController do
   )
 
   def index(conn, params) do
-    edition = Events.get_current_edition()
+    case Events.get_current_edition() do
+      nil ->
+        json(conn, %{data: []})
 
-    filters =
-      params
-      |> Map.take(~w(status raft_id))
-      |> Enum.reject(fn {_, v} -> is_nil(v) or v == "" end)
-      |> Map.new()
+      edition ->
+        filters =
+          params
+          |> Map.take(~w(status raft_id))
+          |> Enum.reject(fn {_, v} -> is_nil(v) or v == "" end)
+          |> Enum.map(fn {k, v} -> {String.to_existing_atom(k), v} end)
 
-    forms = Events.list_registration_forms(edition, filters)
-    json(conn, %{data: Enum.map(forms, &serialize_form/1)})
+        forms = Events.list_registration_forms(edition.id, filters)
+        json(conn, %{data: Enum.map(forms, &serialize_form/1)})
+    end
   end
 
   operation(:approve,
