@@ -4,6 +4,8 @@ defmodule HoMonRadeauWeb.Api.CUFController do
 
   alias HoMonRadeau.CUF
 
+  import HoMonRadeauWeb.Api.ErrorHelpers
+
   tags(["CUF"])
 
   operation(:index,
@@ -88,16 +90,5 @@ defmodule HoMonRadeauWeb.Api.CUFController do
       end
 
     Map.merge(base, raft_info)
-  end
-
-  defp json_error(conn, changeset) do
-    errors =
-      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-        Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-          opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-        end)
-      end)
-
-    conn |> put_status(:unprocessable_entity) |> json(%{errors: errors})
   end
 end

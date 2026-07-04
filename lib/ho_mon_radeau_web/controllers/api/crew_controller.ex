@@ -4,6 +4,8 @@ defmodule HoMonRadeauWeb.Api.CrewController do
 
   alias HoMonRadeau.Events
 
+  import HoMonRadeauWeb.Api.ErrorHelpers
+
   plug HoMonRadeauWeb.Plugs.RequireApiRole, role: :raft_manager
 
   tags(["Crew"])
@@ -123,16 +125,5 @@ defmodule HoMonRadeauWeb.Api.CrewController do
         ),
       joined_at: member.inserted_at
     }
-  end
-
-  defp json_error(conn, changeset) do
-    errors =
-      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-        Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-          opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-        end)
-      end)
-
-    conn |> put_status(:unprocessable_entity) |> json(%{errors: errors})
   end
 end

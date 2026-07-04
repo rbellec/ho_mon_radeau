@@ -4,6 +4,8 @@ defmodule HoMonRadeauWeb.Api.RegistrationFormController do
 
   alias HoMonRadeau.Events
 
+  import HoMonRadeauWeb.Api.ErrorHelpers
+
   tags(["Registration Forms"])
 
   operation(:index,
@@ -73,16 +75,5 @@ defmodule HoMonRadeauWeb.Api.RegistrationFormController do
       inserted_at: form.inserted_at,
       updated_at: form.updated_at
     }
-  end
-
-  defp json_error(conn, changeset) do
-    errors =
-      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-        Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-          opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-        end)
-      end)
-
-    conn |> put_status(:unprocessable_entity) |> json(%{errors: errors})
   end
 end

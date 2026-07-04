@@ -4,6 +4,8 @@ defmodule HoMonRadeauWeb.Api.RaftController do
 
   alias HoMonRadeau.Events
 
+  import HoMonRadeauWeb.Api.ErrorHelpers
+
   tags(["Rafts"])
 
   operation(:index,
@@ -112,16 +114,5 @@ defmodule HoMonRadeauWeb.Api.RaftController do
       end
 
     Map.merge(base, %{crew_members: crew_members, links: links})
-  end
-
-  defp json_error(conn, changeset) do
-    errors =
-      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-        Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-          opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-        end)
-      end)
-
-    conn |> put_status(:unprocessable_entity) |> json(%{errors: errors})
   end
 end

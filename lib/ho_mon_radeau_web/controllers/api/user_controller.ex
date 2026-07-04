@@ -4,6 +4,8 @@ defmodule HoMonRadeauWeb.Api.UserController do
 
   alias HoMonRadeau.Accounts
 
+  import HoMonRadeauWeb.Api.ErrorHelpers
+
   tags(["Users"])
 
   operation(:index,
@@ -80,16 +82,5 @@ defmodule HoMonRadeauWeb.Api.UserController do
       display_name: Accounts.display_name(user),
       inserted_at: user.inserted_at
     }
-  end
-
-  defp json_error(conn, changeset) do
-    errors =
-      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-        Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-          opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-        end)
-      end)
-
-    conn |> put_status(:unprocessable_entity) |> json(%{errors: errors})
   end
 end

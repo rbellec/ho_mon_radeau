@@ -4,6 +4,8 @@ defmodule HoMonRadeauWeb.Api.DrumController do
 
   alias HoMonRadeau.Drums
 
+  import HoMonRadeauWeb.Api.ErrorHelpers
+
   tags(["Drums"])
 
   operation(:index,
@@ -87,15 +89,4 @@ defmodule HoMonRadeauWeb.Api.DrumController do
     do: Map.merge(map, %{raft_id: id, raft_name: name})
 
   defp maybe_merge_raft(map, _), do: map
-
-  defp json_error(conn, changeset) do
-    errors =
-      Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-        Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-          opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-        end)
-      end)
-
-    conn |> put_status(:unprocessable_entity) |> json(%{errors: errors})
-  end
 end
