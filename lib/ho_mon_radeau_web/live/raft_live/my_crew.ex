@@ -232,61 +232,69 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
   @impl true
   def handle_event("set_captain", %{"user-id" => user_id}, socket) do
-    crew = socket.assigns.crew
+    require_manager(socket, fn ->
+      crew = socket.assigns.crew
 
-    case Events.set_captain(crew.id, String.to_integer(user_id)) do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Capitaine mis à jour.")
-         |> load_crew_data()}
+      case Events.set_captain(crew.id, String.to_integer(user_id)) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:info, "Capitaine mis à jour.")
+           |> load_crew_data()}
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Erreur lors de la nomination du capitaine.")}
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Erreur lors de la nomination du capitaine.")}
+      end
+    end)
   end
 
   @impl true
   def handle_event("remove_captain", _params, socket) do
-    crew = socket.assigns.crew
-    Events.remove_captain(crew.id)
+    require_manager(socket, fn ->
+      crew = socket.assigns.crew
+      Events.remove_captain(crew.id)
 
-    {:noreply,
-     socket
-     |> put_flash(:info, "Rôle de capitaine retiré.")
-     |> load_crew_data()}
+      {:noreply,
+       socket
+       |> put_flash(:info, "Rôle de capitaine retiré.")
+       |> load_crew_data()}
+    end)
   end
 
   @impl true
   def handle_event("promote_manager", %{"user-id" => user_id}, socket) do
-    crew = socket.assigns.crew
+    require_manager(socket, fn ->
+      crew = socket.assigns.crew
 
-    case Events.promote_to_manager(crew.id, String.to_integer(user_id)) do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Membre promu gestionnaire.")
-         |> load_crew_data()}
+      case Events.promote_to_manager(crew.id, String.to_integer(user_id)) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:info, "Membre promu gestionnaire.")
+           |> load_crew_data()}
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Erreur lors de la promotion.")}
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Erreur lors de la promotion.")}
+      end
+    end)
   end
 
   @impl true
   def handle_event("demote_manager", %{"user-id" => user_id}, socket) do
-    crew = socket.assigns.crew
+    require_manager(socket, fn ->
+      crew = socket.assigns.crew
 
-    case Events.demote_from_manager(crew.id, String.to_integer(user_id)) do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Rôle de gestionnaire retiré.")
-         |> load_crew_data()}
+      case Events.demote_from_manager(crew.id, String.to_integer(user_id)) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:info, "Rôle de gestionnaire retiré.")
+           |> load_crew_data()}
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Erreur lors de la rétrogradation.")}
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Erreur lors de la rétrogradation.")}
+      end
+    end)
   end
 
   # -- Leave / remove --
@@ -310,19 +318,21 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
 
   @impl true
   def handle_event("remove_member", %{"user-id" => user_id}, socket) do
-    crew = socket.assigns.crew
-    current_user = socket.assigns.current_scope.user
+    require_manager(socket, fn ->
+      crew = socket.assigns.crew
+      current_user = socket.assigns.current_scope.user
 
-    case Events.leave_crew(String.to_integer(user_id), crew.id, removed_by_id: current_user.id) do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Membre retiré de l'équipage.")
-         |> load_crew_data()}
+      case Events.leave_crew(String.to_integer(user_id), crew.id, removed_by_id: current_user.id) do
+        {:ok, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:info, "Membre retiré de l'équipage.")
+           |> load_crew_data()}
 
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Erreur lors du retrait.")}
-    end
+        {:error, _} ->
+          {:noreply, put_flash(socket, :error, "Erreur lors du retrait.")}
+      end
+    end)
   end
 
   # -- CUF --
@@ -402,6 +412,16 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
        |> load_crew_data()}
     else
       {:noreply, socket}
+    end
+  end
+
+  # -- Authorization --
+
+  defp require_manager(socket, fun) do
+    if socket.assigns.is_manager do
+      fun.()
+    else
+      {:noreply, put_flash(socket, :error, "Action réservée aux gestionnaires de l'équipage.")}
     end
   end
 
@@ -497,7 +517,10 @@ defmodule HoMonRadeauWeb.RaftLive.MyCrew do
           <%!-- ===== RAFT PICTURE ===== --%>
           <%= if @is_manager do %>
             <% picture_url = Events.raft_picture_url(@raft) %>
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200" id="raft-picture-section">
+            <div
+              class="bg-white rounded-xl shadow-sm border border-slate-200"
+              id="raft-picture-section"
+            >
               <div class="p-6">
                 <h3 class="text-lg font-semibold text-slate-900">Photo du radeau</h3>
                 <p class="text-sm text-slate-500 mt-1">
