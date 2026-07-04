@@ -64,7 +64,7 @@ defmodule HoMonRadeau.CUFFixtures do
 
     edition =
       %Edition{}
-      |> Edition.changeset(%{year: System.unique_integer([:positive]) + 2100})
+      |> Edition.changeset(%{year: 2100 + rem(System.unique_integer([:positive]), 800)})
       |> Repo.insert!()
 
     raft =

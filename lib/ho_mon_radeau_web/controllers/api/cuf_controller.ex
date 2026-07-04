@@ -23,7 +23,7 @@ defmodule HoMonRadeauWeb.Api.CUFController do
 
   def index(conn, params) do
     filter_status = Map.get(params, "status")
-    declarations = CUF.list_all_declarations(filter_status: filter_status)
+    declarations = CUF.list_all_declarations(filter_status)
     json(conn, %{data: Enum.map(declarations, &serialize_declaration/1)})
   end
 
@@ -38,9 +38,9 @@ defmodule HoMonRadeauWeb.Api.CUFController do
   def validate(conn, %{"id" => id}) do
     declaration = CUF.get_declaration!(id)
 
-    case CUF.validate_declaration(declaration, conn.assigns.current_user) do
-      {:ok, declaration} -> json(conn, %{data: serialize_declaration(declaration)})
-      {:error, changeset} -> json_error(conn, changeset)
+    case CUF.validate_declaration(declaration, conn.assigns.current_user.id) do
+      {:ok, %{declaration: updated}} -> json(conn, %{data: serialize_declaration(updated)})
+      {:error, :declaration, changeset, _changes} -> json_error(conn, changeset)
     end
   end
 
