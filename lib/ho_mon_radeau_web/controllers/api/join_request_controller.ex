@@ -17,7 +17,7 @@ defmodule HoMonRadeauWeb.Api.JoinRequestController do
 
   def index(conn, %{"raft_id" => raft_id}) do
     raft = Events.get_raft!(raft_id)
-    crew = Events.get_crew_by_raft(raft)
+    crew = Events.get_crew_by_raft(raft.id)
     requests = Events.list_pending_join_requests(crew)
     json(conn, %{data: Enum.map(requests, &serialize_request/1)})
   end

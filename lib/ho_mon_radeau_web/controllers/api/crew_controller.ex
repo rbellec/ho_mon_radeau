@@ -16,8 +16,8 @@ defmodule HoMonRadeauWeb.Api.CrewController do
 
   def show(conn, %{"raft_id" => raft_id}) do
     raft = Events.get_raft!(raft_id)
-    crew = Events.get_crew_by_raft(raft)
-    members = Events.list_crew_members(crew)
+    crew = Events.get_crew_by_raft(raft.id)
+    members = Events.list_crew_members(crew.id)
 
     json(conn, %{
       data: %{
@@ -39,11 +39,11 @@ defmodule HoMonRadeauWeb.Api.CrewController do
 
   def promote_manager(conn, %{"raft_id" => raft_id, "member_id" => member_id}) do
     raft = Events.get_raft!(raft_id)
-    crew = Events.get_crew_by_raft(raft)
-    member = Events.get_crew_member(crew, member_id)
+    crew = Events.get_crew_by_raft(raft.id)
 
-    case Events.promote_to_manager(crew, member) do
+    case Events.promote_to_manager(crew.id, member_id) do
       {:ok, member} -> json(conn, %{data: serialize_member(member)})
+      {:error, :not_found} -> conn |> put_status(:not_found) |> json(%{error: "Member not found"})
       {:error, changeset} -> json_error(conn, changeset)
     end
   end
@@ -59,11 +59,11 @@ defmodule HoMonRadeauWeb.Api.CrewController do
 
   def demote_manager(conn, %{"raft_id" => raft_id, "member_id" => member_id}) do
     raft = Events.get_raft!(raft_id)
-    crew = Events.get_crew_by_raft(raft)
-    member = Events.get_crew_member(crew, member_id)
+    crew = Events.get_crew_by_raft(raft.id)
 
-    case Events.demote_from_manager(crew, member) do
+    case Events.demote_from_manager(crew.id, member_id) do
       {:ok, member} -> json(conn, %{data: serialize_member(member)})
+      {:error, :not_found} -> conn |> put_status(:not_found) |> json(%{error: "Member not found"})
       {:error, changeset} -> json_error(conn, changeset)
     end
   end
@@ -79,12 +79,14 @@ defmodule HoMonRadeauWeb.Api.CrewController do
 
   def set_captain(conn, %{"raft_id" => raft_id, "member_id" => member_id}) do
     raft = Events.get_raft!(raft_id)
-    crew = Events.get_crew_by_raft(raft)
-    member = Events.get_crew_member(crew, member_id)
+    crew = Events.get_crew_by_raft(raft.id)
 
-    case Events.set_captain(crew, member) do
-      {:ok, member} -> json(conn, %{data: serialize_member(member)})
-      {:error, changeset} -> json_error(conn, changeset)
+    case Events.set_captain(crew.id, member_id) do
+      {:error, :not_found} ->
+        conn |> put_status(:not_found) |> json(%{error: "Member not found"})
+
+      {:ok, member} ->
+        json(conn, %{data: serialize_member(member)})
     end
   end
 
@@ -99,12 +101,11 @@ defmodule HoMonRadeauWeb.Api.CrewController do
 
   def remove_member(conn, %{"raft_id" => raft_id, "member_id" => member_id}) do
     raft = Events.get_raft!(raft_id)
-    crew = Events.get_crew_by_raft(raft)
-    member = Events.get_crew_member(crew, member_id)
+    crew = Events.get_crew_by_raft(raft.id)
 
-    case Events.remove_crew_member(crew, member) do
-      {:ok, _} -> json(conn, %{data: %{removed: true}})
-      {:error, changeset} -> json_error(conn, changeset)
+    case Events.remove_crew_member(crew.id, member_id) do
+      {0, _} -> conn |> put_status(:not_found) |> json(%{error: "Member not found"})
+      {_count, _} -> json(conn, %{data: %{removed: true}})
     end
   end
 
